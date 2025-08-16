@@ -1,0 +1,1 @@
+# Used to merge multiple of the same maps together like "Akihabara" and "Akihabara UDX"
