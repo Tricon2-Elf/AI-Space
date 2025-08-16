@@ -1,0 +1,1404 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel="stylesheet" href="../vce.css" type="text/css">
+<title>VCE 1.1.4 official document (Japanese)</title>
+</head>
+
+<body>
+<h1>VCE のエラーコードとエラーメッセージ</h1>
+<p>VCEでは2通りの方法でエラーを判別する。
+  ひとつは、vce_get_last_error 関数によってエラー番号を取得する方法、
+  もうひとつは、エラーログ(vce_errout)に出力されている文字列をもとに判別する方法である。本文書では、その両方について説明を加える。
+</p>
+<ul>
+	<li><a href="#ecode">VCEのエラーコード</a></li>
+<li><a href="#elog">VCEのエラーログメッセージ
+</a>  <ul>
+	<li><a href="#fatalerror">Fatalエラーメッセージ</a></li>
+	<li><a href="#warning"> Warningメッセージ </a></li>
+	<li><a href="#bug"> Bugメッセージの一覧 </a></li>
+	<li><a href="#note">Noteメッセージの一覧</a></li>
+	</ul>
+</li>
+</ul>
+
+
+
+<h2><a name="ecode"></a>VCE のエラーコード</h2>
+<p>以下にVCEのエラーコードを列挙する。
+  エラーコードは、追加はされるが、削除や変更はされないので、
+  ここにリストされている説明は、今後どのバージョンにおいても有効である。
+  <BR>
+以下の説明では、 vce.h の内容を引用している。</p>
+<ul id="lib">
+
+  <li>#define VCE_NOERROR (0)
+	  <p>エラーなし</p></li>
+
+  <li>#define VCE_EGENERIC (-1)
+	  <p>一般エラー</p></li>
+
+  <li>#define VCE_EFULL  (-2)
+	  <p>バッファが一杯になった</p></li>
+
+  <li>#define VCE_EBUG   (-3)
+	  <p>VCE内部のバグである可能性が高い</p></li>
+
+  <li>#define VCE_ERANGE (-5)
+	  <p>引数が範囲外である</p></li>
+
+  <li>#define VCE_EINVAL (-6)
+	  <p>引数が不正である</p></li>
+
+  <li>#define VCE_EMEM   (-7)
+	  <p>メモリが足りない</p></li>
+
+  <li>#define VCE_ENOENT (-8)
+	  <p>検索でマッチしない、ファイルが見つからない</p></li>
+
+  <li>#define VCE_EIO    (-9)
+	  <p>ソケットまたはファイルのI/Oエラー</p></li>
+
+  <li>#define VCE_ESOCKET (-10)
+	  <p>socket()システムコールが失敗した</p></li>
+
+  <li>#define VCE_EBIND (-11)
+	  <p>bind()システムコールが失敗した</p></li>
+
+  <li>#define VCE_EIPADDR ( -12)
+	  <p>IPアドレスの指定が間違っている</p></li>
+
+  <li>#define VCE_ELISTEN (-13)
+	  <p>listen()システムコールが失敗した</p></li>
+
+  <li>#define VCE_ECONFIG (-14)
+	  <p>設定が異常である</p></li>
+
+  <li>#define VCE_EHOSTNAME (-15)
+	  <p>ホスト名が解決できない</p></li>
+
+  <li>#define VCE_EFCNTL (-16)
+	  <p>
+	  fcntl が失敗した</p></li>
+
+  <li>#define VCE_ECONNECT (-17)
+	  <p>
+	  connect()システムコールが失敗した
+
+  </p></li>
+
+  <li>#define VCE_EBUFSMALL (-18)
+	  <p>
+	  指定されたバッファが小さすぎる
+  </p></li>
+
+  <li>#define VCE_EPROTO    (-19)
+	  <p>
+	  プロトコルのバイト列がおかしい
+  </p></li>
+
+  <li>#define VCE_ENOTREADY (-20)
+	  <p>
+	  暗号ネゴシエーションが完了していないのにアクセスした
+</p></li>
+
+  <li>#define VCE_ENEGO    (-21)
+	  <p>
+	  暗号ネゴシエーションが失敗した
+  </p></li>
+
+  <li>#define VCE_EPROTO_INVAL (-22)
+	  <p>
+	  プロトコルの引数がおかしい
+  </p></li>
+
+  <li>#define VCE_EPROTO_ODD (-23)
+	  <p>
+	  プロトコルの入力レコードの長さが異常である
+  </p></li>
+
+  <li>#define VCE_EPROTO_TOOLONG (-24)
+	  <p>
+	  プロトコルの入力データが長すぎる
+  </p></li>
+
+  <li>#define VCE_ENOCALLBACK (-25)
+	  <p>
+	  コールバック関数が未定義である
+  </p></li>
+
+  <li>#define VCE_ESUPPORT  (-26)
+	  <p>
+	  現在はサポートされていない
+  </p></li>
+
+  <li>#define VCE_ECIRCSERIAL (-27)
+	  <p>
+	  circ_tのシリアル番号が異なるためI/O不能
+  </p></li>
+
+  <li>#define VCE_ECONNSERIAL (-28)
+	  <p>
+	  conn_tのシリアル番号が異なるためI/O不能
+
+  </p></li>
+
+  <li>#define VCE_EVECNOTREADY (-29)
+	  <p>
+	  パケットベクトライザが準備できていない。
+
+  </p></li>
+
+  <li>#define VCE_ENOCIRCPARENT (-30)
+	  <p>
+	  仮想回路が含まれているはずのTCPコネクションが存在しない
+
+  </p></li>
+
+  <li>#define VCE_EALIGNMENT (-32)
+	  <p>
+	  指定されたオブジェクトのアラインメントがおかしい
+
+  </p></li>
+
+  <li>#define VCE_EFORMAT (-33)
+	  <p>
+	  文字列のフォーマットが異常である
+
+  </p></li>
+
+  <li>#define VCE_ESEARCH (-34)
+	  <p>
+	  サーチエンジン内部エラー
+
+  </p></li>
+
+  <li>#define VCE_ECONTENTLEN (-35)
+	  <p>
+	  プロトコルのレコードのデータ部の長さがおかしい
+
+  </p></li>
+
+  <li>#define VCE_ECONNINIT (-36)
+	  <p>
+	  コネクション表が初期化されていない
+
+  </p></li>
+
+  <li>#define VCE_EBADKEYLEN (-37 )
+	  <p>
+	  暗号化キーの長さがおかしい
+
+  </p></li>
+
+  <li>#define VCE_EACCEPT (-38 )
+	  <p>
+	  accept()システムコールが失敗した
+
+  </p></li>
+
+  <li>#define VCE_ESETSOCKOPT (-39)
+	  <p>
+	  setsockopt()システムコールが失敗した
+
+  </p></li>
+
+  <li>#define VCE_EACCESSFILE (-40)
+	  <p>
+	  ファイルにアクセスできない
+
+  </p></li>
+
+  <li>#define VCE_EWINSOCKINIT (-41)
+	  <p>
+	  Winsock の初期化に失敗(win32のみ)
+
+  </p></li>
+
+  <li>#define VCE_EWBFULL (-44)
+	  <p>
+	  書きこみバッファがいっぱいになっている
+
+  </p></li>
+
+  <li>#define VCE_ELONGINPUT (-45)
+	  <p>
+	  入力バッファが長すぎる
+
+  </p></li>
+
+  <li>#define VCE_ETOOSHORT (-46)
+	  <p>
+	  入力バッファ短すぎる
+
+  </p></li>
+
+  <li>#define VCE_EPROTO_BADLEN (-47)
+	  <p>
+	  プロトコルの入力レコードの長さが異常(クラックのうたがいあり)
+
+  </p></li>
+
+  <li>#define VCE_EPROTO_RESULT (-48)
+	  <p>
+	  プロトコルでサーバがエラーを返している
+
+  </p></li>
+
+  <li>#define VCE_EPROTO_SERVERINVAL (-49)
+	  <p>
+	  サーバが異常な値を返してきた(クラック？)
+
+  </p></li>
+
+  <li>#define VCE_EPROTO_BADCOMMAND (-50)
+	  <p>
+	  そのようなプロトコルコマンドはない
+
+  </p></li>
+
+  <li>#define VCE_EFOPEN_W (-51)
+	  <p>
+	  書きこみのためにファイルを開けない
+
+  </p></li>
+
+  <li>#define VCE_ERENAME (-52)
+	  <p>
+	  rename(2) システムコールが失敗した
+
+  </p></li>
+
+  <li>#define VCE_ENOMORELOCK (-53)
+	  <p>
+	  これ以上ロックを受けいれることができない
+
+  </p></li>
+
+  <li>#define VCE_ENOTFOUND (-54)
+	  <p>
+	  何かが見つからない(vce_get_???_search)
+
+  </p></li>
+
+  <li>#define VCE_ELENTOOLONG (-55)
+	  <p>
+	  長さの指定が大きすぎる。
+
+  </p></li>
+
+  <li>#define VCE_EDATASHORT (-56)
+	  <p>
+	  データ部分が短かすぎる
+	  
+  </p></li>
+
+  <li>#define VCE_EOPENDIR (-57)
+	  <p>
+	  ディレクトリを開くことができない
+
+  </p></li>
+
+  <li>#define VCE_EFSEEK (-58) 
+	  <p>
+	  ファイルをfseekできない
+
+  </p></li>
+
+  <li>#define VCE_EFWRITE (-59) 
+	  <p>
+	  データをファイルに書きこめない
+
+  </p></li>
+
+  <li>#define VCE_EFREAD (-60)
+	  <p>
+	  データをファイルから読めない
+
+  </p></li>
+
+  <li>#define VCE_EMKDIR (-61)
+	  <p>
+	  ディレクトリを作れなかった
+
+  </p></li>
+
+  <li>#define VCE_EALREADY (-62)
+	  <p>
+	  同じ処理は2度できない。重複している。
+	  
+  </p></li>
+
+  <li>#define VCE_EFINALIZE (-63)
+	  <p>
+	  VCEを解放するときのエラー。正しく解放されなかったため、
+	  メモリがリークしている可能性がある(VCEのバグか、使用方法の間違い)
+  </p></li>
+
+  <li>#define VCE_ECLOSED (-64)
+	  <p>
+	  すでにコネクション等が閉じられているのにアクセスしようとした。
+  </p></li>
+
+  <li>#define VCE_EGENCOMMAND (-65)
+	  <p>
+  </p></li>
+
+  <li>#define VCE_ENOCRYPTO (-66)
+	  <p>
+	  そのようなブロック鍵暗号アルゴリズムは存在しない。
+  </p></li>
+
+  <li>#define VCE_ETOOLONGNAME (-67)
+	  <p>
+	  指定された名前は、長すぎる。
+  </p></li>
+
+  <li>#define VCE_ESIZE (-68)
+	  <p>
+	  指定されたサイズは異常である。
+  </p></li>
+
+  <li>#define VCE_ETASK (-69)
+	  <p>
+	  内部で使用するタスクを初期化できない。
+
+  </p></li>
+
+  <li>#define VCE_ETASKG (-70)
+	  <p>
+      内部で使用するタスクグループを初期化できない。
+  </p></li>
+
+  <li>#define VCE_ESWNOTREADY (-71)
+	  <p>
+      switchcontext がまだ準備できていない
+
+  </p></li>
+
+  <li>#define VCE_ESERVERDOWN (-72)
+	  <p>
+      バックエンドのサーバがダウンしている(swp)
+
+  </p></li>
+
+  <li>#define VCE_ESWTRANSIENT (-73)
+	  <p>
+      データを書きこもうとした circ_t は、現在スイッチング中であるため
+      書きこみできない。
+
+  </p></li>
+
+  <li>#define VCE_EODDBUFSIZE (-74)
+	  <p>
+      暗号化するデータバッファのサイズが、奇数、
+      4、8のどれかで割りきれる数でないため、暗号処理できない。
+      
+  </p></li>
+
+  <li>#define VCE_EODDKEYSIZE (-75)
+	  <p>
+      暗号化処理のためのキーが、不正な長さである。
+      たとえば rijndael の場合は16,24,32バイトである必要がある。
+
+  </p></li>
+
+  <li>#define VCE_EKEYEX (-76)
+	  <p>
+      暗号キー交換ルーチンが正常に開始できない。
+      多くの場合メモリ不足。
+
+  </p></li>
+
+  <li>#define VCE_EMORESENDBUF (-77)
+	  <p>
+      より多くの送信バッファを必要としている。
+      circ_t を利用している場合で、
+      SWP への送信バッファが足りない場合に、
+      書きこみ関数からこのエラーが返る。
+
+  </p></li>
+
+  <li>#define VCE_EINIT (-78)
+	  <p>
+      VCE が初期化されていないのに VCE の関数を呼ぼうとした。
+
+  </p></li>
+
+  <li>#define VCE_EARRAY (-79)
+	  <p>
+      VCE が内部で必要としている配列エンジンが不足している。
+      vce_initialize_limited 関数で
+      max_array メンバを調整するとよい。
+
+</ul>
+
+
+<h2><a name="elog"></a>VCE のエラーログメッセージ</h2>
+<p>VCEがログに吐きだすメッセージには、Fatal,Warning,Bug,Note の4種類がある。
+  すべてのメッセージには番号が振られていて、
+  Fatalは1000番台、Warning は4000番台、Bugは7000番台、Noteは10000番台が
+  わりあてられている。番号はVCEの今後のバージョンで増えていくが、
+  削除や内容の変更は行なわれない(細かい表記は修正される)。
+  下記に示すのは VCEgg 0.2 用のメッセージである。
+  また、すべて、 vce.h でマクロとして定義されている。
+  <BR>
+  以下のメッセージは、より正しい表現のために細かく修正されていくので、
+バックアップツールや管理ツールでログを解析するには、 "Fatal:1101"のような番号のみをパースの手がかりとし、
+  細かな英文を手がかりとしないように注意しなければならない。 </p>
+<h3><a name="fatalerror"></a>Fatalエラーメッセージ</h3>
+<p>Fatalエラーメッセージは、主にアプリケーションがVCEの利用方法を間違っているか、
+  OSの設定が不足している(ポートの問題や、空きメモリ、パーミッションの問題など)
+が原因である。細かく原因を追及していくと解決できるはずである。</p>
+<ul id="lib">
+
+  <li>"Fatal:1000 cannot initialize winsock"
+	  <p>
+	  Winsock を初期化できない
+	  
+	  
+  </p></li>
+
+  <li>"Fatal:1003 array table scarcity (init_array)"
+	  <p>
+	  配列の表の残り数が不足している。
+	  vce_init_array の回数が多すぎる。
+	  配列リークしていないかチェックせよ
+	  
+  </p></li>
+
+  <li>"Fatal:1010 MALLOC fail (index=%d)"
+	  <p>
+	  MALLOC ( malloc のラッパ) が失敗。ほぼメモリ不足が原因。
+	  
+  </p></li>
+
+  <li>"Fatal:1011 MALLOC fail (index=%d)"
+	  <p>
+	  MALLOC ( malloc のラッパ) が失敗。ほぼメモリ不足が原因。
+	  
+  </p></li>
+
+  <li>"Fatal:1012 MALLOC fail (index=%d)"
+	  <p>
+	  MALLOC ( malloc のラッパ) が失敗。ほぼメモリ不足が原因。
+	  
+  </p></li>
+
+  <li>"Fatal:1020 array full in %s"
+	  <p>
+	  配列の空き要素がひとつもない。予期せずこれが出力されたときは
+	  vce_free_array_object し忘れを確認せよ
+	  
+  </p></li>
+
+  <li>"Fatal:1050 odd buffer size: %d"
+	  <p>
+	  バッファサイズが、「割りきれない数」になっている。
+	  
+  </p></li>
+
+  <li>"Fatal:1080 please set buffer with length of n*256 bytes."
+	  <p>
+	  256の倍数以外の長さをもつバッファである。
+	  
+  </p></li>
+
+  <li>"Fatal:1090 int-search: MALLOC fail"
+	  <p>
+	  intキーの検索エンジンの初期化時のエラー。
+	  MALLOC ( malloc のラッパ) が失敗。ほぼメモリ不足が原因。
+	  
+  </p></li>
+
+  <li>"Fatal:1091 int-search: init_array fail (index=%d)"
+	  <p>
+	  intキーの検索エンジンで、array 不足による原因で初期化失敗
+	  
+  </p></li>
+
+  <li>"Fatal:1092 int-search: entry full! index=%d"
+	  <p>
+	  intキーの検索エンジンで、それ以上値を記憶できない。
+	  
+  </p></li>
+
+  <li>"Fatal:1093 int-search: entry full! index=%d"
+	  <p>
+	  intキーの検索エンジンで、それ以上値を記憶できない。
+	  
+  </p></li>
+
+  <li>"Fatal:1094 str-search: MALLOC fail"
+	  <p>
+	  stringキーの検索エンジンの初期化時のエラー。
+	  MALLOC ( malloc のラッパ) が失敗。ほぼメモリ不足が原因。
+	  
+  </p></li>
+
+  <li>"Fatal:1095 str-search: init_array fail (index=%d)"
+	  <p>
+	  stringキーの検索エンジンで、array 不足による原因で初期化失敗
+	  
+  </p></li>
+
+  <li>"Fatal:1097 str-search entry full! index=%d"
+	  <p>
+	  stringキーの検索エンジンで、それ以上値を記憶できない。
+	  
+  </p></li>
+
+  <li>"Fatal:1098 str-search entry full! index=%d"
+	  <p>
+	  stringキーの検索エンジンで、それ以上値を記憶できない。
+	  
+  </p></li>
+
+  <li>"Fatal:1100 int2-search: MALLOC fail"
+	  <p>
+	  2整数キーの検索エンジンの初期化時のエラー。
+	  MALLOC ( malloc のラッパ) が失敗。ほぼメモリ不足が原因。
+	  
+  </p></li>
+
+  <li>"Fatal:1101 int2-search: init_array fail index=%d"
+	  <p>
+	  2整数キーの検索エンジンで、array 不足による原因で初期化失敗
+	  
+  </p></li>
+
+  <li>"Fatal:1102 int2-search: entry full! index=%d"
+	  <p>
+	  2整数キーの検索エンジンで、それ以上値を記憶できない。
+	  
+  </p></li>
+
+  <li>"Fatal:1103 int2-search: entry full! index=%d"
+	  <p>
+	  2整数キーの検索エンジンで、それ以上値を記憶できない。
+	  
+  </p></li>
+
+  <li>"Fatal:1200 tcp: no more connections are availabe"
+	  <p>
+	  TCPのコネクションが、VCEの最大接続数制限にひっかかって
+	  それ以上増やせない。
+
+  </p></li>
+
+  <li>"Fatal:1201 tcp: bad secret key length: %d"
+	  <p>
+	  共有秘密鍵の長さが異常である。Blowfishでは4から56で
+	  なければならない。
+	  
+  </p></li>
+
+  <li>"Fatal:1202 tcp: bad encryption type specified:%d"
+	  <p>
+	  vce_tcpcontext_create の crypt 引数の値は0か1のみである。
+	  
+  </p></li>
+
+  <li>"Fatal:1203 need a parser when creating tcpcontext"
+	  <p>
+	  vce_tcpcontext_create するときには、すくなくてもパーサ関数は指定
+	  する必要がある。そうでないとソケットからの入力をどう処理すべきか
+	  が定義されないまま放置されることになる。
+	  
+  </p></li>
+
+  <li>"Fatal:1204 socket() fail addr:%s port:%d os_errno:%s"
+	  <p>
+	  socket() システムコールが失敗しているため、
+	  その状況をCライブラリのエラー番号で返す
+	  
+  </p></li>
+
+  <li>"Fatal:1205 gethostbyname() error: %s"
+	  <p>
+	  gethostbyname関数が失敗している。Cライブラリのエラー出力も表示する。
+	  
+  </p></li>
+
+  <li>"Fatal:1206 gethostbyname() error: %s"
+	  <p>
+	  gethostbyname関数が失敗している。Cライブラリのエラー出力も表示する。
+	  
+  </p></li>
+
+  <li>"Fatal:1207 bind() error. os_errno:%s addr:%s port:%d"
+	  <p>
+	  bind関数が失敗している。
+	  
+  </p></li>
+
+  <li>"Fatal:1208 listen() error. os_errno:%s addr:%s port:%d"
+	  <p>
+	  listen関数が失敗している。
+	  
+  </p></li>
+
+  <li>"Fatal:1209 setsockopt() fail. os_errno:%s"
+	  <p>
+	  setsockopt関数が失敗した。
+
+  </p></li>
+
+  <li>"Fatal:1210 gethostbyname() error: %s"
+	  <p>
+	  gethostbyname関数が失敗している。Cライブラリのエラー出力も表示する。
+	  
+
+	  
+  </p></li>
+
+  <li>"Fatal:1212 fcntl fail: %s"
+	  <p>
+	  fcntl 関数が失敗した。
+	  
+  </p></li>
+
+  <li>"Fatal:1213 setsockopt() fail: %s"
+	  <p>
+	  setsockopt関数が失敗した。
+	  
+  </p></li>
+
+  <li>"Fatal:1214 keyex_start_client fail on fd:%d"
+	  <p>
+	  公開鍵交換方式のクライアント側ネゴシエーションルーチンを
+	  開始できない。
+	  
+  </p></li>
+
+  <li>"Fatal:1230 cannot write data in %s"
+	  <p>
+	  ファイルに出力できない。
+	  
+  </p></li>
+
+  <li>"Fatal:1231 cannot write data in %s"
+	  <p>
+	  ファイルに出力できない。
+	  
+  </p></li>
+
+  <li>"Fatal:1250 cannot init vpaddr search engine"
+	  <p>
+	  パケットベクトライザのマスタデータベースである、 vpaddr という名前の
+	  検索エンジンを初期化できない。
+	  
+  </p></li>
+
+  <li>"Fatal:1251 cannot MALLOC master rb."
+	  <p>
+	  パケットベクトライザの各仮想回路用の読みこみバッファを初期化できない。
+	  
+  </p></li>
+
+  <li>"Fatal:1252 cannot allocate circuit array"
+	  <p>
+	  仮想回路保存用の配列(VCE array)を初期化できない。
+	  
+  </p></li>
+
+  <li>"Fatal:1253 cannot initialize int2 search engine:%s"
+	  <p>
+	  パケットベクトライザの、アドレスと仮想回路を検索する
+	  検索エンジンを初期化できない。
+	  
+  </p></li>
+
+  <li>"Fatal:1256 pointer to tcpcontext is null"
+	  <p>
+	  tcpcontext を指すポインタがNULLである。Sanityチェックにひっかかっている。
+
+  </p></li>
+
+  <li>"Fatal:1260 win32 fatal: gethostbyname() error:%s"
+	  <p>
+	  Winsockにおいて、 gethostbyname が失敗した。
+
+  </p></li>
+
+  <li>"Fatal:1265 Memory shortage when creating tcpcontext state buffer"
+	  <p>
+	  vce_tcpcontext_create において、メモリが不足しているため、
+	  状態つきプロトコル用の状態管理メモリを確保できなかった。
+
+  </p></li>
+
+  <li>"Fatal:1268 Cannot reallocate vec's state buffer array. (%s)"
+	  <p>
+	  パケットベクトライザが、状態つきプロトコル管理用の
+	  状態バッファを再わりあてできなかった(メモリ不足)。
+
+  </p></li>
+
+  <li>"Fatal:1270 vce_scandir is not supported on this operating system"
+	  <p>
+	  vce_scandir 関数は、
+	  このオペレーティングシステムではサポートされていない。
+
+  </p></li>
+
+  <li>"Fatal:1277 setsockopt(SO_REUSEADDR) fail:%s"
+	  <p>
+	  SO_REUSEADDR の設定に失敗した。
+
+  </p></li>
+
+  <li>"Fatal:1280 cannot add ipv4 filter for conn: serious bug? net:%s mask:%s flags:%d"
+	  <p>
+	  conn_t に対するIPv4フィルタの設定ができなかった。
+	  VCEの内部的なバグの可能性が高い。
+
+  </p></li>
+
+  <li>"Fatal:1281 cannot add ipv4 filter for circ: serious bug? net:%s mask:%s flags:%d"	  
+	  <p>
+	  circ_t に対するIPv4フィルタの設定ができなかった。
+	  VCEの内部的なバグの可能性が高い。
+	  
+</p></li></ul>
+
+<h3><a name="warning"></a>Warningメッセージ</h3>
+<p>Warningメッセージは、とりあえずVCEは動作を続けられるが、
+  今後他の資源の枯渇や処理性能の低下を招く可能性がある場合に出力される。
+  できるだけ warning が出ないように運用することが望ましく、
+そのためにはVCEの設定をチューニングすればよい。</p>
+<ul id="lib">
+
+  <li>"Warning:4000 freeing null pointer in %s"
+	  <p>
+	  ヌルポインタをfree しようとしている。
+	  
+  </p></li>
+
+  <li>"Warning:4001 freeing an out-of-bound element in %s address:%p master-address:%p"
+	  <p>
+	  解放しようとしている要素は、配列のメモリ領域の外側に位置している。
+	  
+  </p></li>
+
+  <li>"Warning:4002 freeing an oddly-aligned element in %s address:%p master-address:%p sizeof:%u"
+	  <p>
+	  解放しようとしている要素は、配列の要素でない別なバッファへの
+	  ポインタである。
+	  
+  </p></li>
+
+  <li>"Warning:4003 freeing an out-of-bound element in %s address:%p master-address:%p sizeof:%u"
+	  <p>
+	  解放しようとしている要素は、配列のメモリ領域の外側に位置している。
+	  
+  </p></li>
+
+  <li>"Warning:4010 server packet has bad length"
+	  <p>
+	  サーバから送信されてきたパケットが、変な長さである。
+	  
+  </p></li>
+
+  <li>"Warning:4011 server: request queue is full"
+	  <p>
+	  共有メモリのロック要求リクエストキューが一杯である。
+	  
+  </p></li>
+
+  <li>"Warning:4012 server: being shutting down"
+	  <p>
+	  共有メモリのサーバが現在シャットダウン中である。
+	  
+  </p></li>
+
+  <li>"Warning:4013 server: invalid argument"
+	  <p>
+	  共有メモリのサーバにとって、理解できないパラメータが
+	  クライアントから送られてきた。
+	  
+  </p></li>
+
+  <li>"Warning:4014 unknown server error: %d"
+	  <p>
+	  サーバが、クライアントにとって理解できない
+	  エラーコードを送ってきた。単に無視する。
+	  
+  </p></li>
+
+  <li>"Warning:4015 request timeout for ofs:%u len:%u"
+	  <p>
+	  クライアントからのリクエストがタイムアウトした。
+	  
+  </p></li>
+
+  <li>"Warning:4016 unknown reply from server:0x%x"
+	  <p>
+	  サーバからのコマンドが理解できない。
+	  
+  </p></li>
+
+  <li>"Warning:4017 sender() returns %d not %d"
+	  <p>
+	  レコードを送信できなかった。
+	  
+  </p></li>
+
+  <li>"Warning:4018 sender() returns %d not %d"
+	  <p>
+	  レコードを送信できなかった。
+	  
+  </p></li>
+
+  <li>"Warning:4080 bfenc: no space left on %d's ewb"
+	  <p>
+	  エンコード後のデータの書きこみバッファに空きがないため、
+	  ソケットにデータを送信できなかった。
+	  
+  </p></li>
+
+  <li>"Warning:4100 tcp: only %d connections are usable"
+	  <p>
+	  VCEのコネクション数制限にひっかかるため、表示の本数しか
+	  利用できません。
+	  
+  </p></li>
+
+  <li>"Warning:4101 tcp: accept() error. os_errno:%s port:%d"
+	  <p>
+	  accept()エラー。
+	  
+  </p></li>
+
+  <li>"Warning:4102 tcp: conn_alloc fail no more accept. max:%d port:%d"
+	  <p>
+	  VCEが管理できるコネクションの数の最大に達っしているため、
+	  これいじょうTCPコネクションを追加(accept)できない。
+	  
+  </p></li>
+
+  <li>"Warning:4103 tcp: acceptwatcher fail fd:%d"
+	  <p>
+	  acceptwatcher として指定されている関数がエラーを返した。
+	  
+  </p></li>
+
+  <li>"Warning:4104 select() returns %d: %s"
+	  <p>
+	  select()が不正な値を返した。
+	  
+  </p></li>
+
+  <li>"Warning:4105 connection timeout. fd:%d sec:%d"
+	  <p>
+	  コネクションが、クライアントの調子がわるいせいで
+	  タイムアウトしてしまった。タイムアウトの値は、
+	  vce_tcpcontext_create 関数の呼びだしの時点で指定されている。
+	  
+  </p></li>
+
+  <li>"Warning:4200 vecp buffer full. closing client connection."
+	  <p>
+	  バッファがいっぱいなので、クライアントとの接続を切った。
+	  一般にクライアントへの書きこみバッファが一杯になった場合は、
+	  クライアントの通信状況が悪いと判断して、接続を切る。
+	  
+  </p></li>
+
+  <li>"Warning:4201 vecp buffer full. closing client connection."
+	  <p>
+	  バッファがいっぱいなので、クライアントとの接続を切った。
+	  
+  </p></li>
+
+  <li>"Warning:4202 vecp cannot update search engine on fd:%d"
+	  <p>
+	  新しいクライアントピアアドレスを検索エンジンに登録できない。
+	  クライアントにとってはFatalだが、サーバにとっては、
+	  検索エンジンがいっぱいになっているだけなので Warning である。
+	  
+  </p></li>
+
+  <li>"Warning:4203 vecp buffer full. closing client connection."
+	  <p>
+	  バッファがいっぱいなので、クライアントとの接続を切った。
+	  
+  </p></li>
+
+  <li>"Warning:4204 vecp: bad protocol magic"
+	  <p>
+	  プロトコルのマジックナンバーがおかしい
+	  <p>
+	  クライアントがバグっているか、クラックの可能性あり。	  	  
+	  
+  </p></li>
+
+  <li>"Warning:4205 vecp: bad version number"
+	  <p>
+	  プロトコルのバージョン番号がおかしい
+	  <p>
+	  クライアントがバグっているか、クラックの可能性あり。	  
+	  
+  </p></li>
+
+  <li>"Warning:4206 vecp: bad content length:%d"
+	  <p>
+	  プロトコルのレコード長がおかしい。
+	  <p>
+	  クライアントがバグっているか、クラックの可能性あり。
+	  
+  </p></li>
+
+  <li>"Warning:4207 vecsv: bad protocol magic on vp connection"
+	  <p>
+	  VPコネクション(ベクトライザとサーバ間のコネクション)
+	  において、プロトコルのマジックナンバーが異常。
+	  
+  </p></li>
+
+  <li>"Warning:4208 vecsv: bad version number on vp connection"
+	  <p>
+	  VPコネクション(ベクトライザとサーバ間のコネクション)
+	  において、プロトコルのバージョン番号が一致しない。
+	  
+  </p></li>
+
+  <li>"Warning:4209 vecsv: bad content length:%d"
+	  <p>
+	  VPコネクション(ベクトライザとサーバ間のコネクション)
+	  において、レコード長がおかしい。クラックの可能性あり。
+	  
+  </p></li>
+
+  <li>"Warning:4210 vecsv: cannot write data into vp connection"
+	  <p>
+	  VPコネクションへの書きこみバッファが一杯になっているせいで送信できない。
+	  もしくはコネクションの状態がおかしい。
+	  
+  </p></li>
+
+  <li>"Warning:4211 vecsv: cannot write to circuit buffer.ret:%d start:%d end:%d len:%d"
+	  <p>
+	  仮想回路の書きこみバッファが一杯になっているかトラブルが発生している。
+	  それが理由で書きこめない。
+
+  </p></li>
+
+  <li>"Warning:4215 winsock select() returns SOCKET_ERROR, and WSAGetLastError:%d"
+	  <p>
+	  Winsockにおいて select がエラーコードを返している。
+	  
+  </p></li>
+
+  <li>"Warning:4214 re-freeing an element in %s address:%p"
+	  <p>
+	  同じ要素を2回解放しようとしている。
+	  アプリケーションが2回free_array_object を呼びだした可能性が高い。
+	  
+  </p></li>
+
+  <li>"Warning:4220 SHA-1 keygen output buffer is smaller than 40byte. It usually needs 40 byte. len:%d"
+	  <p>
+	  SHA-1ハッシュがキーのためのハッシュを生成しようとしているが、
+	  与えられたバッファが40バイトよりも少ない。40よりも多くしないと、
+	  windows の _snprintf のバグにひっかかって、UNIXとWindowsで
+	  挙動が異なるようになる可能性がある。64を推奨。
+  </p></li>
+
+  <li>"Warning:4223 bin16: unparser cannot write full record. try:%d actual:%d"	  
+	  <p>
+	  bin16プロトコルの送信関数において、完全なレコードを送信するに足る
+	  送信バッファが利用可能でなかった。そのため VCE_EWBFULL を返さざるを
+	  えなかった。
+
+  </p></li>
+
+  <li>"Warning:4225 vce_tcpcontext_create: reached max connection num %d"	  
+	  <p>
+	  tcpコンテキストに設定された最大接続数に到達してしまった。
+
+  </p></li>
+
+  <li>"Warning:4300 vce_conn_io: conn does not have parser function. use vce_tcpcontext_set_conn_parser"
+	  <p>
+	  TCPコネクション conn が、パーサを持っていない。
+	  vce_tcpcontext_set_conn_parser を用いてパーサを設定しないと
+	  データ入力に対する処理ができない。
+
+  </p></li>
+
+  <li>"Warning:4301 vce_protocol_parser_vecmain_server: circ does not have parser function. use vce_tcpcontext_set_circ_parser"	  
+	  <p>
+	  仮想回路 circ が、パーサを持っていない。
+	  vce_tcpcontext_set_circ_parser を用いてパーサを設定しないと
+	  データ入力に対する処理ができない。
+  </p></li>
+
+  <li>"Warning:4310 tcpcontext_try_accept: IP source address filter denies this address: %s"	 
+	  <p>
+	  conn_t の接続が、IPソースアドレスフィルタによって拒否された。
+	  これは、FILTER_POLICY_LOG を設定しているかどうかに関係なく
+	  verbose モードならかならず表示される。
+	  FILTER_POLICY_LOG を設定すると、verboseモードに関係なく出力される。
+  </p></li>
+
+  <li>"Warning:4311 vectorizer server: IP source address filter denies this address: %s"	  
+	  <p>
+	  circ_t の接続が、IPソースアドレスフィルタによって拒否された。
+	  挙動はconn_tのものと同じ。
+</p></li></ul>
+
+<h3><a name="bug"></a>Bugメッセージの一覧</h3>
+<p>Bugメッセージは、アプリケーションの努力ではどうしようもないエラーが
+  ほとんどである。コミュニティーエンジン社では、Bugメッセージの報告をうけたら
+すぐにデバッグ作業を開始する。</p>
+<ul id="lib">
+
+  <li>"Bug:7000 blank-list stack overflow: %s"
+	  <p>
+	  配列の空きリストの管理異常。
+
+  </p></li>
+
+  <li>"Bug:7002 use flag is 0! in %s address:%p"
+	  <p>
+	  vce_show_array_usage 関数の配列 sanity チェック時のエラー
+	  
+  </p></li>
+
+  <li>"Bug:7003 usenum doesn't match in %s stack:%d link_inuse:%d"
+	  <p>
+	  使用中カウントの数が、スタックが実際に伸びている長さと異なる。
+	  
+  </p></li>
+
+  <li>"Bug:7010 tcp: nobuf?"
+	  <p>
+	  TCP用の空きバッファが、空いてるはずが、不足している。
+	  
+  </p></li>
+
+  <li>"Bug:7011 tcp: nomem?"
+	  <p>
+	  TCP用の空きメモリが、確保されてるはずが、不足している。
+	  
+  </p></li>
+
+  <li>"Bug:7100 vecp: cannot delete search entry"
+	  <p>
+	  検索エンジンに登録してるはずなのに登録されてない。
+	  そのせいで検索エンジンから削除できなかった。
+	  
+  </p></li>
+
+  <li>"Bug:7101 vecp: cannot find client connection"
+	  <p>
+	  クライアントとの接続が検索エンジンで見つけることができなかった。
+	  
+  </p></li>
+
+  <li>"Bug:7102 vecp: cannot find client connection"
+	  <p>
+	  クライアントとの接続が検索エンジンで見つけることができなかった。
+	  
+  </p></li>
+
+  <li>"Bug:7103 vecsv: cannot delete search entry"
+	  <p>
+	  検索エンジンに登録してるはずなのに登録されてない。
+	  そのせいで検索エンジンから削除できなかった。
+	  
+  </p></li>
+
+  <li>"Bug:7104 vecsv: cannot find client connection"
+	  <p>
+	  クライアントとの接続が検索エンジンで見つけることができなかった。
+	  
+  </p></li>
+
+  <li>"Bug:7105 vecsv: cannot delete client circuit from search engine."
+	  <p>
+	  検索エンジンに登録してるはずなのに登録されてない。
+	  そのせいで検索エンジンから削除できなかった。
+
+  </p></li>
+
+  <li>"Bug:7106 vecsv: vce_circ_close fail"
+	  <p>
+	  vce_circ_close関数内部で、閉じるべき仮想回路がみつからなかった。
+	  この表示は、アプリケーションが2回以上同じ仮想回路に対してcloseすると
+	  発生し得るが、そうでない場合はVCEのバグである。
+
+  </p></li>
+
+  <li>"Bug:7109 state buffer is full.(accept)"	  
+	  <p>
+	  コネクションは一杯でないのに、状態管理バッファだけ一杯になっている。
+	  あきらかに、VCEのバグである。
+
+  </p></li>
+
+  <li>"Bug:7112 connect: statebuf shortage"	  
+	  <p>
+	  vce_tcpcontext_connect するときに、状態管理バッファだけ一杯になっている。
+	  これはVCEのバグである。
+</p></li></ul>
+
+<h3><a name="note"></a>Noteメッセージの一覧</h3>
+ <p>Noteメッセージは、VCEを verbose モードに設定したときだけ出力される。
+   VCE が Fatal や Warning のメッセージを出力しているときに、
+  それらに対してデバッグしたいときや、VCE の動作を詳細にログしたいときに
+ verbose モードに設定して Noteメッセージを出力させ、デバッグに役立てる。</p>
+ <ul id="lib">
+
+  <li>"Note:10001 NOOP PROTOCOL: %d bytes from conn_t. serial:%d"
+	  <p>
+	  NOOP プロトコルでデータを受信した。
+	  
+  </p></li>
+
+  <li>"Note:10002 DUMP PROTOCOL: %d bytes from conn_t. serial:%d"
+	  <p>
+	  DUMP プロトコルでデータを受信した。
+	  
+  </p></li>
+
+  <li>"Note:10010 init blowfish on fd:%d"
+	  <p>
+	  Blowfishルーチンを初期化した。
+	  
+  </p></li>
+
+  <li>"Note:10011 init blowfish encoder on fd:%d"
+	  <p>
+	  Blowfishエンコーダを初期化した
+	  
+  </p></li>
+
+  <li>"Note:10100 init int-search OK name:%s htsize:%d entnum:%d"
+	  <p>
+	  整数キーのサーチエンジンを初期化できた。
+	  
+  </p></li>
+
+  <li>"Note:10101 init str-search OK name:%s htsize:%d entnum:%d"
+	  <p>
+	  文字列キーのサーチエンジンを初期化できた。
+	  
+  </p></li>
+
+  <li>"Note:10102 init int2-search OK name:%s htsize:%d entnum:%d"
+	  <p>
+	  2整数キーのサーチエンジンを初期化できた。
+	  
+  </p></li>
+
+  <li>"Note:10103 cleaned up search engine %s"
+	  <p>
+	  サーチエンジンを解放した
+	  
+  </p></li>
+
+  <li>"Note:10200 new connection fd:%d I:%d sbuflen:%d"
+	  <p>
+	  新規コネクションをacceptした
+	  
+  </p></li>
+
+  <li>"Note:10201 non blocking connect()."
+	  <p>
+	  コネクションをnon blocking に設定した
+	  
+  </p></li>
+
+  <li>"Note:10202 connect ok on %d"
+	  <p>
+	  connect()が成功した
+	  
+  </p></li>
+
+  <li>"Note:10220 malloc(%u) returns %p"
+	  <p>
+	  malloc が値を返した
+	  
+  </p></li>
+
+  <li>"Note:10221 free(%p)"
+	  <p>
+	  freeした
+	  
+  </p></li>
+
+  <li>"Note:10300 vec REGISTERED remoteport:%d"
+	  <p>
+	  パケットベクトライザが、リモートのホストを登録した
+	  
+  </p></li>
+
+  <li>"Note:10301 vec UNREGISTERED remoteaddr:%x:%p"
+	  <p>
+	  パケットベクトライザが、リモートのホストを削除した
+	  
+  </p></li>
+
+  <li>"Note:10302 vec CLOSE command from server"
+	  <p>
+	  CLOSEコマンドをサーバから受けとったので、能動的にクライアントの
+	  コネクションを切断した。
+	  
+  </p></li>
+
+  <li>"Note:10303 vec ACCEPT OK on %x:%d"
+	  <p>
+	  パケットベクトライザが accept 成功。
+	  
+  </p></li>
+
+  <li>"Note:10304 vec CLOSE OK on %x:%d"
+	  <p>
+	  パケットベクトライザがcloseした。
+	  
+  </p></li>
+
+  <li>"Note:10310 init_array OK index:%d bufmaster:%p size:%u num:%d name:%s"
+	  <p>
+	  配列を初期化した。
+
+  </p></li>
+
+  <li>"Note:10320 conn_t detected EOF on fd %d"
+	  <p>
+	  TCPにおいて read が 0 を返した
+
+  </p></li>
+
+  <li>"Note:10321 conn_t detected read error on fd %d"
+	  <p>
+	  TCPにおいて read が -1 を返した
+
+  </p></li>
+
+  <li>"Note:10322 conn_t detected write error on fd %d (%s)"
+	  <p>
+	  TCPにおいて write が  -1 を返した。errno の値を表示。
+
+  </p></li>
+
+  <li>"Note:10323 conn_t detected encryption negotiation error on fd %d error code:%d"
+	  <p>
+	  暗号化セッションの初期化ネゴシエーションに失敗、セッション成立せず
+
+  </p></li>
+
+  <li>"Note:10324 conn_t detected decoding error on fd %d error code: %d"
+	  <p>
+	  暗号化ストリームのデコードに失敗
+
+  </p></li>
+
+  <li>"Note:10325 conn_t detected encoding error on fd %d error code: %d"
+	  <p>
+	  暗号化ストリームのエンコードに失敗
+
+  </p></li>
+
+  <li>"Note:10326 conn_t detected protocol error on fd %d error code: %d"
+	  <p>
+	  プロトコル関数(vce_protocol_parser_bin16など)がエラーコード(負)を返した
+
+  </p></li>
+
+  <li>"Note:10330 key exchange: bad client public key length: %d"
+	  <p>
+	  暗号化鍵交換において、クライアントが送信してきた公開鍵の長さ指定が異常。
+	  ほぼクラックと考えてよい。
+	  
+  </p></li>
+
+  <li>"Note:10331 key exchange: encryption negotiation is done on fd %d"
+	  <p>
+	  暗号化セッションのネゴシエーションが正常に終了し、セッション成立。
+
+  </p></li>
+
+  <li>"Note:10332 key exchange: encryption negotiation is done on fd %d"
+	  <p>
+	  暗号化セッションのネゴシエーションが正常に終了し、セッション成立。
+
+  </p></li>
+
+  <li>"Note:10333 key exchange: bad encryption version %d"
+	  <p>
+	  クライアントの暗号化バージョンが異なるためネゴシエーション不可能
+
+  </p></li>
+
+  <li>"Note:10334 key exchange: bad secret key length: %d"	  
+	  <p>
+	  相手が指定してきた秘密鍵の指定長が異常である。
+
+  </p></li>
+
+  <li>"Note:10338 vce_circ_close successful:%x %d"
+	  <p>
+	  vce_circ_close 関数が成功した。
+
+  </p></li>
+
+  <li>"Note:10340 vec: reallocated state buffer size:%d"
+	  <p>
+	  パケットベクトライザサーバが、状態管理用バッファを再わりあてできた。
+
+  </p></li>
+
+  <li>"Note:10342 allocated state buffer for conn."	  
+	  <p>
+	  コネクション(仮想回路ではない)に対して状態管理バッファを
+	  割りあてた。
+
+  </p></li>
+
+  <li>"Note:10345 vce_tcpcontext_create could allocate state buffer."	  
+	  <p>
+	  vce_tcpcontext_create 関数は、無事に状態管理バッファを
+	  わりあてることができた。
+
+  </p></li>
+
+  <li>"Note:10347 freed state buffer for conn"
+	  <p>
+	  状態管理バッファを解放できた。
+
+  </p></li>
+
+  <li>"Note:10348 vec: statebuf allocate ok"	  
+	  <p>
+	  ベクトライザのサーバで、仮想回路に状態管理バッファをわりあてる
+	  ことができた。
+
+  </p></li>
+
+  <li>"Note:10349: vec: freed state buffer for a circ"
+	  <p>
+	  仮想回路の状態管理バッファを解放した。
+
+  </p></li>
+
+  <li>"Note:10400: vce: finalized"
+	  <p>
+	  VCEが正常に終了した。 vce_finalize 関数が成功すると出力される。
+	  
+</p></li></ul>
+
+
+<br><br>
+<a href="index.html">index に戻る</a>
+<br>
+
+<div id="footer">
+Copyright 2000-2005 Community Engine Inc. All rights reserved.</div>
+
+</body> </html>

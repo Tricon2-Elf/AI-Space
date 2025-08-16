@@ -1,0 +1,44 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel="stylesheet" href="../vce.css" type="text/css">
+<title>VCE 1.1.4 official document (Japanese)</title>
+</head>
+
+<body>
+		<h1>VCEによるP2P接続
+		</h1>
+		<p class="description">
+			VCEではpeer-to-peerで接続を確立するために、TCPによるClient/Server方式の1:1ではNATやFWにより接続を待ち受ける事が出来ないので 
+			UDPによる1:1での接続を試みる。IPマスカレードやファイヤーウォールの設定を変えることなく接続が可能になることがあり、接続率が大幅に上がる。 
+			またpeer-to-peerなのでClientとServerの二つのアプリケーションを用意することなく一つのアプリケーションを開発すればよいので 
+			単純な1:1の通信に至っては開発効率が上がる事もある。</p>
+		<h2 class=red>Client/Serverとの違い</h2>
+		<P class="description">1:1で接続するので複数の人と接続するには複数のセッションを自分から開かねばならない。TCPでのServerのようにListeningの動作ができないので"待ち受ける"ということができず、接続するときには相手のアドレス/ポートを事前になんらかの手段で知っておく必要がある。またServerのように一箇所でまとめて管理できないので複数セッションを張るときには同期など厄介な問題が増えると思われる。VCEでP2Pの利用手段としてはClient/ServerシステムではServerに負荷がかかりすぎるような送受信処理等をClient間で直接P2P接続を図り、Serverの負荷軽減等が目的。</P>
+		<h2 class=red>接続方法</h2>
+		<P class="description">tcpcontextを作るときはクライアントセッションを作るときと同じようにtcpcotect_createを呼び出す。暗号化やその他細かいオプションなどは設定しても動作しなかったり、設定できない場合がある。VCEのP2P接続ではUDPを使い通信するので、UDPセッション用バッファ等のメモリを割り当てる必要がある。vce_tcpcontext_setup_p2p(tp,256,4096*8);のようにsetup_p2p関数を呼び出す。この場合は256*4096*8バイト分のメモリを確保しUDP関連の処理に割り当てる。割当量の目安は1セッションで256kバイト程度。割り当てたら、vce_udp_connect関数を呼び出す。tcpcontext_connectと違うのは引数に自分が待ち受けるポートを加えて設定するという事。</P>
+		<pre class="green">
+vce_tcpcontext_setup_p2p(tp,256,4096*8);
+tp=
+vce_tcpcontext_create(0,"0.0.0.0",0,100,65536,65536,60*60*24*365,VCE_BLOCK_CIPHER_NONE,0,0,0,0);
+vce_tcpcontext_set_conn_parser(tp,vce_protocol_parser_bin16,recv_callback);
+vce_tcpcontext_set_conn_closewatcher(tp,pp_closewatcher);
+c=vce_tcpcontext_connect( tp, hostname, port ,localport);
+</pre>
+		<P class="description">※おそらく今後の変更で追加オプションや接続方法が変わっていく。</P>
+		<h2 class=red>送受信処理</h2>
+		<P class="description">通常通りパーサや受信コールバックを設定し、送受信をする。</P>
+		<h2 class=red>固有の設定等</h2>
+		<P class="description">現在、特になし。UDP処理内部で自動判定されたり、自動調整されたりする。</P>
+		<br>
+
+<br><br>
+<a href="index.html">index に戻る</a>
+<br>
+
+<div id="footer">
+Copyright 2000-2005 Community Engine Inc. All rights reserved.</div>
+	</body>
+</html>

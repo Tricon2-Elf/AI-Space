@@ -1,0 +1,441 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html> <head>
+<link rel="stylesheet" href="../vce.css" type="text/css">
+<title>VCE 1.1.4 official document (English) </title>
+</head>
+
+<body>
+<h1>Connection Switching function guide</h1>
+
+
+<h2>Index</h2>
+<ol>
+  <LI><a href="#about">What is The Connection Switch?</a></li>
+  <LI><a href="#system">Mechanism of the Connection Switch</a></li>
+  <LI><a href="#howto">Procedure for Using the Connection Switch</a></li>
+  <LI><a href="#api">The Connection Switch API</a></li>
+  <LI><a href="#swp">swp Command</a></li>
+  <LI><a href="#swpadm">swpadm Command</a></li>
+</ol>
+
+<a name="about"></a>
+<h2>What is The Connection Switch?</h2>
+<p>
+The connection switch is the function to improve server transaction
+process performance by locating a relay server (hereinafter, an "swp")
+between an application client program and server program to undertake
+all the cipher or packet compression processes.
+It is just like a SSL decoder of the Web systems,
+if a general Web application is concerned for instance.
+VCE has this function built-in, and further, offers the function to
+switch the server of a client-server connection to a different
+server in the backend network, by connecting respective swp's and
+servers in a round-robin system.    (Diagram)
+<BR>
+<img src="../images/conn_sw_diagram.gif">
+<BR>
+<B>Figure:Connection Switching Diagram</B>
+<BR></p>
+<p>
+By this function, an application that distributes that's
+loads transparently to using more than one server
+gains the following advantages:
+</p>
+
+<ul>
+  <LI>Structure of a client program can be simplified.</li>
+  <LI>The error rate can be reduced drastically,
+      since a data exchange, that occurs upon switching connection,
+      is executed using a high-quality server network only. </li>
+  <LI>The error rate may be further reduced,
+      because no TCP handshake is exchanged upon reconnection. </li>
+  <LI>Security improves for there lies a sort of
+      gateway between a server and client.</li>
+  <LI>May be used for the purpose of an easy
+      "data exchange with locking",
+      because the state buffer of circ_t is transferred as well.</li>
+  <LI>Since swp is not dicated to specific application,
+      more than one application can reuse it
+      utilizing machine power efficiently. </li>
+</ul>
+<p>
+On the other hands, we can find some weak points like:
+</p>
+<ul>
+  <LI>On an extremely large scale, say over 1000 swp's or server machines,
+      only a limited improvement of performance can be expected
+      if you use this function as it is.
+      Though, more practically, plural data centers are prepared for such
+      large-scale contents. So this weak point cannot be a vital problem.</li>
+  <LI>Since a few to 20 millisecond delay is added through relay,
+      this function cannot be used by an application requiring a
+      high-response of 10 to 20 milliseconds all the time.</li>
+</ul>
+<p>
+ Probably, none of the above restrictions should be an obstacle for
+areas other than online action games that requires an extraordinary response.
+</p>
+
+<a name="system"></a>
+<h2>Mechanism of the Connection Switch</h2>
+<p>
+ The connection switch starts off calling the vce_circ_switch
+function from a server program towards the circ_t. 
+Once the vce_circ_switch function is invoked,
+the server VCE library transmits a connection switch
+request to swp, then the swp relays such request to a new server to move into,
+without informing the client of it.
+The new server then secures memory, and when successful,
+returns the results to the swp.
+3 handshakes are exchanged between the current server and new server
+in order to cope with data reception from a client under the
+switching process, guaranteeing that no packet losses should occur.
+State transition through packet transmission is explained
+as in the diagram below.
+</p>
+<BR>
+<img src="../images/conn_sw_state.gif">
+<BR>
+<B>Figure:	Connection Switching State-flow</B>
+
+<p>
+swp reads a server's IP address and port information
+in the form of a table (just like fstab of UNIX),
+and establishes a connection to respective servers in compliance
+with the configuration in the table.
+Even if one of the servers is suddenly abnormally terminated,
+connections other than the client connections currently connecting to
+the down server will be reconnected after a certain period of time and
+continue services, without being influenced by such termination. 
+</p>
+<P>
+Each server has an individual ID that is strictly consistent with
+the waiting port number.
+The reason why ID and the port number are consistent is that when the number
+of servers increases, debugging efficiency becomes dramatically higher
+when UNIX standard analyzing tools such as "netstat -tn" is used,
+rather than VCE.
+Besides, plural servers having the same ID cannot exist on a single
+"server table".
+</p>
+<p>
+A client program connects to the frontend side of swp when attempting
+to connect to a server, but in fact,
+it is necessary to determine which server accepts such new connection.
+The standard attached swp supports three algorithms;
+"top", "sequential" and "random", to
+determine which server will actually accept. 
+</p>
+
+<a name="howto"></a>
+<h2>Procedure for Using the Connection Switch</h2>
+<p>
+An application using the connection switch is
+put into operation as in the following procedure:
+</p>
+
+<ol>
+  <LI>Start up respective servers with the connection switch API installed.</li>
+  <LI>Start up all swp's and have them read a configuration table.</li>
+</ol>
+
+
+<a name="api"></a>
+<h2>The Connection Switch API</h2>
+<P>
+  Coding with regard to the connection switch is only necessary to
+the server side.
+No additional code is required on the client side.
+Furthermore, standard swp's can be used,
+though original functions may be implemented by altering swproxy.c
+that is included in the sample code.
+The code logic in case of using the connection switch is as follows
+(refer to autotest/swsv.c):
+</p>
+<pre>
+vce_tcpcontext_create
+vce_tcpcontext_set_circ_parser
+vce_tcpcontext_set_circ_switchwatcher
+vce_tcpcontext_set_circ_switchresultwatcher
+vce_vec_init_mainserv
+while(1){
+  vce_heartbeat();
+}
+</pre>
+
+
+<p>
+The following functions, structures and enumeration types
+are concerned with operation of the connection switch.
+Refer to the reference manual for details of respective API functions.
+</p>
+<ul>
+  <LI>SWENT_STATE Enumeration Type<p>
+      Used by a data structure for storing the "server table" of the
+      connection switch.
+      It is actually used only within VCE, and will never
+      be used for coding on an application level.</p></li>
+  <LI>SWITCH_RESULT Enumeration Type<p>
+	  This is the resultant code returned after a switch request from the
+      switch destination server or from swp.
+      Respective values have the following meanings:</p>
+	  <ul>
+		<LI>SWITCH_RESULT_OK : Terminated normally. 
+            The current server may (must) release an applicable circ.</li>
+		<LI>SWITCH_RESULT_NOTFOUND :A server with this particular ID
+            does not exist on the server table.</li>
+		<LI>SWITCH_RESULT_OFFLINE : A server with this ID is currently down.</li>
+		<LI>SWITCH_RESULT_BAD_STATEBUF :
+            Switch is not allowed for the state buffer sizes of a switch
+            destination server and current server are different. </li>
+		<LI>SWITCH_RESULT_CIRC_FULL :
+            The switch destination server is full of circ's.</li>
+		<LI>SWITCH_RESULT_CALLBACK_FAIL :
+            switchwatcher of a switch destination server returned a
+            negative value, meaning a switch was rejected. </li>
+	  </ul>
+	  If a switch fails, a switch source server should return some error to
+      a client, or go on with the current process. </p></li>
+
+  <LI>switchent_t Structure<p>
+	  Used by swp(swproxy.c).
+      The structure to store an entry to the server table.</p></li>
+  <LI>vce_switchcontext_create Function<p>
+      Used by swp. The structure to manage the connection state or to
+      store configurations of connection switching.</p></li>
+  <LI>vce_switchtable_read_from_file Function<p>
+	  Used by swp to read the server table from a file onto an array of 
+      the switchent_t structure. </p></li>
+  <LI>vce_switchtable_show Function<p>
+      Displays the contents of the server table.</p></li>
+  <LI>vce_circ_switch Function<p>
+      Switches a certain circ_t to another server, having appointed an ID.</p></li>
+  <LI>vce_tcpcontext_set_circ_switchresultwatcher Function<p>
+      Invoked when a switch source server completes switching operation.
+      Check an argument of the SWITCH_RESULT enumeration type to confirm 
+      whether there was an error or succeeded. </p></li>
+  <LI>vce_tcpcontext_set_circ_switchwatcher Function<p>
+      The circ_t, that a switch destination server attempted to switch,
+      can be detected with this function.
+      At the point this callback is invoked,
+      the state buffer or attached data is checked, and may be rejected or
+      otherwise treated if it does not comply with the reception conditions.
+      When an on-line game is concerned for instance,
+      it is easy to make a server that only
+      allows level 10 or higher players to enter.</p></li>
+</ul>
+
+
+<a name="swp"></a>
+<h2>swp Command</h2>
+
+<p>
+ The swp command is the standard connection switch relay program
+attached to VCE that realizes the minimum functions.
+Here is explained the startup options and input file
+format of the swp command as follows: 
+</p>
+
+<h2>swp's Startup Options</h2>
+<pre>
+swp CONFIG_FILE SWITCHTABLE_FILE
+</pre>
+<p>
+ Designate a configuration file as CONFIG_FILE.
+Different files may be used for respective swp's,
+or again the same files can be used as the configuration file.
+In case a single swp runs for each machine, the same files should be used.
+</p>
+
+<p>
+ A configuration file is in the format acceptable
+by the vce_read_simple_config_file function of VCE.
+The directives (commands) allowed to be written in a configuration file
+are as follows:
+</p>
+
+<ul>
+  <LI>verbose=0/1<p>
+      Select 1 when designating the verbose mode of VCE, otherwise 0.
+      Since setting this flag to 1 will lead to performance decrement
+      and a growth in log file,
+      it should be set to 0 when actually administrating
+      a server on a commercial basis.</p></li>
+  <LI>read_write_log=0/1<p>
+      Select 1 when dumping all transmission and reception, otherwise 0. 
+      Since setting this flag to 1 will lead to performance
+      decrement and a growth in log file,
+      it should be set to 0 when actually administrating
+      a server on a commercial basis.</p></li>
+  <LI>heartbeat_wait=0/1<p>
+      The value fed to vce_heartbeat_wait_flag() by the SWP main loop.  
+      Setting this to 0 will lead the CPU to be occupied 100%,
+      but to the highest-speed response.
+      Setting this to 1 will cause at most 100 millisecond delay per loop,
+      though CPU consumption will be reduced to almost zero.
+      This should be adjusted depending on the purpose of use.
+      (The default value is 1)</p></li>
+  <LI>frontend_bind_port=PORTNUMBER<p>
+	  The frontend (a port that accepts a connection from a client) number.
+      </p></li>
+      
+  <LI>frontend_cipher=none/blowfish/rijndael/twofish<p>
+      Cipher algorithm to be used for communication with a client.
+      Needless to say that setting up each swp the same will make it easier.
+      </p></li>
+　 <LI>frontend_cipher_key_length=NUMBER<p>
+    The key length of a cipher key to be used for communication with a client.
+    Note that values allowed to be used may vary
+    depending on th cipher algorithm. </p></li>
+  <LI>frontend_send_buffer_size=NUMBER<p>
+      A transmission buffer for communication with a client.
+      Normally takes a value from 16384 to 32768-
+      it depends on the contents of the application.</p></li>
+  <LI>frontend_recv_buffer_size=NUMBER<p>
+      A receipt buffer for communication with a client.
+      Normally takes valued from 16384 to 32768-
+      it depends on the contents of application though.
+      It is good to make this larger than a transmission buffer.
+      </p></li>
+  <LI>frontend_close_timeout=NUMBER<p>
+      Disconnects automatically when no communication
+      with a client is held for a certain period of time.
+      Designated in seconds. </p></li>
+  <LI>frontend_max_connection=NUMBER<p>
+      The maximum number of TCP sessions a client is allowed to connect to 
+      this swp. </p></li>
+  <LI>admin_bind_port=NUMBER<p>
+      The awaiting port number for a management program to establish a 
+      connection.</p></li>
+  <LI>admin_key_string=STRING<p>
+      A password used by a management program to establish a connection. 
+      (plain text)</p></li>
+  <LI>server_max_connection=NUMBER<p>
+      The maximum number of servers for an application.</p></li>
+  <LI>server_send_buffer_size=NUMBER<p>
+      A transmission buffer to be used for communication with a server.
+      This needs to be far larger than the frontend-around 256k to 1M would be
+      ideal.</p></li>
+  <LI>server_recv_buffer_size=NUMBER<p>
+      A reception buffer to be used for communication with a server.
+      This needs to be far larger than the
+      frontend-around 256k to 1M would be ideal.</p></li>
+  <LI>server_close_timeout=NUMBER<p>
+      Time that no communication with a server is held for,
+      before a TCP session will be disconnected (in seconds).  </p></li>
+  <LI>server_cipher=none/blowfish/rijndael/twofish<p>
+      Cipher algorithm to be used for communication with a server.
+      </p></li>
+  <LI>server_cipher_key_length=NUMBER<p>
+      The key length of cipher algorithm to be used
+      for communication with server.</p></li>
+  <LI>switch_reject_buf_size=NUMBER<p>
+      The buffer size to guarantee that no data will be lost
+      even if a client transmits data in the course of connection switching.
+      It would be enough to secure the same extent as recvbuf of frontend.
+      In case a client program only transmits a small packet at intervals,
+      this buffer could be smaller than recvbuf of frontend.
+      </p></li>
+  <LI>accepter_policy=top/sequential/random<p>
+      Select algorithm that determines which server is actually accepted 
+      when a client establishes a connection to swp.
+      In top mode, the first server in the server table is chosen.
+      In sequential mode, servers are selected in order
+      from top to bottom in the server table. In random mode,
+      a server is selected randomly from the server table.
+      </p></li>
+  <LI>proc_file=PATH<p>
+      Designates a path of the state file output at intervals.</p></li>
+  <LI>proc_file_tmp=PATH<p>
+      Designates a path of a temporary file for the state
+      file output task - the state infromation output by the
+      swp is temporarly saved in the
+      temporary file designated by this PATH, then later renamed.</p></li>
+  <LI>proc_interval=NUMBER<p>
+      Designates an interval in which the state file is output
+      (in seconds).</p></li>
+</ul>
+
+<BR><BR>
+<p>
+In SWITCHTABLE_FILE, a list of potential servers to be a switch
+destination server is defined.
+Just enter an IP address and port number pointed off with a comma,
+without space or anything else, following "server=". It's that simple.
+No port number overlap is allowed.
+Since the port number is used as the server ID,
+the port numbers must not overlap each other even if IP addresses differ.
+</p>
+<pre>
+server=192.168.1.24,12345
+server=192.168.1.24,12355
+</pre>
+
+<a name="swpadm"></a>
+<h2>swpadm Command</h2>
+<p>
+The swpadm command is a program for swp remote operation. 
+A source code is attached as a sample program.
+</p>
+
+<h3>swpadm's Startup Options</h3>
+<pre>
+swpadm HOST PORT KEY_STRING PARAM0 PARAM1 PARAM2 ...
+</pre>
+<UL>
+  <LI>HOST : An IP address of the machine where swp is in action.</li>
+  <LI>PORT : admin_bind_port of swp. </li>
+  <LI>KEY_STRING : A character string matching with admin_key_string of swp.</li>
+  <LI>PARAM0 : 1st parameter (character string), compulsory. </li>
+  <LI>PARAM1 : 2nd parameter(character string), may be omitted.</li>
+</ul>
+<p>
+swpadm only has the function of transmitting the character string designated by PARAMn as is, and printing the character string returned from swp to the standard output.
+</p>
+
+<h2>What Can swpadm Do?</h2>
+<P>
+The ollowings are possiblfe with swpadm. 
+Note that all of these functions must be implemented by the swp.
+</p>
+
+<ul>
+  <LI>"shutdown NUMBER"<p>
+	  Designate "shutdown" and a numerical value to PARAM0 and PARAM1  
+      respectively, then kill swp after the designated seconds.
+      </p></li>
+
+  <LI>"accept PORT FLAG"<p>
+	  Designates whether swp accepts connections with this client and 
+      later.
+      PORT is port number of the target server.
+      Select 0 to not accept, or 1 to accept them as usual.
+      The default value is 1. It's good to be executed before a shutdown.
+      </p></li>
+
+  <LI>"closeall PORT"<p>
+	  Shuts down all client connections immediately.
+      PORT is the target server's port number.</p></li>
+  <LI>"ping"<p>
+	  Check if the serer is alive or not.
+      The server will return "pong" if alive.</p></li>
+
+  <LI>"log"<p>
+	  Outputs the operation state to the swp standard error output 
+      (vce_errout).</p></li>
+
+  <LI>"switch"<p>
+	  Not implemented. 
+      Switches an arbitrary client connection to the designated server.
+      </p></li>
+</ul>
+
+
+<p><br>
+
+  <br>
+&quot;PlayStation&quot; is registered trademark and is trademark of Sony Computer Entertainment Inc.<br>
+  <a href="index.html">return to index</a></p>
+<div id="footer">
+Copyright 2000-2005 Community Engine Inc. All rights reserved.</div>
+</body> </html>

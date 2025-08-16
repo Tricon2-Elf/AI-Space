@@ -1,0 +1,102 @@
+<!doctype html public "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<title>Config</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<link rel="stylesheet" href="../../default.css" type="text/css">
+</head>
+
+<body>
+<p>
+<p><a href="../../ja/index.html">[TOP(ja)]</a> <a href="../../ja/changes.html">[ChangeLog(ja)]</a> 
+  <a href="../../ja/map.html">[Index(ja)]</a> <a href="../../ja/words.html">[Words(ja)]</a> | <a href="index.html">[AdmCli]</a> 
+  <a href="../../ja/admin_server.html">[ADMSV(ja)]</a> <a href="../../ja/remote_server.html">[RSV(ja)]</a> 
+  | <a href="../../ja/vcelog.html">[VCE-Log(ja)]</a> <a href="../../ja/monitor_command.html">[VCE-Monitor(ja)]</a> 
+</p>
+
+<h1>Configuration</h1>
+<p> You can preform precise confiuration against admcli by selecting [Tool]-[Configuration] 
+  menu dialog. </p>
+<h2>General configuration</h2>
+<dl> 
+  <dt>Line number of log window buffer</dt>
+  <dd>Configure number of text lines of system log and result log. It can lead 
+    high CPU usage by setting too much line. Default value is 500.</dd>
+</dl>
+<h2>Network configuration</h2>
+<dl> 
+  <dt>user ID</dt>
+  <dd>set user ID to log in to admsv . 
+  <dt>user password</dt>
+  <dd>ser user password to log in to admsv.</dd>
+  <dt>user nickname</dt>
+  <dd>set your nickname when chatting through admsv.</dd>
+  <dt>auto login</dt>
+  <dd>admcli automatically log in to admsv if you set this option "ON".</dd>
+  <dt>auto reconnect</dt>
+  <dd>admcli automatically reconnects to admsv if the connection is shut-down 
+    by some reason during monitoring, by setting this option "ON".</dd>
+  <dt>admsv server address</dt>
+  <dd>set server address of target admsv. admcli tries to connect to this address.</dd>
+  <dt>admsv port number</dt>
+  <dd>set port number of admsv</dd>
+  <dt>interval of network polling</dt>
+  <dd>set interval time to poll the server. The shorter, the quicker response.</dd>
+</dl>
+<h2>Log</h2>
+<dl> 
+  <dt>Directory name of system log</dt>
+  <dd>set pathname of system log directory.</dd>
+  <dt>Prefix of system log file</dt>
+  <dd>admcli uses this prefix when saving and rotating system log in the directory.<br>
+    System log file will be named like: "DIRNAME\PREFIX_YYYYMMDD.txt" </DD>
+  <dt>Directory name of result log</dt>
+  <dd>set pathname of result log directory.</dd>
+  <dt>Prefix of result log files</dt>
+  <dd>admcli uses this prefix when saving result log in the directory. It uses 
+    same rule as "system log file".</dd>
+  <dt>Direcotry name of alert log</dt>
+  <dd>set pathname of alert log directory.</dd>
+  <dt>Prefix of alert log files</dt>
+  <dd>admcli uses this preifx when saving alert log in the direcotory. same rule 
+    as "system log".</dd>
+  <dt>Directory name of graph-log</dt>
+  <dd>set pathname of graph log directory.</dd>
+  <dt>Prefix of graph log files</dt>
+  <dd>admcli uses this prefix when saving graph log. Graph log file will be named 
+    as "DIRNAME\PREFIX_identifier_type_id_YYYYMMDD.txt" .<BR>
+    For example, log of HOST-ping line will be saved in file: "graphlog/graphlog_host_ping_1_20030811.txt" 
+  </dd>
+  <dt></dt>
+  <dd></dd>
+</dl>
+<h2>Graph</h2>
+<dl> 
+  <dt>Number of entries of saved information of graph</dt>
+  <dd>Width of each graph. Bigger number, longer graph.</dd>
+  <dt>Min and Max and auto value of each graphd</dt>
+  <dd>Minimum value is the bottom line of each graph. If the data is less than 
+    this value, it will never plotted in graph. Maximum value is the upper-top 
+    line of each graph. </dd>
+</dl>
+<h2>Font</h2>
+<p> You can choose any font in these admcli windows : </p>
+<br>
+<li>HOST window 
+<li>Process window 
+<li>Log window 
+<li>Result window 
+<li>Search window 
+<li>Chat list window 
+<li>Chat window 
+  <h2>Alert</h2>
+  <p> By setting alert, admcli shows "!" mark in process window and host window's 
+    "alert" column, and the line gets yellow. You can make admcli to reproduce 
+    alert sounds or execute external application program. </p>
+  <br>
+
+<hr>
+Copyright 2000-2005 CommunityEngine Inc. All rights reserved.<BR>
+
+</body>
+</html>

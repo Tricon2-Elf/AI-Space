@@ -1,0 +1,381 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel="stylesheet" href="../vce.css" type="text/css">
+<title>VCE 1.1.4 official document (Japanese)</title>
+</head>
+
+<body>
+<h1>コネクションスイッチ 機能解説</h1>
+
+<h2>Index</h2>
+<ol>
+  <li><a href="#about">コネクションスイッチとは</a></li>
+  <li><a href="#system">コネクションスイッチのしくみ</a></li>
+  <li><a href="#howto">コネクションスイッチの使用手順</a></li>
+  <li><a href="#api">コネクションスイッチの API</a></li>
+  <li><a href="#swp">swp コマンド</a></li>
+  <li><a href="#swpadm">swpadm コマンド</a></li>
+</ol>
+
+<h2><a name="about"></a>コネクションスイッチとは</h2>
+  <p>アプリケーションのクライアント側プログラムと、
+  サーバ側プログラムの間に中継用サーバ(以下、swp と称する)を置き、
+  暗号やパケット圧縮の処理を全て引きうけることでサーバのトランザクション
+  処理性能を向上させようとする機能のことである。
+  一般的な Web アプリケーションの場合に例えて言えば、Webシステムにおける
+  SSL デコーダのような位置付けである。
+  VCE はこの機能を内蔵しているが、さらに、
+  各 swp と各サーバを総当たり的に接続し、
+  クライアントとサーバ間の接続を、サーバからサーバへ論理的に切りかえる
+  機能も提供する(図)。<BR>
+    <img src="../images/conn_sw_diagram.gif">
+    <BR>
+    この機能により、
+  複数サーバを使って透過的に負荷を分散するようなアプリケーションに
+おいて以下のような利点がある。 </p>
+  <ul>
+  <li>クライアントプログラムの構造を単純化することができる</li>
+  <li>コネクションを切りかえるときに発生するデータ交換を、
+	  サーバ側の高品質なネットワークだけを使って実行するため
+	  エラーレートが大幅に下がる</li>
+  <li>コネクション張りかえに際して TCP のハンドシェイクが行なわれないため、
+      さらにエラーレートが下がる</li>
+  <li>サーバとクライアントの間に一種のゲートウェイが介在することになるため、
+	  セキュリティが向上する</li>
+  <li>circ_t の状態バッファも移転するので、
+	  手軽な「ロックつきデータ交換」の目的に使える。</li>
+  <li>swp は専用ではないので、複数アプリケーションでの再利用が可能であり、
+	  マシンパワーを効率的に使える。</li>
+</ul>
+
+  <p>欠点としては、</p>
+  <ul>
+  <li>swp やサーバの台数がそれぞれ1000台を越えるような超大規模な場合は、
+	  この機能をそのまま使っても性能向上はあまり望めない。
+	  もっともそのような規模のコンテンツの場合は、
+	  サイト自体を複数用意するのが現実的であるが。</li>
+  <li>中継によって、数ミリ秒〜20ミリ秒程度の遅延が追加されるため、
+	  10ミリ秒〜20ミリ秒の高レスポンスが常に要求されるアプリケーションでは
+	  使えない。</li>
+</ul>
+<P>
+おそらく、特殊なレスポンスが要求されるオンラインアクションゲーム
+以外の分野では、以上の制限は障害とはならないはずである。
+</p>
+<h2><a name="system"></a>コネクションスイッチのしくみ</h2>
+<p>
+コネクションスイッチはサーバプログラムから、 vce_circ_switch 関数を circ_t
+に対して呼びだすことから始まる。
+vce_circ_switch 関数が呼びだされるとサーバ側の VCE ライブラリは
+コネクションスイッチ要求を swp に対して送信し、
+swp はその要求をクライアントには知らせず移転先のサーバにリレーする。
+移転先のサーバはメモリを確保し、それが成功したら、 swp に対して結果を返す。
+スイッチング処理中のクライアントからのデータ受信に対応するため、
+コネクション移転元サーバと移転先サーバの間では、3回のハンドシェイクを行ない、
+パケットロスが発生しないことを保証する。
+パケット送信による状態遷移は以下の図で説明される。  <BR>
+  <img src="../images/conn_sw_state.gif">
+  <BR>
+</p>
+<p>
+swp はすべてのサーバの IPアドレスとポートの情報を表の形
+(ちょうど、UNIX の fstab のような感じで)で読みこみ、
+その表の設定に基いて各サーバに接続する。
+サーバのうちどれかが突然異常終了しても、
+落ちた当該サーバに現在接続中のクライアント接続以外は影響を受けずに
+一定時間後にふたたび接続し、サービスを継続する。
+</p>
+<P>
+各サーバは個別の ID を持っており、ID と待ちうけポート番号は厳密に一致している。
+このように ID とポート番号を一致させる理由は、
+サーバ台数が多くなってきたときには、VCEではなく "netstat -tn" など
+UNIX 標準の解析ツールでデバッグできたほうが
+デバッグ効率が圧倒的によいからである。
+なお、おなじIDをもつサーバをひとつの「サーバ表」
+に複数存在させることはできない。
+</p>
+<p>
+  クライアントプログラムはサーバに接続するときに swp の frontend
+側(外側)に接続するが、
+実際にはどのサーバがその新規コネクションを accept するかを決定する必要がある。
+標準添付の swp では、「トップ」「シーケンシャル」「ランダム」の
+3つのアルゴリズムをサポートしていて、どのサーバが実際に accept するかを決める。
+</p>
+
+<h2><a name="howto"></a>コネクションスイッチの使用手順</h2>
+<p>
+コネクションスイッチを使ったアプリケーションは以下のような手順をふんで
+稼働させる。
+</p>
+<ol>
+  <li>コネクションスイッチの API を組みこんだ各サーバを順に起動する。  </li>
+  <li>すべての swp を起動し、表を読みこませる。</li>
+</ol>
+
+
+<h2><a name="api"></a>コネクションスイッチの API</h2>
+<P>
+  コネクションスイッチに関するコーディングはサーバ側のみで必要である。
+クライアント側には何らの追加のコードを必要とすることはない。
+また swp は標準のものを使用すればよいが、サンプルコードに含まれている
+swproxy.c を改造することで独自の機能を実装できる。
+コネクションスイッチを使用する場合のサーバの
+コードロジックは以下のようになる(autotest/swsv.cを参照)。
+</p>
+
+<pre>
+vce_tcpcontext_create
+vce_tcpcontext_set_circ_parser
+vce_tcpcontext_set_circ_switchwatcher
+vce_tcpcontext_set_circ_switchresultwatcher
+vce_vec_init_mainserv
+while(1){
+  vce_heartbeat();
+}
+</pre>
+
+
+<p>
+コネクションスイッチ操作には以下の関数や構造体、列挙型が関係している。
+各API関数の詳細はリファレンスマニュアルを参照の事。
+</p>
+<ul>
+  <li>SWENT_STATE 列挙型
+	  <p>コネクションスイッチの、
+	  「サーバ表」を格納するためのデータ構造で使用される。
+	  実際には VCE 内部で使用されるのみで、
+	  アプリケーションではこれを使用したコーディングをすることはない。</p></li>
+  <li>SWITCH_RESULT 列挙型<p>
+	  スイッチ要求をした後にスイッチ先サーバや swp から返ってくる結果の
+	  コードである。各値は以下の意味をもつ。</p>
+	  <ul>
+		<li>SWITCH_RESULT_OK : 正常終了した。
+			スイッチ元サーバは当該 circ を解放してよい(しなければならない)。</li>
+		<li>SWITCH_RESULT_NOTFOUND :
+			そのIDをもつサーバはサーバ表には存在しない。</li>
+		<li>SWITCH_RESULT_OFFLINE :
+			そのIDのサーバは現在落ちている。</li>
+		<li>SWITCH_RESULT_BAD_STATEBUF : 状態バッファのサイズが、
+			スイッチ先サーバとスイッチ元サーバで異なっているため、
+			スイッチできない。</li>
+		<li>SWITCH_RESULT_CIRC_FULL : スイッチ先サーバで circ が一杯である。</li>
+		<li>SWITCH_RESULT_CALLBACK_FAIL : スイッチ先サーバの
+			switchwatcher が負を返した。スイッチ拒否されたという事。</li>
+	  </ul>
+	  <p>スイッチが失敗したら、スイッチ元サーバはクライアントに対して何らかの
+	  エラーを返すか、そのまま処理を続けるのがよい。</p></li>
+	  
+  <li>switchent_t 構造体<p>
+	  swp(swproxy.c) で使用する。サーバ表の1エントリを格納するための構造体。</p></li>
+  <li>vce_switchcontext_create 関数<p>
+	  swp で使用する。各サーバと各クライアントの接続状態を管理したり、
+	  コネクションスイッチングの設定を格納するための構造体。</p></li>
+  <li>vce_switchtable_read_from_file 関数<p>
+	  swp で使用する。サーバ表をファイルから switchent_t 構造体の配列に
+	  読みこむために使う。</p></li>
+  <li>vce_switchtable_show 関数<p>
+	  サーバ表の内容を表示する。</p></li>
+  <li>vce_circ_switch 関数<p>
+	  ある circ_t を別のサーバに ID を指定してスイッチする。</p></li>
+	  
+  <li>vce_tcpcontext_set_circ_switchresultwatcher 関数<p>
+	  スイッチ元サーバで、スイッチ操作が完了したときに呼びだされる。
+	  エラーか成功かは、 SWITCH_RESULT 列挙型の引数を調べることで確認できる。</p></li>
+  <li>vce_tcpcontext_set_circ_switchwatcher 関数<p>
+	  スイッチ先サーバで、スイッチしようとしてきたcirc_t
+	  を検出することができる。このコールバックが呼びだされた時点で、
+	  状態バッファや添付データをチェックして、
+	  受けいれ条件を満たしていない場合は拒否などができる。
+	  たとえば、オンラインゲームの場合は、
+	  レベル10以上のプレイヤーしか入れないサーバなどを簡単に作ることができる。</p></li>
+</ul>
+
+
+
+<h2><a name="swp"></a>swp コマンド</h2>
+<p>
+swp コマンドは、 VCE に標準添付の、最低限の機能を実現したコネクション
+スイッチ中継プログラムである。
+ここでは、 swp コマンドの起動オプションと入力ファイルフォーマットを説明する。
+</p>
+
+<h2>swpの起動オプション</h2>
+<pre>
+swp CONFIG_FILE SWITCHTABLE_FILE
+</pre>
+<P>
+CONFIG_FILE には、設定ファイルを指定する。
+この設定ファイルは、各swp ごとに別々のものを用意してもいいし、
+同じものを使用してもよい。各マシンごとに1個の swp を走らせる場合は同じでよい。
+</p>
+<p>
+設定ファイルは、VCE の vce_read_simple_config_file 関数が受けいれる形式である。
+設定ファイルに書けるディレクティブ(コマンド)は以下のものがある。
+</p>
+<ul>
+  <li>verbose=0/1<p>
+	  VCE のverboseモードを指定する場合は1、そうでない場合は0。
+	  運用状態では0にする。</p></li>
+  <li>read_write_log=0/1<p>
+	  すべての送受信を dump したい場合は1、そうでない場合は0。
+	  これは性能低下とログファイルの増大を招くので、
+      実際に商用運用する場合は0にするべきである。</p></li>
+  <li>heartbeat_wait=0/1<p>
+      SWP のメインループで vce_heartbeat_wait_flag() に与える値。
+      これを0にすると CPU を 100% 食うが、最高速のレスポンスになる。
+      1にすると最大1ループあたり100ミリ秒の遅延が発生するが
+      アイドル時の CPU 使用量をほぼゼロにできる。
+      使用目的に応じて調整する(デフォルト値は1)</p></li>
+  <li>frontend_bind_port=PORTNUMBER<p>
+	  フロントエンド(クライアントからの接続を受けいれるためのポート)の番号。</p></li>
+  <li>frontend_cipher=none/blowfish/rijndael/twofish<p>
+	  クライアントとの通信に使用する暗号アルゴリズム。
+	  各 swp が同じに設定されているほうが簡単なのは言うまでもない。</p></li>
+
+  <li>frontend_cipher_key_length=NUMBER<p>
+	  クライアントとの通信に使用する暗号のキー長。
+	  暗号アルゴリズムによって使用可能な数値が異なるので注意。
+  <li>frontend_send_buffer_size=NUMBER<p></p></li>
+	  クライアントとの通信の送信バッファ。
+	  アプリケーションの内容によるが通常は 16384から32768といった値をとる。</p></li>
+  <li>frontend_recv_buffer_size=NUMBER<p>
+	  クライアントとの通信の受信バッファ。
+	  アプリケーションの内容によるが通常は 16384から32768といった値をとる。
+	  送信バッファより大きくしておくとよい。</p></li>
+  <li>frontend_close_timeout=NUMBER<p>
+	  クライアントとの間に一定時間通信がない場合自動的に切断する。
+	  秒数で指定する。</p></li>
+  <li>frontend_max_connection=NUMBER<p>
+	  クライアントがこのswpに接続できる最大TCP セッション数。</p></li>
+  <li>admin_bind_port=NUMBER<p>
+	  管理プログラムが接続するために待ちうけるポート番号。</p></li>
+  <li>admin_key_string=STRING<p>
+	  管理プログラムが接続するために使うパスワード(平文)。</p></li>
+  <li>server_max_connection=NUMBER<p>
+	  アプリケーションのサーバの最大数。</p></li>
+  <li>server_send_buffer_size=NUMBER<p>
+	  サーバとの通信に使う送信バッファ。
+	  これは frontend よりもかなり大きく取る必要があり、 256k 〜 1M がよい。</p></li>
+  <li>server_recv_buffer_size=NUMBER<p>
+	  サーバとの通信に使う受信バッファ。
+	  これは frontend よりもかなり大きく取る必要があり、 256k 〜 1M がよい。</p></li>
+
+  <li>server_close_timeout=NUMBER<p>
+	  サーバとの間に一定時間通信がない場合にTCPセッションを切断する時間(秒)。</p></li>
+  <li>server_cipher=none/blowfish/rijndael/twofish<p>
+	  サーバとの通信で使用する暗号アルゴリズム</p></li>
+  <li>server_cipher_key_length=NUMBER<p>
+	  サーバとの通信で使用する暗号アルゴリズムのキー長。</p></li>
+  <li>switch_reject_buf_size=NUMBER<p>
+	  クライアントがコネクションスイッチ中にデータを送ってきたときでも
+	  データを失なわないことを保証するためのバッファのサイズ。
+	  frontend の recvbuf と同程度確保すればよい。
+	  クライアントプログラムが、小さいパケットを時々しか送らないなら、
+	  このバッファは frontend の recvbuf より小さくてもよい。</p></li>
+
+  <li>accepter_policy=top/sequential/random<p>
+	  クライアントが swp に対して接続した場合に、
+	  どのサーバが実際に accept するのかを決定するアルゴリズムを選択する。
+	  top は常にサーバ表の先頭のサーバが担当する。
+	  sequential は、サーバ表の上から順番に担当する。
+	  random はサーバ表のメンバのどれかひとつがランダムに担当する。</p></li>
+
+  <li>proc_file=PATH<p>
+      一定時間ごとに出力する状態ファイルのパスを指定する。</p></li>
+  <li>proc_file_tmp=PATH<p>
+      状態ファイル出力作業用のテンポラリファイルのパスを指定する。
+      swp は状態ファイルを出力するときに一旦テンポラリファイルに出力
+      してから rename するが、そのテンポラリファイルのパス。</p></li>
+  <li>proc_interval=NUMBER<p>
+      状態ファイルを出力する周期(秒)を指定する。</p></li>
+  <li>compress=0/1<p>
+      SWPでの圧縮解凍機能を使用したい場合は1、そうでない場合は0。(デフォルト値は0)</p></li>
+  <li>compress_buf_size=NUMBER<p>
+      圧縮解凍のためのワークサイズ。送受信するデータの最大値を設定する。
+      この値は compress=1 のときのみ有効になる。32MBまで設定可能。
+      (デフォルト値は1048576(1M))
+      </p></li>
+      
+
+      
+
+</ul>
+
+<p>
+SWITCHTABLE_FILE には、スイッチ先となり得るサーバのリストを定義する。
+単純に "server=" の後ろに IPアドレスとポート番号をスペース等を入れずに
+コンマで区切って書くだけである。
+同じ ポート番号が重複してはならない。
+ポート番号はサーバの ID として使用されるので、
+たとえ IP アドレスが異なっていてもポート番号は重複してはならない。
+</p>
+<pre>
+server=192.168.1.24,12345
+server=192.168.1.24,12355
+</pre>
+
+<h2><a name="swpadm"></a>swpadm コマンド</h2>
+<p>
+swpadm コマンドは、swp をリモート操作するためのプログラムである。
+ソースコードはサンプルプログラムとして添付されている。
+</p>
+
+<h2>swpadmの起動オプション</h2>
+<pre>
+swpadm HOST PORT KEY_STRING PARAM0 PARAM1 PARAM2 ...
+</pre>
+<UL>
+  <li>HOST : swp が動作しているマシンの IPアドレス</li>
+  <li>PORT : swp の admin_bind_port</li>
+  <li>KEY_STRING : swp の admin_key_string と一致する文字列。</li>
+  <li>PARAM0 : 第1引数(文字列)、省略不可。</li>
+  <li>PARAM1 : 第2引数(文字列)、省略可。</li>
+</ul>
+<p>
+swpadm は単純に PARAMn で指定された文字列をそのまま swp に送信して、
+swp が返してくる文字列をそのまま標準出力に表示するだけの機能しかない。
+</p>
+
+<h2>swpadm で可能な事</h2>
+<p>
+swpadm を使用して以下の事が可能である。
+実際には、これらの機能はすべて swp に実装されていることに注意が必要である。
+</p>
+
+<ul>
+  <li>"netstat"<p>
+      VCEで使用しているnetworkのリソースを文字列で返す。</p></li>
+  <li>"netinfo"<p>
+      swp がネットワーク情報を取得するために使用するコマンド。</p></li>
+  <li>"ping [tick_int]"<p>
+	  swp の生存を確認する。 tick_int をそのまま返す。</p></li>
+  <li>"suicide"<p>
+      プロセス(swp)をその場で終了する。exit(0)を呼んでいる。</p></li>
+  <li>"prof"<p>
+      プロファイリング用のファイル(gmon.out)を出力する。(linuxのみ)</p></li>
+  <li>"get_port"<p>
+      使用しているポートを返す。</p></li>
+  <li>"get_conn"<p>
+      get_portで返したportの接続数を返す。</p></li>
+  <li>"get_pid"<p>
+      プロセスIDを返す。</p></li>
+  <li>"shutdown"<p>
+	  swp を安全に停止する。</p></li>
+  <li>"get_name"<p>
+      名前(SWP)を返す。</p></li>
+  <li>"get_login"<p>
+      "get_conn" と同じ。</p></li>
+
+</ul>
+
+<br><br>
+<a href="index.html">index に戻る</a>
+<br>
+
+<div id="footer">
+Copyright 2000-2005 Community Engine Inc. All rights reserved.</div>
+
+</body> </html>

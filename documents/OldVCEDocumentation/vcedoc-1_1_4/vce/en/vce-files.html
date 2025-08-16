@@ -1,0 +1,77 @@
+<html>
+<head>
+<link rel="stylesheet" href="../vce.css" type="text/css">
+<title> VCE-SDK Files Document </title>
+</head>
+<body>
+<h1>VCE-SDK Files Document </h1>
+<h2>Files index by name</h2>
+<!-- make_file_nameindex -->
+<ol>
+<li><a href="#libvce.a">libvce.a</a></li>
+<li><a href="#vce.h">vce.h</a></li>
+<li><a href="#vcewin32.lib">vcewin32.lib</a></li>
+</ol>
+<h2>Description of all files</h2>
+<!-- make_filedef -->
+<a name="libvce.a"></a>
+<table id="filedef">
+<tr><th colspan="2" id="filedef_title">
+<B>libvce.a</B></th></tr>
+<tr><th>Summary</th><td>VCE for Linux static-link library</td></tr>
+<tr><th>Compatibility</th><td>linux,darwin</td></tr>
+<tr><th>Description</th><td>vce.h includes a prototype declaration and an extern variable
+declaration for all functions of VCEgg API. <BR>
+<B>Notes for compiling under a C++ environment</B>
+ A compiler must be specified to define _the cplusplus macro.
+VCEgg's code is essentially written with UNIX's C so it has the "linkage" of C.
+Microsoft VisualStudio, for instance, has "C++ linkage" as default,
+so a prototype declaration by <code>extern "C" </code> is required
+to use functions with a C linkage. 
+</td></tr>
+</table><br><br>
+<a name="vce.h"></a>
+<table id="filedef">
+<tr><th colspan="2" id="filedef_title">
+<B>vce.h</B></th></tr>
+<tr><th>Summary</th><td>VCE header file for C language</td></tr>
+<tr><th>Compatibility</th><td>linux,win32,other,darwin</td></tr>
+<tr><th>Description</th><td>vce.h includes a prototype declaration and an extern variable
+declaration for all functions of VCEgg API. <BR>
+<B>Notes for compiling under a C++ environment</B>
+ A compiler must be specified to define _the cplusplus macro.
+VCEgg's code is essentially written with UNIX's C so it has the "linkage" of C.
+Microsoft VisualStudio, for instance, has "C++ linkage" as default,
+so a prototype declaration by <code>extern "C" </code> is required
+to use functions with a C linkage. 
+</td></tr>
+</table><br><br>
+<a name="vcewin32.lib"></a>
+<table id="filedef">
+<tr><th colspan="2" id="filedef_title">
+<B>vcewin32.lib</B></th></tr>
+<tr><th>Summary</th><td>VCE for Windows 98/NT/2000 static-link library file</td></tr>
+<tr><th>Compatibility</th><td>win32</td></tr>
+<tr><th>Description</th><td>vcewin32.lib is the library file for Win32 environment.
+ VisualStudio 6.0 is used for compilation.
+ Basically it includes most of the VCE's functions.  <BR> 
+The file name of vcewin32.lib  in the VCE package is 
+<pre>
+vcewin32_1_0_0.lib
+vcewin32_1_0_0mt.lib
+vcewin32_1_0_0mfc.lib
+</pre>
+It is recommended not to change this file name as much as possible to avoid
+confusion on the versions.  If you do not wish to change the file name for a
+development project, simply create a Window shortcut.  The file including "mt"
+in the file name is the library to link with a multi-thread
+version of the C library.  
+</td></tr>
+</table><br><br>
+<!-- make_filedef end -->
+<BR><BR><p><a href="index.html">return to index</a><br></p>
+<div id="footer">
+Copyright 2000-2005 Community Engine Inc. All rights reserved.
+</div>
+</body>
+</html>

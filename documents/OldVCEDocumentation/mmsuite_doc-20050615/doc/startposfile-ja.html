@@ -1,0 +1,49 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html> <head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>mm-suite official document (Japanese)</title>
+</head>
+
+<body>
+<h1>スタート位置定義ファイルの書式(startpos.c></h1>
+
+<p>
+  GMSV は、ユーザがキャラクターを作成したときに、
+世界の中のどの位置から開始させるかを、「スタート位置定義ファイル」
+の内容に基いて決める。
+デフォルト状態では、 data ディレクトリの startpos.txt ファイルが
+スタート位置定義ファイルとなっている。
+このファイルも1行に1設定となっている。
+</p>
+
+<pre>
+cand=FIELDNAME,CATEGORY,X1,Y1,X2,Y2,Z
+</pre>
+
+<ul>
+  <LI>FIELDNAME<BR>
+      フィールド名。 フィールド情報ファイルの name ディレクティブで
+      指定した、フィールド名。このフィールド内の矩形。
+  <LI>CATEGORY<BR>
+      カテゴリ番号。
+      複数の矩形をグループ化して、
+      そのグループの中のどこかから出現ということを可能にするために、
+      カテゴリIDを指定できる。
+      カテゴリ ID が同じ設定はグループと見なされる。
+      カテゴリ ID は 1以上にすること。
+      0だとグループ化されない。
+  <LI>X1,Y1,X2,Y2<BR>
+      この矩形の中のどこかが選択される。
+</ul>
+
+<BR><BR>
+<a href="index-ja.html">index に戻る</a>
+
+
+<br>
+<hr>
+<font size=-1>
+Copyright 2000-2005 CommunityEngine Inc. All rights reserved.<BR>
+
+</body> </html>
+

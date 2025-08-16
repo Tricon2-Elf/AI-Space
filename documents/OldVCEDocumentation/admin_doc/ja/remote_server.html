@@ -1,0 +1,97 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html>
+<head>
+  <title>Remote Server</title>
+</head>
+
+<body>
+
+<h1>Remote Serverについて</h1>
+
+<h2>Remote Serverとは</h2>
+
+<p>Remote Server(rsv)は、ADMSVから各ホストを管理するためのプログラムです。<br>
+
+<p>主に、ホストの情報(load average、ネットワーク負荷等)の収集、
+ホスト内でのUNIXコマンドの実行、ファイルの送受信(未実装)を行います。<br>
+(限定的なtelnet,ftpという位置付けです)
+
+<p>rsvの機能はadmsvを通して使われるため、通常、ユーザーはrsvを直接扱うことは
+ありません。(起動のみを行えばよい)
+
+<p>パッケージ内では、admin/rsv/ 内に含まれています。
+
+
+<h2>rsvの使用方法</h2>
+
+<ol>
+  <li>設定ファイルを記述します。<br>
+     <a href="#rsv.conf">rsv.conf</a>, 
+     に必要な情報を書き込みます。
+
+  <li>rsvを起動します。<br>
+    <pre>$ ./rsv rsv.conf</pre>
+</ol>
+
+<p>rsvは、内部でUNIXのコマンドを実行する必要があるので、必要な権限をもった
+ユーザーで起動する必要があります。<br>
+(ゲーム用のサーバを起動しているユーザーの権限がいいでしょう)
+
+<h2><a name="unix_command">rsvからUNIXコマンドを使用する</a></h2>
+
+<p>admcli.exeからHost Window上の右クリックメニュー[コマンド実行]を選択することで
+コマンドを実行することが可能です。<br>
+まず、"ls"などでコマンドが実行可能か調べましょう。
+
+<p>admcli.exeから実行できるコマンドは１行のコマンドに限定されています。より高度な
+コマンドについては、shell scriptなどをrsvを実行させているホスト上に用意して、それを
+起動するようにするのがよいでしょう。<br>
+その際に以下のことに注意して下さい。
+
+<ul>
+  <li>UNIXコマンドは、rsvを実行しているユーザーの権限で実行される
+  <li>UNIXコマンドは、rsvを実行したworking directoryで実行される
+</ul>
+
+<p>よって、使用したいスクリプトをrsvのあるディレクトリかPATHの通ったディレクトリに用意し、
+chmod +x するのがよいでしょう。
+
+<p>また、起動する前にcdをする必要があれば、"cd hoge ; ./start_hoge"の用に、まずcdを
+します。<br>
+
+<p>"ls -l | grep hoge"のように、パイプも使用できます
+
+<p>終了しないコマンド(top, tailなど)を使用するとrsvがブロックされてしまいますので
+注意して下さい。(修正)
+
+
+<h2>設定ファイルについて</h2>
+
+<h3><a name="rsv.conf"/>rsv.conf</h3>
+
+<p>設定を記述したファイルです。(vce_read_simple_config_file形式)
+各項目については、サンプルのadmsv.confのコメントを参照してください
+
+
+<h2>そのほかの情報</h2>
+
+<p>rsvは、デフォルトでは、33333番ポートを使用します。
+
+<p>rsv上で実行されるUNIXコマンドは、"/bin/sh -c [コマンド]"という形で実行されて、標準出力+
+エラー出力が結果として返されます。
+
+<p>rsvに送られたログは、/tmp/rsvlog/[ポート番号].[ログタイプ]という形で保存されます。
+
+<p>rsvから実行されたプロセスは、/tmp/rsvexec/[UNIX PID].logという形で保存されます。
+
+
+<br>
+<br>
+<br>
+<hr>
+<font size=-1>
+Copyright 2000-2005 CommunityEngine Inc. All rights reserved.<BR>
+
+</body>
+
+</html>

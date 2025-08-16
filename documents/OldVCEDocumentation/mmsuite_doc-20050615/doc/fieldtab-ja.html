@@ -1,0 +1,62 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html> <head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>mm-suite official document (Japanese)</title>
+</head>
+
+<body>
+<h1>fieldtab ファイルの書式</h1>
+
+
+<h3>fieldtab とは</h3>
+<p>
+   fieldtab はデフォルト状態では
+<pre>
+mmsuite/gmsv/data/fieldtab.txt
+<pre>
+  に配置されている。
+どの GMSV がどのフィールドを担当するのかの表が記述されている。
+1行に1個のGMSV を定義する。左端のトークンが GMSV の ID
+(実はポート番号と一致している)で、それ以降のトークンがすべてフィールドの
+名前である。以下の例の場合(mm-suiteデフォルト状態)は、
+8001番ポートで待っている GMSV が land_0 と dungeon_0 の2個のフィールドを
+管理し、 8003番ポートで待っている GMSV が island_0 を担当する。
+ワールド間の移動をおこなう際、クライアントが接続するSWPを変更するため、
+SWPのサーバのアドレス情報とポート番号が必要になる。
+そのためGMSVに接続するSWPの情報も書く。
+</p>
+<pre>
+8001 192.168.1.203 9001 land_0 dungeon_0
+8003 192.168.1.203 9003 island_0
+</pre>
+<p>
+このファイルは稼働中に変更されることはない。
+各 GMSV が起動時に、1回だけ読みこむ。
+稼働中にこのファイルを変更して一部の GMSV だけ再起動すると、
+不整合が発生して混乱するので気をつけること。
+</p>
+
+<h3>GMSV の ID のふりかたの規則</h3>
+<p>
+  mm-suite では、GMSV のIDのふりかたを特別な方法で決める。
+それは、同じポートで待つ GMSV がふたつとない、という事である。
+たとえ IP アドレスが違うマシンで動作させていても、
+ポート番号はそれぞれ異なるのである。
+このことで、 netstat コマンドによるメンテナンス性がかなり向上する。
+さらに、IDの系列をいたずらに増やさないことによりわかりやすさが向上する。
+外部のツールでのメンテナンス性はことのほか重要なので、
+このような仕様となっている。
+</p>
+
+
+
+
+<BR><BR>
+<a href="index-ja.html">index に戻る</a>
+<br>
+<hr>
+<font size=-1>
+Copyright 2000-2005 CommunityEngine Inc. All rights reserved.<BR>
+
+</body> </html>
+

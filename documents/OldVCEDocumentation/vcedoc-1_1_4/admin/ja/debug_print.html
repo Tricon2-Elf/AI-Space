@@ -1,0 +1,137 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html>
+<head>
+<title>debug_print.c</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<link rel="stylesheet" href="../default.css" type="text/css">
+</head>
+
+<body>
+<p><a href="index.html">[トップ]</a> <a href="changes.html">[変更履歴]</a> 
+  <a href="map.html">[目次]</a> <a href="words.html">[用語]</a> <a href="faq.html">[FAQ]</a> | <a href="admcli/index.html">[AdmCli]</a> 
+  <a href="admin_server.html">[ADMSV]</a> <a href="remote_server.html">[RSV]</a> 
+  | <a href="vcelog.html">[VCE-Log]</a> <a href="monitor_command.html">[VCEモニター]</a> 
+</p>
+
+<h1>debug_print.cについて</h1>
+<h2>debug_print.cとは</h2>
+<p>debug_print.cは、<b>VCE-AdminToolに対応するためのスケルトンコードです。</b><br>
+  従来、これらに対応するためには毎回同じようなコードを書く必要がありましたが、 その手間を軽減することができます。<br>
+  また、VCE-AdminToolに対応したLogを出力することは、ドキュメント不足などにより よく分からないことが多いと思うので、それに対する救済措置でもあります。<br>
+<p>デメリットは、カスタマイズの自由度が減ることですがライブラリではなくスケルトンコードと することでそれもなるべく軽減しています。<br>
+  (それによって、カスタマイズ後のdebug_print.cバージョンアップなどはできないが…) 
+<h2>debug_print.cによって実現される機能</h2>
+<p>以下の機能がdebug_print.cによって追加されます。 
+<ul>
+  <li>VCE-Monitorの初期化 
+  <li>VCE-Monitorに基本的なモニターコマンド(get_name, get_login, shutdown, その他VCE-Log用コマンド)の追加 
+  <li><b>VCE-Logに対応したログの出力</b>(printd関数) 
+  <li><b>ログのVCE-AdminToold(rsv)</b>への転送 
+</ul>
+<h2>debug_print.cの使い方</h2>
+<em>具体的には、サンプルを参照してください。</em> 
+<p>導入手順： 
+<ol>
+  <li>debug_print.c, debug_print.h をソースのディレクトリにコピーする。 
+  <li>debug_print.c の <b>CUSTOMIZE HERE</b>と書かれた部分を 各アプリケーションごとにカスタマイズする。<br>
+    詳しくは、debug_print.cのコメントの中を参照してください 
+  <li>VCEの初期化が済んだ後に、init_monitor(), init_log()の呼び出しを記述する 
+  <li>printd()を使用するファイルに対して、debug_print.hをincludeする 
+</ol>
+以上で、printd()によるログの出力が可能になります。 
+<p>printd()は、以下のように使用して下さい。 
+<p>printd( <em>ログの種類(_ERROR, _TRACE など )</em>, <em>フォーマット文字列</em> [ , ...<em>可変引数リスト</em> 
+  ] );
+<p class="code"> 例：printd( _ERROR, "file error( %d )", err ); 
+<h2>ログの種類について</h2>
+<p>ログの種類は、debug_print.h内の"_"で始まるマクロで定義されています。<br>
+  これは各アプリケーションごとにカスタマイズすることが可能です。 カスタマイズする場合は、init_log()内のログの種類を追加するコードを書き足してください。 
+<p><b>ログの種類は、サービスのセキュリティポリシー、運用ポリシーなどによって、 適切に設計される必要があります。</b> ユーザーのパスワードなどをログに出す場合は、そのログを見れる人間を制限する必要があるでしょう。 
+<p>デフォルトで用意されているログの種類については、下を参照してください。 
+<p>　
+<table cellspacing="1">
+  <tr class="header"> 
+    <td width="74">マクロ名</td>
+    <td width="533">説明</td>
+  </tr>
+  <tr> 
+    <td valign="baseline"><b>_TRACE</b></td>
+    <td width="533"><b>もっとも細かいレベルのログ</b>です。<br>
+      デバッグレベルでは使用されるが、<b>普段の運用時には出力しないもの</b>です。<br>
+      <br>
+      例：<font color="#666666">デバッグ用の情報出力、すべてのプロトコルの送受信表示</font><br>
+      <br>
+    </td>
+  </tr>
+  <tr> 
+    <td valign="baseline"><b>_INFO</b></td>
+    <td width="533"><b>運用時出力されるものの中では、最も細かいレベルのログ</b>です。<br>
+      <br>
+      例：<font color="#666666">設定ファイルの読み込んだ項目の表示、定期的に表示される負荷情報、ユーザーのログイン・ログアウト、アイテムの受け渡し</font><br>
+      <br>
+    </td>
+  </tr>
+  <tr> 
+    <td valign="baseline"><b>_WARN</b></td>
+    <td width="533"> 
+      <dl> <b>無視可能なのエラー、注意のログ</b>です。<br>
+        エラー処理ルーチンなどに記述します。<br>
+        <br>
+        例：<font color="#666666">設定の数をこえたオブジェクト（キャラクタや物）を作ろうとして失敗した場合、ログファイルがオープン出来なかった場合、接続しなくても続行可能なバックエンドサーバーに接続できなかった場合、ユーザーが回線を切断した場合</font><br>
+        <br>
+      </dl>
+    </td>
+  </tr>
+  <tr> 
+    <td valign="baseline"><b>_ERROR</b></td>
+    <td width="533"> 
+      <dl> <b>無視できないエラーのログ</b>です。<br>
+        <dt>バグではないがバグに近い場所や、本当は通ってはいけない場所などにも使用します。（assert的な使用）<br>
+          _WARNと同じような状況でも、見落としたくない場合も_ERRORとします。<br>
+          運用時に、このレベルのログは開発者に伝わるようにします<br>
+          <br>
+          例：PENDING<br>
+          <br>
+        </dt>
+      </dl>
+    </td>
+  </tr>
+  <tr> 
+    <td valign="baseline"><b>_FATAL</b></td>
+    <td width="533">
+      <p><b>回復不能なレベルのエラーのログ</b>です。<br>
+        もっとも重要性が高いログになります。<br>
+        運用時に、このレベルのログは開発者に伝わるようにします </p>
+      <p>例：<font color="#666666">落ちてはいけないバックエンドとの接続が切れた、設定ファイルが読めない</font><br>
+        <br>
+      </p>
+    </td>
+  </tr>
+  <tr> 
+    <td valign="baseline"><b>_GM</b></td>
+    <td width="533"><b>ゲームマスター向けのログ</b>です。<br>
+      一般的にゲームマスターは技術者ではないため、技術的な情報を省いて伝える際に使用します。<br>
+      ゲームロジック関連の情報は_GMを使用するとよいでしょう。<br>
+      また、セキュリティ上、ユーザー情報などはゲームマスターには閲覧させたくない場合にも使用します。<br>
+      <br>
+      例：<font color="#666666">レベルアップ、チャット</font><br>
+      <br>
+    </td>
+  </tr>
+  <tr> 
+    <td valign="baseline"><b>_ADMIN</b></td>
+    <td width="533">
+      <p><b>ゲームサーバー管理者(もしくは、上級ゲームマスターなど)むけのログ</b>です。<br>
+        <br>
+        例：<font color="#666666">他のサーバーからの接続、サーバーの起動・停止</font><br>
+        <br>
+      </p>
+      </td>
+  </tr>
+</table>
+<p>　</p>
+<hr>
+Copyright 2000-2005 CommunityEngine Inc. All rights reserved.<br>
+
+</body>
+</html>

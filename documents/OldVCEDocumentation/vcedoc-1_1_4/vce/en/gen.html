@@ -1,0 +1,384 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html> <head>
+<link rel="stylesheet" href="../vce.css" type="text/css">
+<title>VCE 1.1.4 official document (English) </title>
+</head>
+
+<body>
+<h1>Detailed Description of gen.rb </h1>
+<p>
+gen.rb is an auto function generator for protocol processing.  This tool easily implements RPC on VCE.  gen.rb reads a configuration file and then output C source code which can be compiled on Win32/UNIX and Ruby source code which can be used with Ruby.  It supports a network byte order so that it allows the communication between different processors and different languages.  The output of Java source code will be supported with future release.  
+</p>
+<H2>Index</h2>
+<ul>
+  <LI><a href="#basic">Basic concept</a>
+  <LI><a href="#commandline">Command Line Option </a>
+  <LI><a href="#output">Output File Name</a>
+  <LI><a href="#infile">Input File Format</a>
+  <LI><a href="#comment">Comment</a>
+  <LI><a href="#commands">Command Line (directive)</a>
+  <LI><a href="#count">Command Counter </a>
+  <LI><a href="#version">Version Management </a>
+</ul>
+
+<a name="basic"></a>
+<h2>Basic Concept</h2>
+<p>
+ In VCE, the basis of protocol processing is "remotely handles function calls"; gen.rb generates stub code required for this basis.  In other words, the entity of function is defined by this stub file and a switch function that actually calls a function from remote is also defined.  With TCPcontext, protocol processing is performed in three stages:
+</p>
+<ol>
+  <LI>Data input from TCP connection or virtual circuit 
+  <LI>Parser splits data into records 
+  <LI>Call callback functions for each record 
+</ol>
+<p>
+This switch function corresponds to callback functions called for each record.  Using gen.rb simplifies developing communication application without writing a complicated code such as processing data running in a socket per byte.  It also makes communication programming easy under multi-platform environment so a server by C and a client by Ruby can transparently communicate with each other.  In the future, Java will be supported in addition to C/C++ and Ruby. 
+</p>
+
+<a name="commandline"></a>
+<h2>Command Line Option </h2>
+<p>
+The contents of configuration file can be overwritten by specifying a command line argument.  The name of configuration file is required.
+</p>
+<pre>
+ruby gen.rb  configuration file name  [option]
+The following options are available.  
+--protocolname NAME            
+--serverconnection conn|circ
+--workbufsize SIZE
+These options are the same with the options used in configuration file and overwrite the contents of configuration file if used as option.  
+--noc  Do not output a stub file of C 
+--nocpp  Do not output a stub file of C++ 
+--noruby  Do not output a stub file of Ruby
+These options do not take any arguments, and set the action of gen.rb. 
+--identifier STRING
+Change the identification used to identify commands in a configuration file 
+from default "=" to a specified string.  
+--vce_include_path PATH
+Change the place of #include vce.h in output code.
+--func_counter_type TYPE
+Change the type of the call counter for callback function.  
+</pre>
+
+<a name="output"></a>
+<h2>Output File Name</h2>
+<p>
+When gen.rb finishes successfully, the following six files will be created.
+</p>
+<pre>
+protocol name_sv.c      C source file for server 
+protocol name_cli.c     C source file for client 
+protocol name_sv.cpp    C++ source file for server 
+protocol name_cli.cpp   C++ source file for client 
+protocol name_sv.h      C/C++ header file,  protocol name_sv.c is included 
+protocol name_cli.h     C/C++ header file,  protocol name_cli.c is included 
+protocol name_sv.rb     Ruby source file for server 
+protocol name_cli.rb    Ruby source file for client 
+</pre>
+<p>
+The output of Java source code will be supported in the future release. 
+</p>
+<UL>
+
+  <LI>To develop a server with C <p>
+	  Compile/link <code>protocol name_sv.c</code> and include .
+          <code>protocol name_sv.h</code> in the source file that defines 
+          receive functions and in the all source files that define send 
+          functions.  
+          Also, <code>protocol name_sv_sender</code> function , <code>protocol           name_sv_recv_error_callback</code> function and
+      <code>protocol name_toolong_recv_warning</code> function
+          must be defined in 
+          addition to receive functions.  At last, specify callback function 
+          <code>protocol name_sv_pcallback</code> for TCPcontext that uses the 
+          defined protocol.  </p></li>
+	  
+	  
+  <LI>To develop a client with C <p>
+	  Compile/link <code>protocol name_cli.c</code> and include <code>
+          protocol name_cli.h</code> in the source file that defines receive 
+          functions and in the all source files that define send functions.  
+          Also, <code>protocol name_cli_sender</code> function and 
+          <code>protocol name_cli_recv_error_callback</code> function must be 
+          defined in addition to receive functions  At last, specify callback 
+          function <code>protocol name_cli_pcallback</code> for TCPcontext that
+           uses the defined protocol. </p></li>
+	  
+  <LI>To develop a server with Ruby<p>
+	  Require <code>protocol name_sv.rb</code> from application source.  
+          In the source, define the contents of 
+          <code>protocol name_sv_sender(_co, data )</code> ,
+          <code>protocol name_sv_recv_error_callback(_co, ecode )</code>,
+          <code>protocol name_toolong_recv_warning(_co, protoid, length) method.          Also, specify <code>$protocol name_sv_proc</code> as the callback 
+          Proc of second argument upon calling set_[conn|circ]_parser method for           the instance of TCPcontext.  This Proc instance is a Proc object that           is called for processing upon receiving a record and it is defined by           <code>protocol name_sv.rb.</code></p></li>
+
+  <LI>To develop a client with Ruby<p>
+	  Require <code>protocol name_cli.rb</code> from application source.  
+          In the source, define the contents of 
+          <code>protocol name_cli_sender(_co, data )</code> 
+          <code>protocol name_cli_recv_error_callback(_co, ecode )</code> method. 
+          Also, specify <code>$protocol name_cli_proc</code> as the callback 
+          Proc of second argument upon calling set_conn_parser method for the 
+          instance of TCPcontext.  This Proc instance is a Proc object that is 
+          called for processing upon receiving a record and it is defined by 
+          <code>protocol name_cli.rb.</p></li>
+</UL>	  
+
+<a name="infile"></a>
+<h2>Input File Format</h2>
+<p>
+	  The format of input file can be anything like HTML, ASCII, or TEXT.  
+          A line that begins with '=' is interpreted as a command line.  Using 
+          this functionality, you can write description about protocol in HTML,
+           and the same file can be used as a configuration file for gen.rb by 
+          adding command lines as necessary.  
+	  <BR><BR>
+	  gen.rb parses an input file line by line; if it finds '=' at the 
+          beginning of line, then retrieves a command and arguments the 
+          following '=' and performs the operation of the command.  Any number 
+          of spaces after '=' are perceived as a single space.  Also, a command
+           line can be spread into lines by adding back slash at the end of the
+           line.  '=' line must be written with a single command line, but it 
+          can be written with multiple lines as follows: </p>
+	  <pre>
+	  =s2c 100 login ( int id, \
+                     	  char password[100] )
+	  </pre>
+	  </li>
+
+<a name="comment"></a>
+<h2>Comment</h2>
+<p>
+      With the input file of gen.rb, all the text after '#' character will be
+      ignored.
+</p>
+      
+	  
+<a name="commands"></a>
+<h2>Command Line (directive)</h2>
+<p>
+A line begins with '=' is called a command line (directive line) and 
+A command line (directive line) begins with '=' followed by command strings.  The following is a list of available commands.
+</p>
+<ul id="lib">
+  <LI><B>protocolname NAME</B><p>
+	  This specifies a protocol name.  
+          Because a protocol name is used in various places such as function 
+          name or file name, use strings that are clearly recognized as C 
+          language's identification.  It is a good practice to add suffix 
+          "proto" so that it is easily identified as a protocol function.  <BR>
+          See the following example.  </p>
+          <pre>
+	  =protocolname toyproto
+	  =protocolname gameproto
+	  </pre></li>
+
+  <LI><B>serverconnection CONNECTION_TYPE</B><p>
+	  This command specifies the type of connection used by a server.  
+          VCE implements a function that reduces the load of the server by using           packet vectorizer; write "circ" if you use packet vectorizer and 
+          "conn" if you do not use packet vectorizer.    <BR>
+          See the following example.</p>
+	  <pre>
+	  =serverconnection circ
+	  =serverconnection conn
+	  </pre></li>
+
+  <LI><B>workbufsize SIZE</B><p>
+	  This command specifies the size of work buffer that is used by gen.rb 
+          when it internally sends data.  The maximum length of single record 
+          for transmission is the value that is specified with this command 
+          subtracting 1.  <BR>
+          See the following example.  </p>
+          <pre>
+	  =workbufsize 8192
+	  </pre><p>
+	  The work buffer is created on stack so care should be taken for 
+          sending a large record (a few M).  </p>
+
+  <LI><B>version NUMBER</B><p>
+	  This command specifies the version of protocol.  
+	  An integer number can be specified in NUMBER. 
+	  The specified version number can be retrieved as a return value of </p>
+	  <pre>
+	  int someproto_get_version( int *subv)
+	  </pre><p>
+	  function. See <a href="#version">version management</a>.</p></li>
+	  
+  <LI><B>vce_include_path PATH</B><p>
+      The output code of gen.rb is dependent on vce.h; however, this directive 
+      can change the file name that is given when you #include vce.h in output 
+      code.  For instance, if you install VCE under /usr/local/vce, you may like       to specify as in the following example. </p>
+      <pre>
+      =vce_include_path /usr/local/vce/include/vce.h
+      </pre></li>
+
+  <LI><B>func_counter_type TYPE</B><p>
+      A call counter for callback function is included in the output code of 
+      gen.rb; this directive specifies the type of the counter.
+      By default, the       type is VCEI64. <p>
+      <pre>
+      =func_counter_type int
+      </pre>
+      <p>Above example sets the type to int.  </p></li>
+      
+  <LI><B>idmax NUMBER</B><p>
+	  This command specifies the maximum value of command ID of protocol.  
+	  If the value is equal to or less than 255, 
+          the internal data structure for identifying command becomes 1 byte.  
+          If the value is greater than 255 and less than 65536, the internal 
+          data structure for identifying command becomes 2 byte.  If the value 
+          is greater than 65535, the internal data structure for identifying 
+          command becomes 4 byte.  The smaller the value, the more traffic can 
+          be saved.  By default, this value is 255.  With c2s or s2c directive,
+           it causes an error if the value of ID is greater than idmax.</p></li>
+
+  <LI><B>define IDENTIFIER EXPRESSION</B><p>
+      This command defines a macro.  At present, it supports C only. </p>
+      <pre>
+      =define TEST 1
+      </pre><p>
+      Use as in the above shown example.
+      This is an argument of function and mainly used to define a subscript of 
+      array. </p>
+      <pre>
+      =define TEST_A(x) (x+1)
+      </pre><p>
+      Therefore, it cannot define a complex macro such as a macro with an 
+      argument like the following example.  
+      If you define this, </p>
+      <pre>
+      #define ??_IDENTIFIER EXPRESSION
+      </pre><p>
+      similar to the above will be defined in XXproto_sv.h and XXproto_cli.h.  
+      By defining error codes and size constants that are frequently used in 
+      protocol, clients and servers can share a constant definition file and the       development efficiency will be increased.  </p></li>
+      
+  <LI><B>enum ENUMTYPE IDENTIFIER [EXPRESSION]</B><p>
+      Like define command, this defines enum of C.</p>   
+      <pre>
+      =enum HOGE INVALID_ARGUMENT -999
+      =enum HOGE NOT_SUPPORTED
+      </pre><p>
+      If you define as shown above, and the protocol name is GAMEPROTO, </p>
+      <pre>
+      typedef enum {
+          GAMEPROTO_INVALID_ARGUMENT=-999,
+          GAMEPROTO_NOT_SUPPORTED,
+      } GAMEPROTO_HOGE;
+      </pre><p>
+      an enum with a type of GAMEPROTO_HOGE is defined.  More than one ENUMTYPE 
+      can be specified and in that case multiple definitions of enum are created      .  If a number (-?[0-9]+) is specified in EXPRESSION, then it is taken as
+       a defined value.  If no value is specified, an enum with a default value
+       is created.  </p></li>
+
+
+  <LI><B>c2s ID FUNCNAME ( ARGDECL )<br>
+	  s2c ID FUNCNAME ( ARGDECL )</B><p>
+	  c2s and s2c define functions generated by gen.rb. 
+	  c2s and s2c can be added up to idmax pieces in a single file.  <BR>
+	  
+	  c2s is an abbreviation of "client to server" and it defines a send 
+          function on the client side and a receive function on the server side.           In other words, if you write a c2s directive, then a send function is
+           added to 
+           <code>protocol name_cli.c</code> 
+          and a receive function call (not a definition) is added to 
+           <code>protocol name_sv.c</code>. 
+          The process upon receiving is defined by application so only a receive
+           function call is performed.  
+	  <BR>
+	  Specify a message ID in <B>ID</B> with a number under idmax.  
+          A message ID is used by client and server to identify a function, 
+          and it is possible to handle up to idmax type of functions in total 
+          for s2c and c2c.  This ID can be added manually to keep compatibility
+           with the past protocol when a new function is added later. 
+          Therefore, if you plan to add new functions in the future, making an 
+          ID a jump number would be useful.
+	  
+	  Specify a function name in <B>FUNCNAME</B>.  As an identification of 
+          C, proper strings must be used for a function name.  <BR>
+          Specify arguments for each function in <B>ARGDECL</B>.  Following 
+          types are available. </p>
+	  <pre>
+	  int i       : int type integer 
+	  short i     : short type integer 
+	  char i      : char type integer 
+	  int a[100]  : int type array 
+	  short a[100] : short type array 
+	  char a[100]  : char type array 
+	  stringarray a[100][100] : array of string [maximum number of string]
+                                  [maximum number of characters for each string]
+	  </pre><p>
+	  A size must be specified when you specify an array.  It is required to
+           avoid overflowing the work area that is reserved in output code of 
+          gen.rb.  Be careful that the work area is created on a stack so 
+          setting a large value may result in insufficient stack.  An order of 
+          a few thousands is no problem.<BR>
+          The size of array is a "maximum size" so a full amount of data would 
+          not actually be transmitted.  For instance, if the first 10 byte of 
+          char a[100] is used, only 10 byte is transmitted.  Also, if an array 
+          is specified as an argument, an argument of int type that indicates 
+          the number of elements in the array is added.  Its name is set to 
+          variable name_len.    <BR><BR>
+	  The following is an example of configuration and functions to be 
+           generated.  someproto is a protocol name.  
+      </p>  
+	  <pre>
+	  =s2c 100 login( int id, char passwd[20] )
+	  C: int someproto_login_send( conn_t _c, int id, char *passwd, int passwd_len )
+	  Ruby: someproto_login_send( Conn c, Fixnum id, String passwd )
+	  
+	  =c2s 101 sendbig( int bigdata[1000] )
+	  C: int someproto_sendbig_send( conn_t _c, int *bigdata, int bigdata_len )
+	  Ruby: someproto_sendbig_send( Conn c, Array ia )
+	  </pre><p>
+	  The maximum size of array is not a byte count but a number of elements. </p></li>
+	  
+</ul>
+
+
+
+<a name="count"></a>
+<h2>Command Counter</h2>
+<p>
+ gen.rb defines a function that counts how many times each command written in a protocol configuration is sent/received.  When "login" command is sent to a server from a client, the following function is defined on the client side,  </p>
+<pre>
+C: VCEI64 someproto_get_login_send_count(void)
+Ruby: someproto_get_login_send_count()
+</pre><p>
+and the following function is defined on the server side.  </p>
+<pre>
+VCEI64 someproto_get_login_recv_count(void)
+Ruby: someproto_get_login_recv_count()
+</pre><p>
+By default, the type of return value is VCEI64, but it can be changed 
+by --func_counter_type argument or =func_counter_type directive.  </p>
+
+
+<a name="version"></a>
+<h2>Version Management</h2>
+<p>
+Protocols are continuously changing so the version management is indispensable.  With gen.rb, we propose managing the version numbers of protocol with two values.  One is a version number that is specified by a programmer, and the other is a sub version number that is retrieved by hashing the contents of the configuration file and it can be used as a strict "finger print of contents".  The version number specified by a programmer is set with the following directive.
+</p>
+<pre>
+=version
+</pre>
+<p>
+This is called as a major-version.  Both sub version and major version can be retrieved by the following function.
+</p>
+<pre>
+C(server): int someproto_sv_get_version(int *subv )
+C(client): int someproto_cli_get_version(int *subv )
+Ruby(server): someproto_sv_get_version()
+Ruby(client): someproto_cli_get_version() 
+</pre>
+<p>
+This function returns the major version that a programmer specified in a configuration file and returns the sub version for the int value directed by subv pointer.   A sub version is used only when a strict match of protocol is required..  Usually it can be ignored by specifying NULL for subv.  If "=version" is not included in a configuration file, this function always returns -1 as a major version number.  With Ruby version method, it always returns an array with two elements; 0th element indicates a major version and 1st element indicates a sub version. 
+</p>
+
+<p><br>
+
+  <br>
+&quot;PlayStation&quot; is registered trademark and is trademark of Sony Computer Entertainment Inc.<br>
+  <a href="index.html">return to index</a></p>
+<div id="footer">
+Copyright 2000-2005 Community Engine Inc. All rights reserved.</div>
+</body> </html>

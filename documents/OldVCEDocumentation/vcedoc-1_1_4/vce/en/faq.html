@@ -1,0 +1,270 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html> <head>
+<link rel="stylesheet" href="../vce.css" type="text/css">
+<title>VCE 1.1.4 official document (English) </title>
+</head>
+
+<body>
+<h1>VCE FAQ</h1>
+
+<OL id="lib">
+
+  <LI>Cannot establish more than a thousand of TCP connection.
+          <p>If you initialize VCE with a vce_initialize function, 
+          the maximum number of connection is set to 1000.  
+          Initialize by using the vce_initialize_limited function 
+          and specify a large number for max_conn member of vce_limit_t.</p></li>
+      
+  <LI>Calling vce_initialize reserves memory for a few MB. 
+	  <p>You can decrease the amount of memory usage as much as possible 
+          with the vce_initialize_limited function instead of the vce_initialize           function. 
+          See vce_initialize_limited function reference for an instruction.</p></li>
+	
+  <LI>Delay simulator (vce_tcpcontext_set_read_delay) does not work.
+	  <p>See "Cannot call a parser". </p></li>
+	  
+  <LI>Cannot call a parser.
+	  <p>If you find nothing wrong with a source, but a parser is not called, 
+          several causes are considered to be causing the problem.  </p>
+      <ul>
+        <LI>The order of calling tcpcontext_connect function and configuring 
+            parser. <p>
+            Usually this problem happens when you call a function 
+            (ex. vce_tcpcontext_set_conn_parser ) that configures tcpcontext_t 
+            after vce_tcpcontext_connect.  
+            A process such as vce_tcpcontext_connect that assigns a new 
+            connection copies the configuration of tcpcontext_t upon assignment.             For a detailed information, see vce_tcpcontext_connect and 
+            vce_tcpcontext_create manual.</p></li>
+        <LI>Using gen.rb with p2p application <p>
+            With p2p application, the same program can be a client and a server,
+             and sometimes it shares a protocol with a single protocol 
+            configuration file.  
+            In this case, if you write "=c2s" and "=s2c" the other way around, 
+            calling a protocol function does not reach the destination party.</p>
+            <pre>
+            You should have written  
+            =c2s hello ( char name[100] )
+            =s2c hello_reply ( char answer[100] )
+            but you made a mistake and wrote 
+            =s2c hello ( char name[100] )
+            =c2s hello_reply ( char answer[100] )
+            </pre>
+            <p>Check the protocol file again.  </p></li>
+      </UL>
+           
+  <LI>While using encryption, acceptwatcher is not called. 
+	  <p>If you call vce_tcpcontext_connect from client and then call 
+          vce_conn_close after a short while (like 10ms), 
+          the packet exchange of SSL is terminated before it finishes so 
+          acceptwatcher at server side will not be called. 
+          Initializing SSL requires a packet exchange several times. 
+          To examine if SSL packet exchange has finished, use the following. </p>
+	  <pre>
+	  if( vce_conn_writable(c) &gt; 0 )
+	  </pre></li>
+	  
+  <LI>vce_heartbeat causes an infinite recursion 
+	  <p>You have called vce_heartbeat in a callback function 
+          (parser, acceptwatcher, closewatcher, etc.) that is called from 
+          vce_heartbeat. 
+          To fix the problem, modify the code.  </p></li>
+	  
+  <LI>Does increasing a write buffer and/or read buffer bring stability? 
+	  <p>Depends on the application, but it usually makes it more stable. 
+          In VCE, when 100 bytes are needed to be written in a buffer 
+          when only 50 bytes are available, then it does not write just 50 bytes           but causes an error. 
+          This is based on the following concepts: </p>
+	  <UL>
+		<LI>"A problem caused by perished data is worse than having 
+                    no data."  </li>
+                <LI>"Otherwise it does not make sense to use buffer." </li>
+                <LI>"Handling an error is easier by protocol for each record."</li>
+      </UL>
+	  <p>Generally some applications disconnect right away 
+          when this error occurs because it can be considered that
+          "a write buffer is full because a reading is working insufficiently".</p></li>
+	  
+  <LI>Received an error message that is not found in the error message list.
+	  <p>Among the messages displayed by VCE, 
+          only the messages with fixed specification are added 
+          to the error message list.  
+          A message not found in the error message list would be added 
+          to the list in the future version.</p></li>
+      
+  <LI>Memory leak was found with the memory leak check program.
+	  <p>You probably forgot the vce_tcpcontext_cleanup and vce_finalize.  
+          These functions free the memory used by tcpcontext_t and VCE itself.            Take care that the vce_finalize function does not free memory used by
+           tcpcontext_t (both functions must be called properly). 
+          Also, some requires calling the cleanup function. </p></li>
+
+  <LI>Linking vcewin32_x_y_zz.lib results in a link error.
+	  <p>vcewin32 is dependent on the winsock2 library provided by Microsoft. 
+          Dependent means it refers symbols.  
+          Therefore, when you compile an application, you need to add 
+          <B>ws2_32.lib</B> to the library you link to.  </p></li>
+	  
+  <LI> Compatibility with multi-thread application on Windows<p>
+	  VCEwin32 supports multi-thread environment under Win32 environment. 
+
+	   Use a library named like "vcewin32_0_3_12mt.lib", 
+           then you can properly compile when you use a multi-thread version C 
+           library (in VC, /MTd option). 
+           If you use single-thread C library (in VC, /MLd), link a library name            like "vcewin32_0_3_12.lib".<BR> 
+           However, since VCE is not thread safe, calling VCE function 
+           from two or more threads should be avoided. 
+           Typically, making a thread "for network", and calling 
+           the transmitting function and heartbeat of VCE only in the thread 
+           are mounted.</p></li>
+ 
+  <LI>Is it possible not to use VCE on either the client or the server? <p>
+	  For instance, use VCE for the client and an ordinary program 
+          for the server, or the other way around. 
+          It is very easy especially if you do not use an encryption server 
+          or a relay server (the other way around is very difficult).  
+          Typical example is when the high load server only uses the VCE relay
+           server, and the client carried out an ordinary socket programming. 
+          For instance, this case applies to building SMTP server with VCE 
+          and also you can easily create client with VCE.  
+          The configuration must be selected if you can not use VCE 
+          on a client platform, such as cell phone.</p></li>
+
+  <LI>Warning message for SO_SNDLOWAT
+	  <p>VCE uses a socket option "SO_SNDLOWAT".  
+          If you use VCE under Linux kernel 2.2 or 2.4, 
+          this option is not available. 
+          When a new connection is accepted and when a connection is established           to a remote host, a warning message "Cannot configure SO_SNDLOWAT 
+          (Protocol not available)" is displayed (only with a verbose mode). 
+          With FreeBSD release 4.1 and above, 
+          this warning message is not displayed.</p></li>  
+
+  <LI>vce_tcpcontext_create function returns EINVAL.
+	  <p>If vce_tcpcontext_create returns EINVAL and is unable to initialize 
+          tcpcontext with various arguments settings, this is mostly because of
+           a missing vce_initialize() function call.</p></li>  
+
+  <LI>When using Ruby/VCE, <BR> 
+          "no implicit conversion from ..." message is displayed upon receiving 
+          data is indicated.<p>  
+          The value (handled as a return value) of the last expression of 
+          Proc does not return an integer at a callback process 
+          (ex. acceptwatcher, parser, closewatcher, etc.) that passes an object
+           for Proc.  
+          With Ruby/VCE, this return value of callback Proc is used to identify
+           an error of protocol.  </p></li>
+
+  <LI>How do I voluntary specify a timeout when I use a circ_t.<p>
+      See vce_circ_set_timeout function reference.  </p></li>
+
+  <LI>strace goes SIGSEGV<p>
+          When you run a program linked to VCE on strace and the maximum number
+           of connection is approximately greater than 1020, 
+          then strase itself goes SIGSEGV. 
+          The cause of this problem is that you changed FD_SETSIZE to 65536 and
+           compiled VCE, but the strace used to execute a program is compiled 
+          with FD_SETSIZE = 1024. 
+          When you use strace command, set the maximum number of connection at 
+          below 1000. 
+          We assume you do not need many connections for debugging with strace.
+           However, if you need strace with 65535 for production, 
+          CommunityEngine Inc. can provide you customized version of strace 
+          (of course, you can create your own strace by referring to 
+          <a href="linuxtune.html">Linux tune</a>.)  </p></li>
+      
+  <LI>Although a connection has been closed, it is not released right away. <p>          When you close a connection with a vce_conn_close function, 
+          if data remain in the send buffer of the closed connection, 
+          VCE will attempt sending the remaining data until the default timeout
+           (an argument of vce_tcpcontext_create function) expires.  
+          If you do not need to take care of this problem, 
+          for instance a client side program, use vce_conn_set_timeout and 
+          specify the timeout value to zero or closet to zero for applicable 
+          connections so that a connection is released right away.  
+          For detailed information, see vce_conn_close function reference.  
+          The timeout for a connection established again by connect/accept is 
+          set back to the default value.  </p></li>
+      
+  <LI>A callback function is called only once for a single heartbeat. <p>
+          This is a VCE specification. 
+          It is because VCE's main objective is to develop a server 
+          that provides service to many clients concurrently.  
+          This can be an obstacle so 
+          vce_tcpcontext_set_conn_call_parser_per_heartbeat is provided to 
+          adjust the number of times. </p>
+
+  <LI>Can multi-byte strings be processed with a group of functions in the text category? <p>
+          In case of Japanese, it can be processed if the target text is in EUC.           The text category processes all inputs in byte unit.  
+          When you directly process multi-byte strings such as Japanese and 
+          Chinese, you will need a text processing routine for each language.  
+          In being aware that game servers will be used in a multilingual 
+          environment, CommunityEngine Inc. is planning to provide a text 
+          processing engine especially for Japanese in future versions.</p></li>
+
+  <LI>Calling vce_vecprotocol_unparser_* failed.<p>
+          If the size of write buffer for relay server is less than 32768 
+          when tcpcontext_create is executed, it may fail and return 
+          VCE_EMORESENDBUF. 
+          This problem is solved by setting a larger buffer size. 
+          Typically, 1MB or larger buffer is needed.  </p>
+
+  <LI>Performance is improved by calling vce_heartbeat several times. <p>
+          Even if you set vce_tcpcontext_set_conn_call_parser_per_heartbeat to 
+          the maximum value (ex 10000), calling vce_heratbeat several times 
+          rather than once may improve the performance of a callback.  
+          This is because VCE acquires only 32KB per single connection for 
+          a single vce_heartbeat. 
+          This is in consideration that the load for each connection should be 
+          uniform for a server program. 
+          However, this may deteriorate performance when there are too many 
+          small queries or performing a bulk transmission. 
+          In this case, call vce_heartbeat successively for several times.</p></li>
+
+  <LI>What is a "bind error" (VCE_EBIND)"?<p>
+          Under UNIX (Linux), to keep up a server using TCP/IP, server processes           must occupy 65536 "TCP ports" from #0 to #65535. 
+          Use a system called "bind" to occupy those ports (with VCE's C API, 
+          "bind" is executed when the vce_tcpcontext_create function is called).           Therefore, when a server process that uses a #2000 port is working 
+          already, if another process that uses a #2000 port tries to start, 
+          the vce_tcpcontext_create function returns a VCE_EBIND error, 
+          which means a process was unable to start since the port is already 
+          bound.  </p></li>
+      
+  <LI>The method of the success judging when connecting from clients is not known. <p>
+          Refer to <a href="connect.html"> Connection from VCE clients</a></p></li>
+        
+  <LI>How to make file transfer programs and streaming applications using VCE?<p>
+
+          Not only the VCE, it is desirable to carry out the data demand of 
+          client initiative, but not one-way data transmission by server like 
+          HTTP.
+          The client initiative means mounting the server in order to carry out            the request message from a client faithfully; for example, 
+          if the client request "data of 1KB", the server returns "data of 1KB".          Each time the client transmits this request, a counter increases only           one, and whenever data returns, it decreases one. 
+          And if the frequency of the transmission demand is adjusted to keep 
+          the value of this counter 4 or less, only 4KB will not save on 
+          a network at the maximum. 
+          By carrying out like this, the server load of the application 
+          which tends to require load for a server memory like a file transfer 
+          is reduced sharply, and also the zone of the server side can be used 
+          evenly. </p></li>
+
+  <LI>What is VCEI64 data type?<p>
+      typedef'ed as "long long" in Linux and PS2.
+      typedef'ed as "__int64" in win32.
+      This data type is defined by VCE to use 64bit longer integer
+      when calling VCE functions.</p></li>
+      
+  <LI>Unneeded log output "received data..." is printed out on PS2<p>
+      in PS2 sce-libnet environment, VCE prints out some log lines
+      by default. To stop this, you will execute following code tip:</p>
+      <pre>
+      extern int rinsock_do_errout;
+      rinsock_do_errout = 1;
+      </pre></li>
+      
+</OL>
+
+<p><br>
+
+  <br>
+&quot;PlayStation&quot; is registered trademark and is trademark of Sony Computer Entertainment Inc.<br>
+  <a href="index.html">return to index</a></p>
+<div id="footer">
+Copyright 2000-2005 Community Engine Inc. All rights reserved.</div>
+</body> </html>

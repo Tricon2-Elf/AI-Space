@@ -1,0 +1,486 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel="stylesheet" href="../vce.css" type="text/css">
+<title>VCE 1.1.4 official document (Japanese)</title>
+</head>
+
+	<body>
+        <h1>gen.rb プロトコルジェネレータ リファレンス</h1>
+
+		<p>gen.rb は、プロトコル処理用関数自動生成器である。 VCE 上の RPC を簡単に実現するためのツールである。 gen.rb 
+		は、簡単な書式のプロトコル定義ファイルを読みこみ、Win32/UNIXでコンパイル可能な 
+		C言語のソースコードと、Rubyから利用可能なRubyのソースコードを出力する。 ネットワークバイトオーダに対応しているため、 
+	異なるプロセッサ、言語間で通信が可能である。 将来の版ではJavaのソースコードも出力する予定である。</p>
+		<H2>もくじ</H2>
+        <p>
+        gen.rb 詳細説明</p>
+		<ul>
+			<li>
+				<a href="#basic">基本的な考えかた</a></li>
+			<li>
+				<a href="#commandline">コマンドラインオプション</a></li>
+			<li>
+				<a href="#output">出力ファイル名</a></li>
+        </ul>
+        
+        <p>
+        プロトコル定義ファイル</p>
+        <ul>
+			<li>
+				<a href="#infile">入力ファイル形式</a></li>
+			<li>
+				<a href="#comment">コメント</a></li>
+			<li>
+				<a href="#commands">指示行(ディレクティブ)</a></li>
+        </ul>
+        
+        <p>
+        出力コード の機能</p>
+        <ul>
+			<li>
+				<a href="#count">コマンド回数カウント</a></li>
+			<li>
+				<a href="#version">バージョン管理</a></li>
+			<li>
+				<a href="#antihack">不正クライアント対策</a></li>
+		</ul>
+        
+
+
+		<h2>gen.rb 詳細説明</h2>        
+		
+			<h3><a name="basic"></a>基本的な考えかた</h3>
+		    <p>VCEでは、「関数呼びだしのリモート化」をプロトコル処理の基本としているが、 gen.rb 
+		では、関数呼びだしのリモート化のために必要なスタブコードを出力する。 つまり、リモート化される関数の実体をこのスタブファイルで定義すると同時に、 
+	リモートから呼びだされる関数を実際に呼びだすスイッチ関数も定義する。 TCPcontextにおいては、</p>
+		    <ol>
+			<li>
+			TCPコネクションまたは仮想回路からのデータ入力</li>
+			<li>
+			パーサによるレコード分割</li>
+			<li>
+				各レコードごとに呼びだされるコールバック関数呼びだし</li>
+		</ol>
+		    <p>の3段階のプロトコル処理が行なわれるが、 このスイッチ関数は、レコードごとに呼びだされるコールバック関数に対応する。 gen.rb 
+		を用いることによって、ソケットの中を流れるデータをバイト単位で 処理したりといった繁雑でバグを含みやすいコーディングを一切せずに 
+		通信アプリケーションを開発することができる。また、 C言語によるサーバとRubyによるクライアントとが透過的に通信できるなど、 
+		マルチプラットフォーム環境での通信プログラミングを容易にする。 将来はC/C++, Ruby ばかりでなく Java にも対応していく予定である。</p>
+		    <h3><a name="commandline"></a>コマンドラインオプション</h3>
+	    <p>コマンドラインに引数を指定することによって、 プロトコル定義ファイルの内容を上書きすることができる。 プロトコル定義ファイル名はかならず必要である。</p>
+		    <pre>
+　ruby gen.rb [オプション] プロトコル定義ファイル名</pre>
+	        <p>オプションは以下の通り</p>
+	        <pre>
+　--protocolname NAME            
+　--serverconnection conn|circ
+　--workbufsize SIZE</pre>
+　　
+<p>以上のオプションは、プロトコル定義ファイルに書けるものと同じで、オプションで指定した場合は定義ファイルの記述を上書きする。
+</p>
+<pre>
+　--noc  C言語のスタブファイルを出力しない
+　--nocpp C++言語のスタブファイルを出力しない
+　--noruby  Rubyのスタブファイルを出力しない</pre>
+　　
+<p>以上のオプションは、引数をとらず、gen.rb の動作を設定する。
+</p>
+<pre>
+  --nocli クライアントファイルを出力しない
+  --nosv  サーバファイルを出力しない    
+　--identifier STRING</pre>
+　　
+<p>プロトコル定義ファイルのコマンドを解釈する識別子を、デフォルトの"="から指定した文字列に変更する。 </p>
+<pre>
+　--func_counter_type TYPE</pre>
+　　
+<p>コールバック関数の呼びだし回数カウンタの型を変更する。
+</p>
+<pre>
+　--use_const</pre>
+　　
+<p>一部の関数プロトタイプにconst修飾を追加する。
+  　　基本的に使用した方がよいが、互換性の問題のためにデフォルトでは使用されない。
+  </p>
+<h3><a name="output"></a>出力ファイル名</h3>
+	<p>gen.rb は正常終了すると、</p>
+		<pre>
+プロトコル名_sv.c      C言語のソースファイル、サーバ用
+プロトコル名_cli.c     C言語のソースファイル、クライアント用
+プロトコル名_sv.cpp    C++言語のソースファイル、サーバ用
+プロトコル名_cli.cpp   C++言語のソースファイル、クライアント用
+プロトコル名_sv.h      C/C++言語のヘッダファイル、 プロトコル名_sv.c がinclude
+プロトコル名_cli.h     C/C++言語のヘッダファイル、 プロトコル名_cli.c がinclude
+プロトコル名_sv.rb     Rubyのソースファイル、サーバ用
+プロトコル名_cli.rb    Rubyのソースファイル、クライアント用
+</pre>
+        <p>の8つのファイルを出力する。将来の版では、 Javaのソースコードも出力するようになる予定である。</p>
+        <ul>
+			<li>
+				C言語のサーバを開発する場合<p>
+				<code>プロトコル名_sv.c</code> をコンパイル/リンクし、 受信用関数を定義するソースファイルと 
+				送信関数を使用するすべてのソースファイルにおいて、 <code>プロトコル名_sv.h</code> をincludeする。 また受信用関数のほかにも、 <code>プロトコル名_sv_sender</code>関数と、
+				<code>プロトコル名_sv_recv_error_callback</code>関数、 <code>プロトコル名_toolong_recv_warning</code>関数の３つを 
+				定義しなければならない。 定義したプロトコルを使用する TCPcontextに対して、 <code>プロトコル名_sv_pcallback </code>コールバック関数を設定する。各接続毎のプロトコル内で使う変数の初期化のため接続が来たときに<code>プロトコル名_new</code>と 
+				接続が切れたときに<code>プロトコル名_del</code>を呼び出さなければならない。また必要頻度以上にプロトコルが発行されたときの 
+				警告処理をするために<code>プロトコル名_toomany_recv_warning</code>関数も定義し、プロトコル定義ファイルに最大接続数 <code>=define 
+					MAX_CONNECTION 最大接続数</code>を設定しなければならない。この接続数は<code>vce_tcpcontext_create</code>や<code>vce_vec_init_mainsev</code>に渡す値と同じにする。
+                これらの関数の詳細については、<a href="genref.html">gen.rb-C出力リファレンス</a>をご覧ください。</p></li>
+			<li>
+				C言語のクライアントを開発する場合<p>
+				<code>プロトコル名_cli.c</code>をコンパイル/リンクし、 受信用関数を定義するソースファイルと 
+				送信関数を使用するすべてのソースファイルにおいて、 <code>プロトコル名_cli.h</code>を include する。 また受信用関数のほかに、 <code>
+					プロトコル名_cli_sender</code>関数と、 <code>プロトコル名_cli_recv_error_callback</code>関数のふたつを 
+				定義しなければならない。 最後に、定義したプロトコルを使用する TCPcontextに対して、 <code>プロトコル名_cli_pcallback</code>
+			コールバック関数を設定する。
+                これらの関数の詳細については、<a href="genref.html">gen.rb-C出力リファレンス</a>をご覧ください。 </p></li>
+            
+			<li>
+				Rubyのサーバを開発する場合<p>
+				アプリケーションソースから <code>プロトコル名_sv.rb</code> を require する。 そのソースにおいて、 <code>プロトコル名_sv_sender(_co, 
+					data )</code> <code>プロトコル名_sv_recv_error_callback(_co, ecode )</code> <code>プロトコル名_toolong_recv_warning(_co, 
+					proto_id, length)</code> メソッドの中身を定義する。さらに、 TCPcontextのインスタンスに対して 
+				set_[conn|circ]_parser メソッドを 呼びだすときに、第二引数のコールバックProcとして <code>$プロトコル名_sv_proc</code>
+				を指定する。 このProcインスタンスは、レコードを受信したときに処理のために呼びださ れる Proc オブジェクトであり、<code>プロトコル名_sv.rb</code>
+			で定義されているものである。</p></li>
+
+			<li>
+				Rubyのクライアントを開発する場合<p>
+				アプリケーションソースから<code>プロトコル名_cli.rb</code> を require する。 そのソースにおいて、 <code>プロトコル名_cli_sender(_co, 
+					data )</code> <code>プロトコル名_cli_recv_error_callback(_co, ecode )</code> メソッドの中身を定義する。さらに、 
+				TCPcontextのインスタンスに対して set_conn_parserメソッドを 呼びだすときに、第二引数のコールバックProcとして、 <code>$プロトコル名_cli_proc</code>
+				を指定する。 このProcインスタンスは、レコードを受信したときに処理のために呼びださ れる Proc オブジェクトであり、<code>プロトコル名_cli.rb</code>
+				で定義されているものである。</p></li>
+		</ul>
+        
+<h2>プロトコル定義ファイル</h2>
+		
+<h3><a name="infile"></a>入力ファイル形式</h3>
+		<p>入力ファイルの形式はHTML,ASCII TEXT,など何でもよい。 ただし、行頭が '=' ではじまる行は、コマンド行として解釈される。 
+		この特徴を利用すれば、HTMLでプロトコルの説明を書きつつ、同時に コマンド行を適宜挿入してgen.rb のプロトコル定義ファイルとしても使えるようにもできる。
+		  <BR>
+		  <BR>
+		gen.rb は入力ファイルを行ごとにパースし、行頭に '=' があると、 '=' に続くコマンドと引数を取りだし、コマンドに応じた処理をおこなう。 
+		'='の後ろには、スペース文字などがいくつ続いてもひとつの空白文字として 認識される。また、どの行も、 行末にバックスラッシュを書くことで、 
+	複数の行にまたがることができる。 = の行は1行で書く必要があるため、 複数行にまたがってコマンド定義をしたい場合は</p>
+		<pre>	  =s2c 100 login ( int id, \
+                     	  char password[100] )</pre>
+		<p>という風になる。</p>
+		<h3><a name="comment"></a>コメント</h3>
+		<p>gen.rb の入力ファイルにおいて、'#' 記号の後ろに書かれている すべてのテキストは無視される。</p>
+		<h3><a name="commands"></a>指示行(ディレクティブ)</h3>
+	<p>行頭に'='がある行はコマンド行(指示行)と呼ばれ、コマンド文字列が続く。 以下は、コマンド一覧である。</p>
+		<ul id="lib">
+			<li>
+				<B>protocolname NAME</B><p>
+				プロトコル名を指定する。 プロトコル名は、関数名やファイル名など随所に使用されるので、 C言語の識別子として正しいような文字列を使用すると問題がおこらない。 
+				また、プロトコル関数であることをわかりやすくするために、 "proto"などと いう接尾語をつけるとよい。デフォルトでは、defaultproto となっている。
+				<BR>
+				以下に例示する。</p>
+				<pre>	  =protocolname toyproto
+	  =protocolname gameproto</pre></li>
+			<li>
+				<B>serverconnection CONNECTION_TYPE</B><p>
+				サーバが使用するコネクションの種類を指定する。 VCEでは、パケットベクトライザを使用してサーバ本体の負荷を軽減する 
+				機能を持っているが、パケットベクトライザを使用する場合は "circ" を、 パケットベクトライザを使用しない場合は "conn" を、書きこむ。 
+				以下に例示する。</p>
+				<pre>	  =serverconnection circ
+	  =serverconnection conn</pre></li>
+			<li>
+				<B>workbufsize SIZE</B><p>
+                gen.rb が内部で送信データを作るときに使うワークバッファのサイズである。 送信の1レコードの最大長さはここで指定する値-1 となる。指定しない場合、64kbyteに設定される。
+				<BR>
+				以下に例示する。</p>
+				<pre>
+	  =workbufsize 8192</pre>
+				<p>ワーク用バッファはスタック上に取られるので、 あまり大きなレコード(数Mとか)を送信したいときには注意する必要がある。
+				<br>
+				<span style="font-style: italic;">＃VCE0.5.10以降のgen.rbでは関数のパラメータから送信バッファを構成するのに 
+					必要なサイズを計算し、関数毎にバッファサイズが設定されるのでこの値は無視される。</span></p></li>
+			<li>
+				<B>version NUMBER</B><p>
+				プロトコルのバージョンを指定する。 NUMBERには整数値を指定することができる。 ここで指定したバージョン番号は、</p>
+				<pre>
+	  int someproto_get_version( int *subv)</pre>
+				<p>関数の返り値として得ることができる。<a href="#version">バージョン管理</a>
+			を参照。</p></li>
+			<li>
+				<B>vce_include_path PATH</B><p>
+				gen.rb の出力するコードは vce.h に依存しているが、出力コード中で vce.h を #include する時にどのファイル名を与える 
+				かを、このディレクティブで変更できる。 たとえば /usr/local/vce に VCE をインストールすると決めている場 
+				合は、以下のように設定したいかもしれない。</p>
+				<pre>
+      =vce_include_path /usr/local/vce/include/vce.h </pre></li>
+			<li>
+				<B>func_counter_type TYPE</B><p>
+				gen.rb の出力するコードにはコールバック関数の呼びだし回数カウン タが含まれているが、回数のカウンタの型をこのディレクティブで指定 する。デフォルトでは 
+				VCEI64 型となっている。</p>
+				<pre>
+      =func_counter_type int
+</pre>
+			<p>以上のようにすると int 型となる。</p></li>
+			<li>
+				<B>idmax NUMBER</B><p>
+			プロトコルのコマンドID の最大値を設定する。 この値が255以下の場合、 コマンドを識別するための内部データ構造は1バイトになり、 
+			256以上65535以下なら2バイトになり、65536以上なら4バイトになる。 できるだけトラフィックを節約するためにも、この値は小さいほどよい。 
+			デフォルトでは 255となっている。 c2s や s2c ディレクティブにおいて ID の値を idmax よりも大きくするとエラーとなる。</p></li>
+
+			<li>
+				<B>recvlimit FUNCNAME COUNT TIME</B><p>
+			サーバでの対象関数の呼び出し回数を制限する。 TIMEミリ秒間にCOUNT数以上呼び出されるとアプリケーション定義の 
+			「プロトコル名_toomany_recv_warning」関数が呼び出される。 
+			警告関数の戻り値に0より低い値を設定すればプロトコルエラーとなり、切断することもできる。 
+			しかし、タイムラグで纏めてリクエストがくる事も考えられるので慎重に設定する必要がある。</p></li>
+			<li>
+				<B>define IDENTIFIER EXPRESSION</B><p>
+				マクロを定義する。現在はCのみ対応。
+				<pre>
+      =define TEST 1
+</pre>
+				<p>のように使用する。 これは、関数の引数で、配列の添字の定義に主に使用する事を目的とされている為、</p>
+				<pre>
+      =define TEST_A(x) (x+1)
+</pre>
+				<p>のような引数付きマクロなど、複雑な定義は出来ない。 なお、これを定義すると??proto_sv_hと??proto_cli.hに</p>
+				<pre>
+      #define ??_IDENTIFIER EXPRESSION
+</pre>
+			<p>のように定義される。 プロトコルでよく使用されるエラーコードやサイズ定数などは、この define 機能をつかって記述しておくと、クライアントと 
+			サーバで定数定義ファイルを共有することができて開発効率が向上する。</p></li>
+            <li>
+                <B>include FILENAME</B><p>
+                指定したファイルを詠み込み、その位置に挿入する。共通のマクロを定義したファイルを読み込む場合に利用できる。
+                <pre>
+      =include "common.txt"
+</pre></li>
+            <li>
+                <B>static IDENTIFIER EXPRESSION</B><p>
+                マクロを定義する。define と同様、引数付きマクロなど、複雑な定義はできない。主に include するファイルで共通マクロを定義する場合に使用することを目的とされている。??proto_sv.hと??proto_cli.hには define と同様、
+                <pre>
+      #define ??_IDENTIFIER EXPRESSION
+</pre>
+                <p>と定義される。define との違いは、 ??が static を記述したファイル名になる点である。</p>
+                <pre>
+      (common.txt)          
+      =static ID_LEN 32
+
+      (testproto.txt)
+      =protocolname testproto
+      =include "common.txt"
+      =define MAX_LEN 64          
+</pre>
+                <p>とした場合、testproto_sv.h と testproto_cli.h には、</p>
+                <pre>
+      #define COMMON_ID_LEN 32
+      #define TESTPROTO_MAX_LEN 64
+</pre>
+                <p>と定義される。</p></li>
+			<li>
+				<B>ifdef IDENTIFIER FUNCNAME</B><p>
+				マクロを定義により処理するプロトコルを決める。</p>
+				<pre>
+      =ifdef _DEBUG ping
+</pre>
+			<p>のようにするとプリプロセッサで_DEBUGが定義されているときのみ クライアントのpingの送信関数およびサーバのping受信関数が動作する。</p></li>
+			<li>
+				<B>enum ENUMTYPE IDENTIFIER [EXPRESSION]</B><p>
+				define と同様、今度は C言語の enum を定義する。
+				<pre>      =enum HOGE INVALID_ARGUMENT -999
+      =enum HOGE NOT_SUPPORTED
+</pre>
+				<p>のように定義すると、プロトコル名が GAMEPROTO の場合は、</p>
+				<pre>      typedef enum {
+          GAMEPROTO_INVALID_ARGUMENT=-999,
+          GAMEPROTO_NOT_SUPPORTED,
+      } GAMEPROTO_HOGE;
+</pre>
+			<p>というように、GAMEPROTO_HOGE という型をもつ enum がひとつ定義される。 ENUMTYPE を複数にすることもでき、その場合は複数の 
+			enum 定義が 出力される。 EXPRESSION のところに数値がきたとき (-?[0-9]+)は、その値が、enum の定義値として採用される。 
+			数値を指定しないときは、デフォルト値をもつ enum として出力される。</p></li>
+			<li>
+			   <b>struct IDENTIFIER{ ARGDECL }</b><p>
+			   define と同様、C言語の構造体を定義する。</p>
+			   <pre>      =struct hoge { int x, int y }
+</pre>
+			   <p>のように定義すると、</p>
+			   <pre>      typedef struct _hoge {
+          int x,
+          int y,
+      } hoge;
+</pre>
+			   <p>というように、構造体が定義される。<b>ARGDECL</b>には、メンバを定義する。次項の引数のタイプと同じものや構造体を使用できる。</p>
+			   <pre>      =struct hoge { int a, int b[20], char c[21], string d[22], stringarray e[23][24] }</pre>
+			   <p>と定義すると、gen.rbによって以下の定義文が生成されます。</p>
+			   <pre>      typedef struct _hoge {
+          int a;
+          int b[20];
+          int b_len;
+          char c[21];
+          int c_len;
+          char d[22];
+          char e[23][24];
+          int e_len;
+          char *e_p;
+          int e_i;
+       } hoge;
+</pre></li>
+			<li>
+				<B>c2s ID FUNCNAME ( ARGDECL )<BR>
+					s2c ID FUNCNAME ( ARGDECL )</B><p>
+				c2s,s2cは、gen.rb が出力する関数を定義する。 c2s,s2cは、1ファイル中に合計idmax個まで書ける。<BR>
+				c2s は "client to server" の略で、クライアント側に送信関数を、 サーバ側に受信関数を定義する。つまり、 c2s 
+				ディレクティブを1個書くと、 <code>プロトコル名_cli.c</code>に送信関数が1個、 <code>プロトコル名_sv.c</code>では受信関数呼びだしが1個(定義ではない) 
+				追加される。呼びだしが1個という意味は、 受信して実際に何をするかはアプリケーションが定義するので その関数の呼びだしだけを行なうという意味である。
+				<BR>
+				<B>ID</B>には、idmax以下の、メッセージIDを指定する。 メッセージIDとは、クライアントとサーバが関数の特定のために使うIDであり、 
+				s2cとc2s合計でidmax種類までの関数をやりとりできることになる。 このIDを手動で設定する理由は、新しい関数を後から追加しても 
+				過去のプロトコルと互換性を保つためである。なので、 将来関数を追加することがわかっている場合は、IDを飛び番号にするなどの 工夫をしておくとよい。 <B>FUNCNAME</B>には、関数名を指定する。関数名は、 
+				C言語の識別子として正しい文字列を指定しなければならない。<BR>
+				<B>ARGDECL</B>には、それぞれの関数の引数列を定義する。 引数には以下のタイプがある。</p>
+				<pre>	  int i       : int型整数
+	  uint i       : unsigned int型整数
+	  short i     : short型整数
+	  ushort i    : unsigned short型整数	  
+	  char i      : char 型整数
+	  uchar i	     : unsigned char型整数
+	  int64 i	     : int64型整数
+	  float i	     : float型浮動小数点数（環境によっては正常に通信できない）
+	  int a[100]  : int型配列
+	  short a[100] : short 型配列
+	  char a[100]  : char 型配列
+	  float a[100] : float 型配列（環境によっては正常に通信できない）
+	  string a[100]: 文字列
+	  stringarray a[100][100] : 文字列の配列 [文字列の最大数][各文字列の最大文字数]
+</pre>
+				<p>配列を指定する場合は、サイズを必ず指定しなければならない。 これは、gen.rb の出力コードの中で確保するワーク領域が 
+				バッファオーバーフローすることを確実に防ぐために必要だからである。 ここで注意が必要なのは、そのワーク領域はスタック上に取られるため、 
+				あまりにも大きな値を指定するとスタックが足りなくなることである。 数千のオーダならまったく問題ない。<BR>
+				配列のサイズは「最大サイズ」なので、大きくても実際にはそれだけの 量は通信されない。たとえば char a[100] の最初の10バイトしか使われ 
+				なかった場合は、10バイトしか送信しない。 また、配列を引数に指定した場合は、配列の要素数をあらわす int 
+				型の引数が、長さ渡し用に追加される。その名前は、変数名_len となる。
+				<BR>
+				<BR>
+				以下は、設定と出力される関数の対応の例である。 someproto はプロトコル名である。</p>
+				<pre>	  =s2c 100 login( int id, char passwd[20] )
+	  C: int someproto_login_send( conn_t _c, int id, char *passwd, int passwd_len )
+	  Ruby: someproto_login_send( Conn c, Fixnum id, String passwd )
+	  
+	  =c2s 101 sendbig( int bigdata[1000] )
+	  C: int someproto_sendbig_send( conn_t _c, int *bigdata, int bigdata_len )
+	  Ruby: someproto_sendbig_send( Conn c, Array ia )
+</pre>
+				<p>配列の最大サイズはバイト数ではなく、要素数であることに注意が必要である。</p></li>
+
+			<li>
+				<B>=sh Code<br>=ch Code</B><p>
+				shはサーバ側のヘッダーファイルに任意のコードを追加する。<br>
+				chはクライアント側のヘッダーファイルに任意のコードを追加する。<br>
+				例えばプロトコルファイル(testproto.txt)を次のように書いた場合、</p>
+	  <pre>
+	  =sh #include "server.h"
+	  =sh extern Server * sv;
+	  =sh extern Server2 sv2;
+
+	  =ch #include "client.h"
+	  =ch extern Client * cli;
+	  =ch extern Client2 cli2;
+</pre>
+
+				<p>これは以下のように変換される。</p>
+
+	  <pre>
+	  //testproto_sv.h
+	  /* Generated by gen.rb CommunityEngine Inc. 2000-2005 */
+	  #ifndef _TESTPROTO_SV_H_
+	  #define _TESTPROTO_SV_H_
+	  #include "vce.h"
+	  #include "server.h"
+	  extern Server * sv;
+	  extern Server2 sv2;
+	  #undef TESTPROTO_MAX_CONNECTION
+	  #define TESTPROTO_MAX_CONNECTION 1024
+	  ・・・
+</pre>
+
+	  <pre>
+	  //testproto_cli.h
+	  /* Generated by gen.rb CommunityEngine Inc. 2000-2005 */
+	  #ifndef _TESTPROTO_CLI_H_
+	  #define _TESTPROTO_CLI_H_
+	  #include "vce.h"
+	  #include "client.h"
+	  extern Client * cli;
+	  extern Client2 cli2;
+	  #ifdef __cplusplus
+	  extern "C" {
+	  ・・・
+</pre>
+
+		  </li>
+		</ul>
+
+        
+        <h2>出力コードの機能</h2>
+		
+<h3><a name="count"></a>コマンド回数カウント</h3>
+		<p>gen.rb は、 プロトコル設定に記述されている各コマンドの送信と受信の回数を 数える関数を定義する。関数名は、クライアントからサーバに "login" という コマンドを送る場合は、クライアント側に </p>
+		<pre>
+C: VCEI64 someproto_get_login_send_count(void)
+Ruby: someproto_get_login_send_count()
+</pre>
+		<p>関数が、サーバ側に</p>
+		<pre>
+VCEI64 someproto_get_login_recv_count(void)
+Ruby: someproto_get_login_recv_count()
+</pre>
+		<p>が定義される。 返り値は VCEI64 がデフォルトだが、--func_counter_type 引数や、=func_counter_type 
+		ディレクティブで型を変更できる。</p>
+		<h3><a name="version"></a>バージョン管理</h3>
+		<p>プロトコルはたえず変化していくものなので、 バージョン管理が不可欠である。 gen.rb では、 プログラマが指定するプロトコルのバージョン番号と、 
+		プロトコル定義ファイルの内容をhashして得られる、 厳密な「内容の指紋」として使えるサブバージョン番号の2つの値を使って 
+	プロトコルのバージョンを管理する方法を提案する。 プログラマが指定するバージョン番号は、</p>
+		<pre>
+=version
+</pre>
+		<p>ディレクティブで指定する。これをメジャーバージョンと名付ける。 サブバージョンもメジャーバージョンも、</p>
+		<pre>
+C(server): unsigned int someproto_sv_get_version(unsigned int *subv )
+C(client): unsigned int someproto_cli_get_version(unsigned int *subv )
+Ruby(server): someproto_sv_get_version()
+Ruby(client): someproto_cli_get_version() 
+</pre>
+		<p>関数で得ることができる。 この関数は、返り値として、プログラマがプロトコル定義ファイル中で指定した メジャー番号を返し、subv のポインタが指すunsigned int値に対して、 
+		サブバージョンを返す。 サブバージョンは厳密にプロトコルの一致を求めるとき以外は 使うことはないので、 subv に NULL 
+		を指定して、無視させることができる。 定義ファイル中に、 "=version" がない場合は、 この関数はメジャー番号として常に 0xffffffff を返す。 
+		Ruby版メソッドは、常に2要素の配列を返し、0番目の要素がメジャーバージョンで、 1番目の要素がサブバージョンである。<br>
+          <br>
+        【使用例】 </p>
+		<pre>
+unsigned int hashver;
+unsigned int version = someproto_sv_get_version(&hashver);
+        version : メジャーバージョン
+        hashver : サブバージョン
+</pre>
+        
+
+<h3><a name="antihack"></a>不正クライアント</h3>
+		<p>ユーザ自身がチートまたはサービス不可攻撃目的でする場合がある。 特にプログラムがクラックされ負荷の高いプロトコルまで解析され、それが連続で発行されると 
+		サーバの過負荷やクラッシュに繋がる。 まず、通信バッファや帯域を圧迫させないためには異常に長いプロトコルは早い段階で破棄/切断 
+		する必要がある。gen.rbのサーバヘッダファイルにはすべてのプロトコルの中から一番長いものが <b>プロトコル名_MAX_RECV_RECORD_LENGTH</b> として定義されている。これを「vce_tcpcontext_protocol_set_maxlength」 
+		関数を使い設定することで異常に長いプロトコルをはじく事が出来る。 
+		また、プロトコル毎に予期しない長さのデータが受信されたら「プロトコル名_toolong_recv_warning」 
+		関数が呼び出される。必要頻度以上に受信されたら「プロトコル名_toomany_recv_warning」 
+		が呼び出される。どちらもサーバアプリケーションで定義する必要がある。 
+		recvlimitにより一つも受信頻度の制限がされていないときはtoomay_recv_warningはリンカで破棄されるので定義する必要は無い。</p>
+
+<p>
+<br><br>
+<a href="index.html">index に戻る</a></p>
+</p>
+
+<div id="footer">
+Copyright 2000-2005 Community Engine Inc. All rights reserved.</div>
+	</body>
+</html>

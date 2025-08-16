@@ -1,0 +1,54 @@
+<!doctype html public "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<title>起動のまでの手順</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<link rel="stylesheet" href="../../default.css" type="text/css">
+</head>
+
+<body>
+<p><a href="../index.html">[トップ]</a> <a href="../changes.html">[変更履歴]</a> 
+  <a href="../map.html">[目次]</a> <a href="../words.html">[用語]</a> | <a href="index.html">[AdmCli]</a> 
+  <a href="../admin_server.html">[ADMSV]</a> <a href="../remote_server.html">[RSV]</a> 
+  | <a href="../vcelog.html">[VCE-Log]</a> <a href="../monitor_command.html">[VCEモニター]</a> 
+</p>
+<h1>起動のまでの手順</h1>
+はじめて admcli.exe を実行した時、いくつか設定をしなければなりません。<br>
+<br>
+<ul>
+  <li><a href="#startup">起動の前にすること</a></li>
+  <li><a href="#network">ネットワーク設定</a></li>
+</ul>
+<a name="startup"></a> 
+<h2>起動の前にすること</h2>
+<p>
+監視するサーバーマシン上でadmsvとrsvを実行しておかなければなりません。<br>
+また、監視するサーバーマシン(admsv,rsvが実行されている)のIPアドレス(またはマシン名)を入手しておきましょう。<br>
+ユーザー名、 パスワードについては admsvサーバーの管理者に尋ねてください。<br>
+(デフォルトではユーザー名admin,&nbsp;パスワードはtestkeyらしいです)<br>
+</p>
+<a name="network"></a> 
+<h2>ネットワーク設定</h2>
+<p> (1) [ツール]-[設定] メニューを選択し、 表示された設定ダイアログボックスの、 ツリービューの「ネットワーク」を選択します。<br>
+  (2) ユーザー名、パスワードを入力します。ユーザー名、 パスワードについては admsv サーバーの管理者に尋ねてください。<br>
+</p>
+<p>(3) [ツール]-[設定] メニューを選択し、表示された設定ダイアログボックスの、ツリービューの「ネットワーク」を選択します。<br>
+  (4) admsv サーバー名、ポートを入力します。サーバー名、ポートについては管理者に尋ねてください。<br>
+  <br>
+  これらの設定が終了したら、OKボタンを押し、設定ダイアログボックスを終了してください。<br>
+  その後、[ファイル]-[Login] にて admsv サーバーに接続する事が出来ます。</p>
+<p>
+  [参考:デフォルトの設定例]</br>
+  ユーザーID:admin&nbsp;&nbsp;ニックネーム:(設定なし)</br>
+  パスワード:testkey</br>
+  admsv&nbsp;サーバーアドレス:(admsvを実行しているlinuxのIPアドレス[例:192.168.1.20])</br>
+  その他は変更しない</br>
+</p>
+<p><img src="network_setting.png"></p>
+<p>ログインに成功すれば、ホストウインドウにマシン名とIPアドレス、プロセスウインドウにadmsv(他にもいくつかの監視プロセス)が表示されます。</p>
+<p><a href="index.html">admcliの目次に戻る</a></p>
+<hr>
+Copyright 2000-2005 CommunityEngine Inc. All rights reserved.<br>
+
+</body>
+</html>

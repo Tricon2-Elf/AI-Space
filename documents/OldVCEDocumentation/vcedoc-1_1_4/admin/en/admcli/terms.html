@@ -1,0 +1,47 @@
+<!doctype html public "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<title>Words</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<link rel="stylesheet" href="../../default.css" type="text/css">
+</head>
+
+<body>
+<p>
+<a href="../../ja/index.html">[TOP(ja)]</a> <a href="../../ja/changes.html">[ChangeLog(ja)]</a> 
+  <a href="../../ja/map.html">[Index(ja)]</a> <a href="../../ja/words.html">[Words(ja)]</a> | <a href="index.html">[AdmCli]</a> 
+  <a href="../../ja/admin_server.html">[ADMSV(ja)]</a> <a href="../../ja/remote_server.html">[RSV(ja)]</a> 
+  | <a href="../../ja/vcelog.html">[VCE-Log(ja)]</a> <a href="../../ja/monitor_command.html">[VCE-Monitor(ja)]</a> 
+</p>
+
+<h1>admcli: words</h1>
+<ul>
+  <dl> 
+    <dt><a name="admsv">admsv</a></dt>
+    <dd>Special server program for monitoring server process and server machines. 
+      Only one admsv is running in one domain. admcli connects to this process. 
+      admsv will connect to <a href="#rsv">rsv</a>, swp, and every server programs 
+      which you want to monitor. </dd>
+    <dt><a name="rsv">rsv</a></dt>
+    <dd>Runs on every target MACHINE. Admsv will connect to every rsv and sends 
+      command, and obtains host information from rsv. </dd>
+    <dt>process</dt>
+    <dd>process will be identified by IP address and monitoring port number. Note 
+      that service port number is not used for identification. In this document, 
+      we will often use "process" as "process that is monitored by admsv". </dd>
+    <dt>host</dt>
+    <dd>host will be identified by IP address. In this document, we will often 
+      use "host" as "host that is monitored by admsv". </dd>
+    <dt><a name="vcemon">VCE monitor API</a></dt>
+    <dd>A set of API and protocol implemented in <a href="http://vce.ce-lab.net/">vce</a>. 
+      This simple protocol is used to monitor remote server activity. </dd>
+    <dt><a name="moncmd">Monitor command</a></dt>
+    <dd>commands defined in VCE monitor API.</dd>
+  </dl>
+</ul>
+
+<hr>
+Copyright 2000-2005 CommunityEngine Inc. All rights reserved.<br>
+
+</body>
+</html>

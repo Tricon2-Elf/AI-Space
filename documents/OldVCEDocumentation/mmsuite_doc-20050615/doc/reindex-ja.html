@@ -1,0 +1,170 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html> <head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>mm-suite official document (Japanese)</title>
+<style type="text/css">
+P {
+  TEXT-INDENT: 1em
+}
+</style>
+</head>
+
+<body>
+
+<h1>データベースのreindex</h1>
+<p>
+MM-suiteでは、複数のデータベースサーバ(dbsv)を持ち、
+dbsvにかかる負荷を分散させている。
+現在ユーザごとにどのdbsvを使用するかはハッシュ値を元に決定している。
+dbsvにかかる負荷が増大し、dbsvの数を増やしたいことがある。
+しかし、dbsvの数が変わるとユーザごとのデータがどのサーバに置かれるかが変更されるので、
+データベース内のデータの再振り分け(reindex)をおこなわなければならない。
+そこで、reindexをおこなうツールをtools/dbreindexに用意してある。
+</p>
+
+<h3>データベースのバックアップ</h3>
+<p>
+reindexをおこなう前に、reindexが失敗することを考えて、
+データベースのバックアップを取っておくとよい。
+たとえば、storage2のデータベースをbackup2.sqlというファイルに
+バックアップする際は次のようなコマンドを入力する。
+</p>
+
+<pre>
+mysqldump storage2 -uroot -p -Q --opt -rbackup2.sql
+</pre>
+
+<p>
+パスワードを聞かれるのでrootのパスワードを入力すると
+バックアップがおこなわれる。
+バックアップした内容を元に戻すには、たとえば次のようにコマンドを入力する
+</p>
+
+<pre>
+mysql -uroot -p storage2 < backup2.sql
+</pre>
+
+<p>
+これでバックアップした内容が復元される。
+</p>
+
+<h3>dbsv数の変更</h3>
+<p>
+データベースのreindexをおこなうには、まずはじめに
+カレントディレクトリをtools/dbreindex/としてmakeコマンドを呼び、
+dbreindexという実行ファイルを作る。
+</p>
+
+<p>
+例としてdbsvを2個から3個にする場合のreindexの手順を示す。
+まず、サーバに接続するプログラム(msgsvとgmsv)の設定を変更する。
+msgsv/msgsv_template.confファイルとgmsv/gmsv_template.confに
+</p>
+
+<pre>
+dbsv=ホストアドレス,ポート番号,ドメイン名
+</pre>
+
+<p>
+の行を追加する。たとえば
+</p>
+
+<pre>
+dbsv=192.168.1.10,7005,domain6
+dbsv=192.168.1.10,7005,domain7
+dbsv=192.168.1.10,7005,domain8
+</pre>
+
+<p>
+のような具合である。
+</p>
+
+<p>
+次に、tools/dbreindexのreindexツールを使用する。
+reindexツールがコピー先の
+新しく追加するデータベースにstorageユーザを追加する。
+</p>
+
+<pre>
+GRANT ALL PRIVILEGES ON *.* TO storage@ホストアドレス IDENTIFIED BY 'パスワード' WITH GRANT OPTION;
+</pre>
+
+<p>
+ホストアドレスはreindexツールを実行するPCのアドレスである。
+たとえば次のとおりである。
+</p>
+
+<pre>
+GRANT ALL PRIVILEGES ON *.* TO storage@192.168.1.11 IDENTIFIED BY 'abcd1234' WITH GRANT OPTION;
+</pre>
+
+<p>
+どのようにreindexをおこなうか設定するために
+設定ファイルを用意するが、ここではdbreindex.confとする。
+この設定ファイルにまずreindex元のデータベースを以下のフォーマットで記述する。
+</p>
+
+<pre>
+from_dbsv=データベースサーバのホスト名,データベース名,データベースのパスワード
+</pre>
+
+<p>
+たとえば
+</p>
+
+<pre>
+from_dbsv=localhost,storage2,
+from_dbsv=localhost,storage3,password
+</pre>
+
+<p>
+という具合である。
+reindex先のデータベースを以下のフォーマットで記述する。
+</p>
+
+<pre>
+to_dbsv=データベースサーバのホスト名,データベース名,データベースのパスワード
+</pre>
+
+<p>
+たとえば
+</p>
+
+<pre>
+to_dbsv=localhost,storage2,
+to_dbsv=localhost,storage3,password
+to_dbsv=192.168.1.10,storage2,abcd1234
+</pre>
+
+<p>
+という具合である。
+用意した設定ファイルを使用して次のようにコマンドを入力する。
+</p>
+
+<pre>
+./dbreindex dbreindex.conf
+</pre>
+
+<p>
+これによりreindexがおこなわれる。
+</p>
+
+<h3>注意</h3>
+<p>
+dbreindexはデータベースの構造に依存したプログラムになっているので、
+データベースの構造が変わった場合は
+ソースコードを書き換えてmakeする必要がある。
+</p>
+
+
+<BR><BR>
+<a href="index-ja.html">index に戻る</a>
+
+<br>
+<hr>
+<font size=-1>
+Copyright 2000-2005 CommunityEngine Inc. All rights reserved.<BR>
+
+</body> </html>
+
+

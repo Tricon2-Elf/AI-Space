@@ -1,0 +1,75 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html>
+<head>
+<title>Admin server(ADMSV)</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<link rel="stylesheet" href="../default.css" type="text/css">
+</head>
+
+<body>
+<p><a href="index.html">[トップ]</a> <a href="changes.html">[変更履歴]</a> 
+  <a href="map.html">[目次]</a> <a href="words.html">[用語]</a> <a href="faq.html">[FAQ]</a> | <a href="admcli/index.html">[AdmCli]</a> 
+  <a href="admin_server.html">[ADMSV]</a> <a href="remote_server.html">[RSV]</a> 
+  | <a href="vcelog.html">[VCE-Log]</a> <a href="monitor_command.html">[VCEモニター]</a> 
+</p>
+
+<h1>Admin Serverについて</h1>
+<h2>Admin Serverとは</h2>
+<p>Admin Server(admsv)は、管理クライアント(admcli.exe)が各ホスト、プロセスの情報を 取得するためのサーバープログラムです。 
+<p>通常、admsvの機能はadmcli.exeを通して利用します。 
+<p>パッケージ内では、admsv/ 内に含まれています。 
+<h2>admsvの使用方法</h2>
+<ol>
+  <li>設定ファイルを記述します。<br>
+    <a href="#admsv.conf">admsv.conf</a>, <a href="#admsv.conf">admsv.list</a>, 
+    <a href="#admsv.user">admsv.user</a> に必要な情報を書き込みます。 
+  <li>admsvを起動します。<br>
+    <pre class="command">$ ./admsv admsv.conf admsv.list admsv.user</pre>
+</ol>
+<h2>設定ファイルについて</h2>
+<h3><a name="admsv.conf"/></a>admsv.conf</h3>
+<p>設定を記述したファイルです。(vce_read_simple_config_file形式) 各項目については、サンプルのadmsv.confのコメントを参照してください 
+<h3><a name="admsv.list"/></a>admsv.list</h3>
+<p>監視するホスト、プロセスを記述したファイルです。 
+<p>１行が一つのホスト、もしくはプロセスを表します。<br>
+  １行ごとに、"[監視するホストのIP]::[TAG]"、もしくは "[監視するプロセスのホストのIP]:[VCE monitor用のポート番号]:起動用コマンド"を記述します。 
+<p>例: 
+<pre>
+192.168.0.100::HOST1
+192.168.0.101::HOST2
+192.168.0.100:9099:PROC1:cd test; make start1
+192.168.0.100:9100:PROC2:cd test; make start2
+192.168.0.102:10000:PROC3:cd test; make start3
+</pre>
+<p>この設定ファイルでは、192.168.0.100, 192.168.0.101 の２台のホストと 192.168.0.100:9099=PROC1, 
+  192.168.0.100:9100=PROC2, 192.168.0.102:10000=PROC3 を監視ポートとする３つのプロセスを監視します。<br>
+  また、PROC1プロセスの起動用のコマンドは"cd test; make start"ということになります。<br>
+  監視していないホスト上で動くのプロセスを監視することも可能ですが、一部の機能(再起動など)が 使えなくなる場合もあります。 
+<h3><a name="admsv.user"/></a>admsv.user</h3>
+<p>ユーザーリストを記述したファイルです。 
+<p>１行が一人のユーザーを表します。 
+<p>１行ごとに "[ユーザー名]:[パスワード]:[パーミッション]" という形式で記述します。<br>
+  パスワードは平文で保存されます。<br>
+  パーミッションは、パーミッションを","で区切って並べます。 パーミッションには、以下のものが存在します。 
+<ul>
+  <li>ADMIN : 全ての操作を実行できます 
+  <li>DEVELOPER : 全ての操作を実行できます 
+  <li>GMASTER : ユーザー管理、サーバーの起動、停止以外のことは実行できます(ゲームマスター)( PERM_PROCESS_COMMAND, 
+    PERM_LOG, PERM_CHAT_ROOM ) 
+  <li>VIEWER : 情報を見る以外のことは実行できません(PERM_LOG, PERM_CHAT_ROOM) 
+  <li>PERM_USER : ユーザー管理の権限 
+  <li>PERM_EDIT : プロセスや、ホストの追加、削除の権限 
+  <li>PERM_HOST_COMMAND : ホストコマンドを実行できる権限 
+  <li>PERM_PROCESS_COMMAND : プロセスコマンド実行できる権限 
+  <li>PERM_LOG : ログの取得の権限 
+  <li>PERM_CHAT_ROOM : チャットルームの作成、削除の権限 
+  <li>PERM_EXEC_PROCESS : プロセスの起動、シャットダウンの権限 
+</ul>
+<h2>そのほかの情報</h2>
+<p>admsvは、デフォルトでは、12345番ポートを使用します。 
+
+<hr>
+Copyright 2000-2005 CommunityEngine Inc. All rights reserved.<br>
+
+</body>
+</html>

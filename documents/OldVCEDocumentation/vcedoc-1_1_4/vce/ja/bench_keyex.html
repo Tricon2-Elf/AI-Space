@@ -1,0 +1,164 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel="stylesheet" href="../vce.css" type="text/css">
+<title>VCE 1.1.4 official document (Japanese)</title>
+</head>
+
+
+<body>
+
+<h1>
+暗号鍵交換の最高頻度テスト
+</h1>
+
+<h2>はじめに</h2>
+<p>
+暗号鍵交換の最高頻度テストでは通信ミドルウェアVCEgaが秒間に鍵交換を
+何回おこなうことができるか測定する。
+</p>
+
+<h2>必要な環境</h2>
+
+<ul>
+<li>TCP/IP通信で接続可能な2台のコンピュータ</li>
+<li>gccが実行できること</li>
+<li>unixのシェルスクリプトが実行できること</li>
+<li>VCE最新版</li>
+</ul>
+
+<h2>使い方</h2>
+
+<p>
+vce/bench/keyexに測定プログラムがあるので、そのディレクトリに移動する。
+ciphbsv.cがサーバプログラム、ciphbcl.cがクライアントプログラムで、
+このプログラムを編集して通信のための設定をおこなう。
+
+ciphbsv.cを開き、使用するポート番号と暗号の設定をおこなう。
+ポート番号はportnum変数の値を指定することでおこなう。
+
+<pre>
+unsigned short portnum = 23456;
+</pre>
+
+通信に使用する暗号の設定はcipher変数の値を指定することでおこなう。
+
+<pre>
+VCE_BLOCK_CIPHER cipher = VCE_BLOCK_CIPHER_RIJNDAEL;
+</pre>
+
+暗号の鍵長の設定はkeylength変数の値を指定することでおこなう。
+
+<pre>
+int keylength = 16;
+</pre>
+
+benchcl.cを開き、サーバのIPアドレスとポートの番号と暗号の
+設定をおこなう。
+ポート番号はportnum変数の値を指定することでおこなう。
+
+<pre>
+unsigned short portnum = 23456;
+</pre>
+
+サーバのIPアドレスの設定はhost変数の値を指定することでおこなう
+
+<pre>
+char host[] = "192.168.1.20";
+</pre>
+
+通信に使用する暗号の設定はcipher変数の値を指定することでおこなう。
+
+<pre>
+VCE_BLOCK_CIPHER cipher = VCE_BLOCK_CIPHER_RIJNDAEL;
+</pre>
+
+暗号の鍵長の設定はkeylength変数の値を指定することでおこなう。
+
+<pre>
+int keylength = 16;
+</pre>
+
+サーバプログラムのコンパイルはsv0シェルスクリプトを実行することで
+おこなう。
+
+<pre>
+$ ./sv0
+</pre>
+
+s.outという実行ファイルが生成されるので、サーバマシンでs.outを
+実行する。
+
+<pre>
+$ ./s.out &
+</pre>
+
+クライアントプログラムのコンパイルはcl0シェルスクリプトを
+実行することでおこなう。
+
+<pre>
+$ ./cl0
+</pre>
+
+それにより、c.outという実行ファイルが生成されるので、
+クライアントマシンでc.outを実行する。
+
+<pre>
+$ ./c.out &
+</pre>
+
+測定が開始される。
+測定結果はクライアント側のコンソールとc.txtファイルに10秒ごとに
+次のように出力される。
+
+<pre>
+conn / sec = 34.900000
+</pre>
+
+この値が1秒間に何回鍵交換がおこなわれたかを示す値となっている
+
+測定を終了する場合は、クライアント側のコンピュータでは
+
+<pre>
+$ killall c.out
+</pre>
+
+と入力してクライアントプログラムを終了させる。
+サーバ側のコンピュータでは、
+
+<pre>
+$ killall s.out
+</pre>
+
+と入力してサーバプログラムを停止させる。
+</p>
+
+<h2>ベンチマーク結果</h2>
+<p>
+Pentium4 2GHzのPC同士で、暗号はRIJNDAEL鍵長16の場合、最高秒間38.5回程度の鍵交換が可能。   
+</p>
+
+<h2>結論</h2>
+<p>
+1万同時接続のオンラインゲームにおいて、1プレイの平均時間が10分だとすると、
+10000/600=約17 となり、秒間17回の鍵交換が発生することになる。
+単体のSWPが38回の鍵交換に耐えることから、SWPの鍵交換性能は十分である
+ことがわかる。</p>
+<p>
+実際には1万同時接続の場合、SWP1個あたり2000同時接続を割りあてるとすれ
+ば、SWP1個あたり秒間 (10000/600/5=約3)回となり、
+まったく問題がないことがわかる。
+</p>
+
+<br><br>
+<a href="index.html">index に戻る</a>
+<br>
+
+
+<div id="footer">
+Copyright 2000-2005 Community Engine Inc. All rights reserved.</div>
+
+</body>
+</html>

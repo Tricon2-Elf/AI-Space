@@ -1,0 +1,183 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html> <head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" >
+<link rel="stylesheet" href="../vce.css" type="text/css">
+<title>VCE 1.1.4 official document (English) </title>
+</head>
+
+<body>
+<h1>Linux Tune</h1>
+<p>
+ Depending on the size and contents of the service, you may need to tune Linux 
+kernel to run a program using VCE on Linux older than 2.4.  This section describes how to tune TCP/IP on Linux.  </p>
+<ul>
+  <LI><a href="#reason">The Reason why there are differences Between Linux 2.2 and 2.4 </a><BR>
+  <LI><a href="#session">Set The Number of Session Greater Than 1000 <BR></a>
+  <LI><a href="#keepalive">How to Detect a Terminated Connection of Client</a>
+</ul>
+
+
+<a name="reason"></a>
+<h2>The Reason why there are differences Between Linux 2.2 and 2.4 </h2>
+<p>
+Linux 2.4 and later versions offer a function that automatically expands 
+the size of fd_set when the assigning unused fd (ex. file, socket) exceeds 
+the size of fd_set within the existing kernel. 
+Therefore, you do not need to tune the fd_set value in the kernel.  
+Just tune at a library level.  
+However, Linux 2.2 and older versions do not have the same functions.  
+The size of FD_SETSIZE is fixed in kernel and the maximum fd number is 
+regulated.  
+This section describes how to tune kernel with the old versions of Linux. 
+</p>
+
+<a name="session"></a>
+<h2>Set The Number of Session Greater Than 1000 </h2>
+<p>
+Most programs using VCE that handle more than 1000 connections require 
+tuning other than VCE. 
+This section describes how to use many file descriptor in Linux. <BR> 
+VCE is compiled to handle 65536 connections.  When you develop an application 
+with VCE, you can support multi-connection by tuning the kernel 
+without modifying the glibc. 
+</p>
+
+<h2>For VCE Users </h2>
+<p>
+Linux 2.4 family kernel supports a multi-connection; 
+however, you need to configure to utilize this feature.  
+As a superuser, use csh shell (csh and tcsh but not bash/zsh) and 
+modify the limitations as follows.   </p>
+<pre>
+shell # limit descriptors 10000
+shell # limit openfiles 10000
+</pre>
+<p>
+However, you do not want to run server as root privilege, 
+change INR_OPEN of include/linux/fs.h of Linux kernel to 10000, for instance. 
+Then general users can use this number of connection.  (Usually you do not need to change the limits; you need to do so for some shellｓ.) 
+You have to choose either tuning the kernel or running the server with root. 
+</p>
+<p>
+After handling the above, you also need to change the upper limit of the number 
+of files being opened.  Use the following command line. 
+</p>
+<pre>
+shell # echo 65536 > /proc/sys/fs/file-max
+</pre>
+
+<BR>
+<B>*Note*</B><BR>
+<UL>
+  <LI>Problem of strace (Linux 2.4.x)<p>
+	  After changing the size of include/linux/fs.h, 
+          if you trace an application program with strace program, 
+          select() function call is not properly displayed.  
+          You need to recompile the strace program to solve this problem.</p></li>
+  <LI>Amount of Memory <p>
+	  The multi-connection requires lots of memory, 
+          so prepare physical memory as much as possible. 
+          For tens of thousands of connections, implement more than 768M memory.
+      </p></li>
+  <LI>Local Port Number <p>
+	  If the number of connection exceeds thirty thousand, 
+          the range of local port causes shortage.  
+	  Use the following command line to expand the range (Linux 2.4x). <p>
+          <pre>
+	  shell # echo 10000 65500 > /proc/sys/net/ipv4/ip_local_port_range
+	  </pre><p>
+	  Reducing the lower limit too much (10000 in the above example) affects          other applications.  
+          For an IP single home, approximately 50000 connections are 
+          the actual limit.  </p></li>
+   <LI>Other Applications<p>
+	  Other applications which use a select() function (including shell) 
+          must be recompiled to use a multi-connection.  
+          It is because most applications are compiled with a premise of 
+          1024 connections.  </p></li>
+</UL>
+
+<h3>For VCE Developers </h3>
+<p>
+The data structure of fd_set is important.  
+With glibc 2.2.x, fd_set is defined as follows (retrieved by gcc -E).  
+"Compiling VCE to support maximum 65536 connections" means 
+making fd_set structure large enough for VCE.  
+It is merely changing the defines of various headers and then making it.  
+Match them to maximum values (only Linux).  The size of fd_set becomes about 8KB and it is enough for a server on Linux. 
+</p>
+<pre>
+typedef long int __fd_mask;
+typedef struct
+{
+  __fd_mask __fds_bits[__FD_SETSIZE / (8 * sizeof (__fd_mask))];
+} fd_set;
+</pre>
+<p>
+_FD_SETSIZE is defined in /usr/include/bits/types.h and in include/linux/posix_types.h of Linux kernel source (symlinked from libc). 
+The first one is for the glibc internal, the next one is for kernel. 
+Since the pointer of fd_set that is passed to kernel is a simple array, 
+reserve a large area and pass it to any kernel (also applied to FreeBSD).  
+Also, change INR_OPEN of fs.h likewise for usability. 
+Then general users can have 65536 fds. 
+</p>
+
+<h3> In FreeBSD </h3>
+<p>
+FD_SETSIZE of /usr/include/sys/types.h is everything. 
+</p>
+<pre>
+typedef unsigned long   fd_mask;
+typedef struct fd_set {
+    fd_mask fds_bits[((( 1024  ) + ((  (sizeof(fd_mask) * 8 )  ) - 1)) / (  (sizeof(fd_mask) * 8 )  )) ];
+} fd_set;
+</pre>
+<p>
+Change FD_SETSIZE of sys/sys/types.h in kernel source and the constant 2048 of 
+sys/sys/kern/sys_generic.c, and match FD_SETSIZE of /usr/include/sys/types.h to it before compiling VCE. 
+Like Linux, it is simply an array so setting a large size of fd_set with VCE 
+causes no problem.  
+</p>
+
+
+<a name="keepalive"><h3>How to Detect a Terminated Connection of Client</h3></a><p>
+When a client uses a dial-up PPP and the server is on Linux, and if a telephone line of the client side is unplugged, there is no way to detect this termination at the server side since ICMP message is not generated.  
+</p>
+<p>
+VCE use SO_KEEPALIVE option.  With the standard setting of Linux, a KEEPALIVE 
+packet is sent two hours later after a communication is lost.  
+Game applications need to detect the termination in a short time.  
+Therefore, you need tuning to solve this problem.  
+</p>
+
+<h3>How KEEPALIVE Packet Works </h3>
+<p>
+When tcp_keepalive_time seconds has elapsed after the last packet exchange, 
+keepalive of TCP sends probe packet to the other end per tcp_keepalive_intvl 
+seconds, and it perceives it as disconnection if it does not receive replies 
+tcp_keepalive_probes times. 
+With Linux 2.4, these settings can be configured for each OS 
+(not for each socket).  
+To manage options of keepalive, use the following three variables.  
+<ul>
+  <LI>/proc/sys/net/ipv4/tcp_keepalive_probes
+  <LI>/proc/sys/net/ipv4/tcp_keepalive_time
+  <LI>/proc/sys/net/ipv4/tcp_keepalive_intvl  ( 2.4 and later) 
+</ul>
+See (man tcp(7)).  Configure these variables as follows. 
+</p>
+<p>
+<pre>
+echo 2 &gt; /proc/sys/net/ipv4/tcp_keepalive_probes
+echo 60 &gt; /proc/sys/net/ipv4/tcp_keepalive_time
+echo 60 &gt; /proc/sys/net/ipv4/tcp_keepalive_intvl
+</pre>
+In this example, timeout expires 60 + 2 * 60 = approximately 180 seconds 
+after a connection has terminated.  
+For VCE, closewatcher is called at the server side.  
+</p>
+<hr>
+
+<font size=-2>
+Copyright 2000-2005 Community Engine Inc. All rights reserved.<BR>
+"PlayStation" is registered trademark and is trademark of Sony Computer Entertainment Inc.
+</body> </html>

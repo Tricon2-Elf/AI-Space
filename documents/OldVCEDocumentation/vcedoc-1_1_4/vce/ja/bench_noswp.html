@@ -1,0 +1,392 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel="stylesheet" href="../vce.css" type="text/css">
+<title>VCE 1.1.4 official document (Japanese)</title>
+</head>
+
+
+<body>
+
+<h1>VCE最高速度ベンチマーク(SWPなし版)</h1>
+
+<h2>はじめに</h2>
+<p>
+VCE最高速度ベンチマークとは、VCEミドルウェアの通信速度を測定する
+ベンチマークで、Queryサイズやクライアント数ごとにおける最高速度を測定する。</p>
+<p>このベンチマークでは、性能向上のための中継サーバ SWP を使用していないことに
+注意が必要である。使用している版のベンチマークについては、<a href="bench_swp.html">bench_swp.html</a> を参照。
+</p>
+
+<h2>必要な環境</h2>
+<ul>
+  <lI>TCP/IP通信で接続可能な2台のコンピュータ
+  <li>gccが実行できること
+  <li>unixのシェルスクリプトが実行できること
+  <li>VCE最新版
+</ul>
+
+<h2>使い方</h2>
+<p>
+vce/bench/noswpにベンチマークがあるので、そのディレクトリに移動する。
+benchsv.cがサーバプログラム、benchcl.cがクライアントプログラムで、
+このプログラムを編集して通信のための設定をおこなう。</p>
+
+<p>benchsv.cを開き、使用するポート番号と暗号の設定をおこなう。
+ポート番号はportnum変数の値を指定することでおこなう。</p>
+
+<pre>
+unsigned short portnum = 23456;
+</pre>
+
+通信に使用する暗号の設定はcipher変数の値を指定することでおこなう。
+
+<pre>
+VCE_BLOCK_CIPHER cipher = VCE_BLOCK_CIPHER_NONE;
+</pre>
+
+benchcl.cを開き、サーバのIPアドレスとポートの番号と暗号の
+設定をおこなう。
+ポート番号はportnum変数の値を指定することでおこなう。
+
+<pre>
+unsigned short portnum = 23456;
+</pre>
+
+サーバのIPアドレスの設定はhost変数の値を指定することでおこなう
+
+<pre>
+char host[] = "192.168.1.20";
+</pre>
+
+通信に使用する暗号の設定はcipher変数の値を指定することでおこなう。
+
+<pre>
+VCE_BLOCK_CIPHER cipher = VCE_BLOCK_CIPHER_NONE;
+</pre>
+
+ベンチマークを取るとき徐々に通信量を増加させるが、
+その増加させる割合をcoefficientで指定している。
+
+<pre>
+#define coefficient 100
+</pre>
+
+この値が大きいと、通信量はすぐに増加し、この値が小さいと、
+通信量はゆっくりと増加する。値は大体10〜1000程度が良い。
+
+
+サーバプログラムのコンパイルはsv0シェルスクリプトを実行することで
+おこなう。
+
+<pre>
+$ ./sv0
+</pre>
+
+s.outという実行ファイルが生成されるので、サーバマシンでs.outを
+実行する。
+
+<pre>
+$ ./s.out &
+</pre>
+
+<p>クライアントプログラムの実行はcl*_*シェルスクリプトを実行することで
+  おこなう。（*には0〜3の値が入る。）*の値によって通信速度を測定する
+  ときのパラメータが変わってくる。それは次の表のとおりである。
+</p>
+<table id="bb">
+  <tr>
+    <td>query size＼client </td>
+    <td>1 </td>
+    <td>10 </td>
+    <td>100 </td>
+    <td>1000 </td>
+  </tr>
+  <tr>
+    <td>1 </td>
+    <td>cl0_0 </td>
+    <td>cl0_1 </td>
+    <td>cl0_2 </td>
+    <td>cl0_3 </td>
+  </tr>
+  <tr>
+    <td>10 </td>
+    <td>cl1_0 </td>
+    <td>cl1_1 </td>
+    <td>cl1_2 </td>
+    <td>cl1_3 </td>
+  </tr>
+  <tr>
+    <td>100 </td>
+    <td>cl2_0 </td>
+    <td>cl2_1 </td>
+    <td>cl2_2 </td>
+    <td>cl2_3 </td>
+  </tr>
+  <tr>
+    <td>1000 </td>
+    <td>cl3_0 </td>
+    <td>cl3_1 </td>
+    <td>cl3_2 </td>
+    <td>cl3_3 </td>
+  </tr>
+</table>
+
+
+Queryサイズ100byte、1000クライアントの測定をおこないたい場合は、
+
+<pre>
+$ ./cl2_3
+</pre>
+
+と入力する。
+それにより、c.outという実行ファイルが生成され、指定したパラメータで、測定を開始する。
+測定結果はサーバ側のコンソールとs.txtファイルに10秒間ごとに次のように出力される。
+
+<pre>
+conn size = 10
+recieved querry = 94638
+query / sec = 9463.800000
+byte / sec = 9463800.000000
+</pre>
+
+conn sizeはクライアント数を表し、recieved querryは10秒間にどのくらいの
+Queryを受信したかを表す。query / secは1秒間に何Queryを受信したかを
+表す値である。byte / secは1秒間に何バイトの送受信がおこなわれたかを示す
+値である。
+
+測定を終了する場合は、クライアント側のコンピュータでは
+
+<pre>
+$ killall c.out
+</pre>
+
+と入力してクライアントプログラムを終了させる。
+サーバ側のコンピュータでは、
+
+<pre>
+$ killall s.out
+</pre>
+
+と入力してサーバプログラムを停止させる。
+
+
+<h2>ベンチマーク結果</h2>
+<p>クライアント側、サーバ側ともにPentium4 2GHzのPCを使用し、
+  100MbpsのEthernetでマシンを接続してベンチマークをおこなった。
+  以下の表が暗号を使わなかった場合のベンチマーク結果である。
+</p>
+<table id="bb">
+  <tr>
+    <td>query size＼client </td>
+    <td>1 </td>
+    <td>10 </td>
+    <td>100 </td>
+    <td>1000 </td>
+  </tr>
+  <tr>
+    <td>1 </td>
+    <td>9.54 </td>
+    <td>73.6 </td>
+    <td>87.0 </td>
+    <td>14.0 </td>
+  </tr>
+  <tr>
+    <td>10 </td>
+    <td>9.28 </td>
+    <td>40.5 </td>
+    <td>48.2 </td>
+    <td>14.9 </td>
+  </tr>
+  <tr>
+    <td>100 </td>
+    <td>5.83 </td>
+    <td>13.6 </td>
+    <td>34.9 </td>
+    <td>13.5 </td>
+  </tr>
+  <tr>
+    <td>1000 </td>
+    <td>6.16 </td>
+    <td>6.43 </td>
+    <td>11.4 </td>
+    <td>7.77 </td>
+  </tr>
+</table>
+<p>  <!--
+<table border="1">
+<tr><td>
+query size＼client
+</td><td>
+1
+</td><td>
+10
+</td><td>
+100
+</td><td>
+1000
+</td></tr>
+
+<tr><td>
+1
+</td><td>
+30.8
+</td><td>
+51.6
+</td><td>
+26.9
+</td><td>
+11.2
+</td></tr>
+
+<tr><td>
+10
+</td><td>
+29.4
+</td><td>
+52.9
+</td><td>
+26.1
+</td><td>
+10.6
+</td></tr>
+
+<tr><td>
+100
+</td><td>
+25.2
+</td><td>
+21.4
+</td><td>
+26.5
+</td><td>
+7.66
+</td></tr>
+
+<tr><td>
+1000
+</td><td>
+8.38
+</td><td>
+10.3
+</td><td>
+10.7
+</td><td>
+7.66
+</td></tr>
+</table>
+-->
+    
+</p>
+
+
+<p>縦軸はquery sizeで送受信するQueryのbyte数をあらわす。
+  横軸はクライアント数である。通信速度は秒間に何kQ送受信できたかを
+  表す値で単位はkQ/sである。
+  Queryサイズごとにクライアント数を変化させた場合のグラフは
+  以下のとおりである。
+  <img src = "../images/noswpbench_graph0.gif"><br>
+  
+Queryサイズ1000、クライアント数100の場合、秒間に送受信できるビット数は
+  87Mbpsであり、LANの通信速度である100Mbpsに近い値が出ている。
+  また、この時点でのCPU使用率は、サーバ、クライアントともに1%以下であった。
+  
+
+  以下の表が暗号を使った場合(RIJNDAEL/16)のベンチマーク結果である。
+</p>
+<table id="bb">
+  <tr>
+    <td>query size＼client </td>
+    <td>1 </td>
+    <td>10 </td>
+    <td>100 </td>
+    <td>1000 </td>
+  </tr>
+  <tr>
+    <td>1 </td>
+    <td>9.04 </td>
+    <td>43.8 </td>
+    <td>56.4 </td>
+    <td>10.7 </td>
+  </tr>
+  <tr>
+    <td>10 </td>
+    <td>8.25 </td>
+    <td>43.7 </td>
+    <td>55.2 </td>
+    <td>10.9 </td>
+  </tr>
+  <tr>
+    <td>100 </td>
+    <td>6.69 </td>
+    <td>13.8 </td>
+    <td>22.1 </td>
+    <td>7.97 </td>
+  </tr>
+  <tr>
+    <td>1000 </td>
+    <td>1.74 </td>
+    <td>5.51 </td>
+    <td>5.99 </td>
+    <td>3.13 </td>
+  </tr>
+</table>
+
+
+縦軸はquery sizeで送受信するQueryのbyte数をあらわす。
+横軸はクライアント数である。
+通信速度は秒間に何kQ送受信できたかを表す値で単位はkQ/sである。
+Queryサイズごとにクライアント数を変化させた場合のグラフは以下のとおりである。
+
+<img src = "../images/noswpbench_graph3.gif"><br>
+
+この結果から、暗号化によって、
+最高速度は暗号なし版の50%程度となることがわかる。
+しかし、暗号化している場合は、暗号化していない場合にCPU使用率が1%以下
+だったのに対し、CPUを100%消費する状態となった。
+つまり、100MbpsのEthernetの限界速度を活かすには、
+単純計算で、CPU速度があと2倍必要ということになる。
+
+<h3>Full Duplexについて</h3>
+<p>
+上記の2通りのベンチマークにおいては、サーバは、受信したすべてのデータを
+echo(クライアントにそのまま送りかえす)している。つまり、1KBのデータを
+受信したら、1KBのデータをそのまま返す。
+したがって、暗号化性能は、受信時にデコード、送信時にエンコードの処理
+をしているため、約2倍の負荷が発生している。
+これはオンラインゲームの一般的な利用状態とは異なる(通常はサーバから
+の返しのほうが数倍多い)ことに注意が必要である。たとえばMMORPGの場合、
+1KB受信すると10KB送信することはざらである。</p>
+
+<p>また、今回のテストで使用したEthernetは、100Mbpsの受信と
+100Mbpsの送信が同時にできる全二重に対応しているため、
+暗号なし版のテストにおいて送受信あわせて100Mbpsを越えていることにも
+注意されたい。
+</p>
+
+
+<h2>結論</h2>
+<p>
+本ベンチマークは、SWPを使用しない状態でのVCEの最高速度を計測した。
+暗号を使わない場合には 100Mbps のEthernet の限界速度が常に達成され、
+暗号を使う場合には50MbpsあたりでCPUの限界に突きあたった。
+<p> したがって、ひとつのゲームサーバの最高性能をより高めたい場合は、
+<ul>
+<li>暗号なしの場合：ギガビットEthernetを使う</li>
+<li>暗号ありの場合：SWPを使って暗号処理を外部化する</li>
+</ul>
+という事が必要となる。
+
+</p>
+
+<br><br>
+<a href="index.html">index に戻る</a>
+<br>
+
+<div id="footer">
+Copyright 2000-2005 Community Engine Inc. All rights reserved.</div>
+
+</body>
+</html>

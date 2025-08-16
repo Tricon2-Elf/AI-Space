@@ -1,0 +1,131 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel="stylesheet" href="../vce.css" type="text/css">
+<title>VCE 1.1.4 official document (Japanese)</title>
+</head>
+
+<body>
+<h1>VCEクライアントからの接続について</h1>
+<p>
+  このドキュメントでは、
+VCEを用いたクライアントが、(VCEを用いた)サーバに接続するときの
+成功判定、失敗判定の方法について解説する。
+</p>
+
+<h2>推奨される接続方法</h2>
+<p>
+  VCEを使ったアプリケーションでは、ノンブロッキング暗号化接続を用いて、
+vce_conn_writable 関数のみを使って接続成功テストをすることを推奨される。
+</p>
+
+<pre>
+tcpcontext_t t = vce_tcpontext_create( 0, ... );
+conn_t new_con = vce_tcpcontext_connect( t, "localhost" , 80 ); /* A */
+while (1 ){
+  vce_heartbeat();
+  if( vce_conn_writable( new_con ) >= 4 ){
+    vce_conn_write( new_con, "test" , 4 ); /* 書きこみ処理 */
+  } else {
+    /* Aから一定時間たったら、失敗を通知 */
+  }
+}      
+</pre>
+
+<p>
+  この方式の場合は、何らかのタイマーを使って、一定時間以内に
+vce_conn_writable が正の値を返さない場合はクライアント端末上に
+エラーを表示するといった処理を追加して、
+ユーザーに接続できない旨を知らせることになる。
+なお、以上の方法は、暗号を使わない場合でも同様に有効である。
+</p>
+<p>
+  ところが、テスト用プログラムや、サーバの監視用プログラムなど、
+そのような手続きを踏むのを省略して簡単に作りたい場合も多い。
+VCEの「ブロッキング接続」はそのような目的のために利用可能である。
+ブロッキング接続の場合は、以下のような感じでループをさせることなく、
+接続成功確認ができる。
+</p>
+<pre>
+tcpcontext_t t = vce_tcpontext_create( 0, ... );
+conn_t new_con = vce_tcpcontext_connect( t, "localhost" , 80 );
+if( vce_conn_is_valid( new_con ) == 0 ){
+  /* 失敗! ここで判定できるので便利 */
+}
+while (1 ){
+  vce_heartbeat();
+  if( vce_conn_writable(new_con)&gt;0 ){
+    /* 書きこみ処理 */
+  }
+}
+</pre>
+
+<p>
+  ところが、この方法を用いる場合でも、
+サーバが絶対最大接続数に達している場合だけ、期待通りの動作をしない。
+つまり、上の例で vce_conn_is_valid 関数が真を返しているのに、
+ループを開始すると vce_conn_writable がエラーを返してしまうのだ。
+実際にはサーバは最大接続に達しているので、
+最終的には vce_conn_writable がエラーを返すのは当然なのだが、
+なぜ、一番最初の vce_conn_is_valid が真を返すのかが問題となる。
+</p>
+<p>
+  この原因は、
+VCEサーバにおいて最大接続数に達したときの動作が原因である。
+VCEサーバにおいては、クライアントからの接続の数が
+あらかじめ設定された最大値に達した場合は、
+一旦接続を受けいれ(accept)てから、改めて切断(close)しているからである。
+VCEをはじめUNIXの各ツール(apacheなども)
+がこのような仕様になっているのは、
+以下のようなソケットライブラリの機能上の制限があるからである。
+</p>
+<ul>
+  <li>UNIXのソケットライブラリが、最大接続の概念を持っていない
+      <p>TCP/IP の機能により、
+      あるサーバが最大接続数に達している場合に
+      connection refused を返す手段がない。</p></li>
+       
+  <li>最大接続数付近で、同じポートをbind/listen したり、
+      <p>解放したりを繰りかえすべきでない<BR>
+      上記の動作は、最大接続に達するごとに、
+      bind/listenしているポートを解放して、
+      接続数に余裕ができたらまたbind/listenするといったことを繰りかえす
+      ことによって実現できるが、
+      このような動作はセキュリティホールとなり得る上、
+      パフォーマンス上の問題もあり推奨されない。</p></li>
+</ul>
+<p>
+  したがって現在UNIX上で動作するサーバアプリケーションは、
+一旦acceptしてから closeするという動作がデフォルトとなっているのである。
+</p>
+
+<H2>最大接続数の扱い</h2>
+<p>
+  VCE では、最大接続数を越えた接続に関しては、
+上で説明したような動作がデフォルトとなっている。
+しかしこの動作のままでは、サーバが混雑しているときにアクセスした
+ユーザにとって、サーバがトラブルを起こしているのか、
+混雑が発生しているのか、知ることができない。
+</p>
+<p>
+  そこで、VCEでは、絶対的最大接続数のほかに、
+「仮の」最大接続数を設定して、
+仮の最大接続数を越えた接続を受けいれたときに別の接続監視関数を
+呼びだす機能を備えている。
+それが vce_tcpcontext_set_conn_hiwater_acceptwatcher 関数と、
+vce_tcpcontext_set_circ_hiwater_acceptwatcher 関数である。
+詳細に関しては、
+vce_tcpcontext_set_conn_hiwater_acceptwatcher 関数を参照の事。
+</p>
+
+<br><br>
+<a href="index.html">index に戻る</a>
+<br>
+
+
+<div id="footer">
+Copyright 2000-2005 Community Engine Inc. All rights reserved.</div>
+
+</body> </html>

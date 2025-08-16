@@ -1,0 +1,56 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html> <head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>mm-suite words (Japanese)</title>
+</head>
+
+<body>
+<h1>mm-suite 単語集</h1>
+
+
+<ul>
+  <a name="default_state">
+  <LI>デフォルト状態<BR>
+      </a>
+      mm-suite のパッケージを展開して直後の状態のこと。初期状態とも言う。
+      各種設定は、すべてのサーバが localhost で動作するときにのみ、
+      正しく接続できるように調整されている。
+
+  <a name="backend_server">
+  <LI>バックエンドサーバ<BR>
+      </a>
+      LOCKSV,AUTHSV,DBSV,GUILDSV の4種類のサーバの事。
+      GUILDSV は複数の MSGSV から、それ以外は複数の GMSV から、接続を受けいれる。
+
+      
+  <a name="frontend_server">
+  <LI>フロントエンドサーバ<BR>
+      </a>
+      GMSV, MSGSV, SWP のサーバの事。
+      もっともフロントエンドにあるのが SWP, MSGSV で、
+      次が GMSV だが、これら3種類をあわせて フロントエンドサーバと呼ぶ。
+
+  <a name="mysql">
+  <LI>MySQL<BR>
+      </a>
+      mm-suite の MSGSV, DBSV, GUILDSV が依存している、
+      リレーショナルデータベースである。
+      単純な処理を超高速に処理することに特化しているため、
+      mm-suite ではこれを採用した。
+      <!--
+      実際には sqllib という名前の SQL ラッパーを介して、
+      直接にサーバ内から MySQL を叩くことをしないような設計になっている。
+      -->
+
+
+</ul>
+
+<BR><BR>
+<a href="index-ja.html">index に戻る</a>      
+<br>
+<hr>
+<font size=-1>
+Copyright 2000-2005 CommunityEngine Inc. All rights reserved.<BR>
+
+</body> </html>
+

@@ -1,0 +1,113 @@
+<!doctype html public "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<title>Process window</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<link rel="stylesheet" href="../../default.css" type="text/css">
+</head>
+
+<body>
+<p>
+<a href="../../ja/index.html">[TOP(ja)]</a> <a href="../../ja/changes.html">[ChangeLog(ja)]</a> 
+  <a href="../../ja/map.html">[Index(ja)]</a> <a href="../../ja/words.html">[Words(ja)]</a> | <a href="index.html">[AdmCli]</a> 
+  <a href="../../ja/admin_server.html">[ADMSV(ja)]</a> <a href="../../ja/remote_server.html">[RSV(ja)]</a> 
+  | <a href="../../ja/vcelog.html">[VCE-Log(ja)]</a> <a href="../../ja/monitor_command.html">[VCE-Monitor(ja)]</a> 
+</p>
+
+<h1>admcli: process window</h1>
+<h2>Description of process window</h2>
+<p> This window visualizes target PROCESSES running on target hosts. State of 
+  each processes is monitored through <a href="terms-en.html#vcemon">VCE monitor 
+  API</a>. You can sort entries by clicking headline of each column. Youc can 
+  choose multiple lines at the same time. It's convenient to execute the same 
+  commands against multiple processes in one action. </p>
+<h3>Description of shown entries</h3>
+<dl> 
+  <dt>Alert</dt>
+  <dd>It turns to "!" when pre-set condition is satisfied.</dd>
+  <dt>Id</dt>
+  <dd>unique process ID number given by admsv. This is used when searching through 
+    log to determine process. </dd>
+  <dt>Addr</dt>
+  <dd>IP address of the host that has target process.</dd>
+  <dt>Name</dt>
+  <dd>Name of target process.</dd>
+  <dt>Tag</dt>
+  <dd>Tag string for your own use. You can set this entry by admsv configuration 
+    file or admcli.</dd>
+  <dt>State</dt>
+  <dd>state of the process. There are 3 states: DEAD,INIT,ALIVE<BR>
+    It'll be shown red if DEAD or INIT. <br>
+    <li>DEAD : process is down. (vce-monitor cannot connect to it.)</li>
+    <li>INIT : process is now in the way starting.</li>
+    <li>ALIVE : process is healthy.</li>
+  </dd>
+  <dt>Type</dt>
+  <dd>Type of process. now it's always 1.</dd>
+  <dt>Port</dt>
+  <dd>Port number of the process' service.</dd>
+  <dt>AdmPort</dt>
+  <dd>Port number for Admin tool, not service</dd>
+  <dt>Ping</dt>
+  <dd>Round trip time of ping request from admsv to the process. This is highly 
+    influenced by process' activity, for example if the process is performing 
+    a big calcuration, ping value will bigger.</dd>
+  <dt>Ping graph</dt>
+  <dd>graph of Ping value. You can configure it by [Tool]-[Configuration]-[Graph] 
+  </dd>
+  <dt>Login</dt>
+  <dd>Number of concurrent user of the process. This is obtained by VCE monitor 
+    API. THe process have to return it by get_login <a href="terms.html#moncmd">monitoring 
+    command</a>.</dd>
+  <dt>Login graph</dt>
+  <dd>Graph of Login number.</dd>
+  <dt>Session</dt>
+  <dd>Number of TCP sessions that are holded by target process.</dd>
+  <dt>Session graph</dt>
+  <dd>Graph of Session.</dd>
+</dl>
+<br>
+<h2>Controlling process window</h2>
+<p> You can manipulate process window by these ways: </p>
+<br>
+<ul>
+  <li><a href="#autoupdate">On/Off Auto update of process window</a></li>
+  <li><a href="#update">Update process window once</a></li>
+  <li><a href="#exec">Execute command against the process</a></li>
+  <li><a href="#exec_registercmd">Execute registered command</a></li>
+  <li><a href="#boot">Start/Stop/Restart process</a></li>
+  <li><a href="#edit">Edit tag string</a></li>
+  <li><a href="#create">Create/Delete process entry</a></li>
+  <li><a href="#editstartcmd">Configure startup command</a></li>
+</ul>
+<br>
+<dl> 
+  <dt><a name="autoupdate">On/Off Auto update of host window</a> 
+  <dd>You can on/off auto update of host window.</dd>
+  <dt><a name="update">Update host-window once</a> 
+  <dd>You can force admcli to update host window.</dd>
+  <dt><a name="exec">Execute command against the process</a></dt>
+  <dd>Execute <a href="terms.html#moncmd">Monitor command</a> Result will be 
+    shown in result window<br>
+    Commands can be selected from pop-up menu by right click, or just you can 
+    type the command by yourself.</dd>
+  <dt><a name="exec_registercmd">Execute registered command</a></dt>
+  <dd>not implemented yet.</dd>
+  <dt><a name="boot">Start/Stop/Restart process</a></dt>
+  <dd>You have to configure admsv configuration file to perform this, or use <a href="#editstartcmd">configure 
+    startup command</a> beforehand.</dd>
+  <dt><a name="edit">Edit tag string</a></dt>
+  <dd>Edit tag string.</dd>
+  <dt><a name="create">Create/delete new process entry</a></dt>
+  <dd>Create and delete entry.</dd>
+  <dt><a name="editstartcmd">Configure startup command</a></dt>
+  <dd>Configure starup command for starting each process that'll be monitored. 
+    admcli cannot start target process without configuring this correctly.</dd>
+</dl>
+<br>
+
+<hr>
+Copyright 2000-2005 CommunityEngine Inc. All rights reserved.<br>
+
+</body>
+</html>

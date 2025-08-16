@@ -1,0 +1,120 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel="stylesheet" href="../vce.css" type="text/css">
+<title>VCE 1.1.4 official document (Japanese)</title>
+</head>
+
+<body>
+		<h1>gen.rb-C出力リファレンス
+		</h1>
+		<p>PROTONAMEはプロトコル定義ファイルで設定したプロトコル名<br>
+		関数にsvと付くものはサーバ、同等の物がcliに置き換わりクライアントにも存在する。<br>
+		そうでない物はサーバのみ。</p>
+		<h2>アプリケーション側で定義が必要なもの		</h2>
+		<h3>int PROTONAME_sv_sender( conn_t _c, char *data, int len )</h3>
+		・レコードを送信するための関数<br>
+<p class="func">
+			conn_t _c : 送信に使うコネクション<br>
+			char *data : 送信するデータへのポインタ<br>
+	int len : 送信するデータの長さ（バイト）</p>
+		<pre class="green">
+//65535バイトまでのパーサ関数で送る例
+int echoproto_sv_sender( conn_t _c, char *data, int len )
+{
+    return vce_protocol_unparser_bin16( _c,data,len);
+}</pre>
+
+		<h3>int PROTONAME_sv_recv_error_callback( conn_t _c,int e )</h3>
+		・不正なレコードを受信したときに呼ばれる関数
+		<p class="func">
+			conn_t _c : 受信したコネクション<br>
+int e : エラーコード</p>
+		<pre class="green">
+// あやしいコネクションは、早々に切るに限るので、-1を返して切断している
+int echoproto_sv_recv_error_callback( conn_t _c,int e )
+{
+    vce_errout( "cannot receive data err=%d(%s)\n", e, STRERR );
+    return -1;
+}</pre>
+
+		<h3>int PROTONAME_toomany_recv_warning( conn_t c,int proto_id)</h3>
+		・recvlimitにより設定した回数より多く受信されたときに呼ばれる関数
+<p class="func">
+			conn_t _c : 受信したコネクション<br>
+	int proto_id : プロトコルID</p>
+		<pre class="green">
+//-1を返して切断する。
+int echoproto_toomany_recv_warning( conn_t c,int proto_id)
+{
+    return -1;
+}
+</pre>
+
+		<h3>int PROTONAME_toolong_recv_warning( conn_t c,int proto_id,int length)</h3>
+		・プロトコルで必要な長さよりも長いレコードを受信したときに呼ばれる関数
+<p class="func">
+			conn_t _c : 受信したコネクション<br>
+			int proto_id : プロトコルID<br>
+	int length : 受信したレコード長</p>
+		<pre class="green">
+//-1を返して切断する。
+int echoproto_toolong_recv_warning( conn_t c,int proto_id,int length)
+{
+    return -1;
+}
+</pre>
+
+		<h2>アプリケーション側で設定が必要なもの</h2>
+		<h3>PROTONAME_sv_pcallback</h3>
+		・レコードを処理するための受信関数
+		<pre class="green">
+    // Parserなどを設定する
+    vce_tcpcontext_set_conn_parser( tp,
+                                    vce_protocol_parser_bin16,
+                                    PROTONAME_sv_pcallback );
+</pre>
+
+		<h3>int PROTONAME_new(conn_t c)</h3>
+		・プロトコル情報を初期化するための関数
+		<pre class="green">
+int accept_watcher( conn_t _c )
+{
+    PROTONAME_new(_c);
+    return 0;
+}
+</pre>
+
+		<h3>int PROTONAME_del(conn_t c)</h3>
+		・プロトコル情報を解放するための関数
+		<pre class="green">
+int close_watcher( conn_t _c )
+{
+    PROTONAME_del(_c);
+    return 0;
+}
+</pre>
+		<h2>その他オプション</h2>
+		<h3>PROTONAME_MAX_CONNECTION</h3>
+<p>・サーバ側で接続を受け入れる最大数が定義されている。</p>
+		<h3>PROTONAME_MAX_RECV_RECORD_LENGTH</h3>
+<p>・サーバ側で受信するレコードの最大長が定義されている。</p>
+		<h3>unsigned int PROTONAME_sv_get_version(unsigned int *subv)</h3>
+		<p>・プロトコル定義ファイルのバージョンを取得する。<br>
+・クライアント側では_cli_に置き換わる</p>
+		<h3>VCEI64 PROTONAME_get_FUNCNAME_send_count(void)</h3>
+		<h3>VCEI64 PROTONAME_get_FUNCNAME_recv_count(void)</h3>
+<p>・それぞれのプロトコルの送受信回数を取得する。</p>
+		<h3>void PROTONAME_FUNCNAME_send_debugprint(int on_off)</h3>
+		<h3>void PROTONAME_FUNCNAME_recv_debugprint(int on_off)</h3>
+		<p>・GEN_DEBUG_PRINT定義時にプロトコルの送受信情報表示のON/OFFを設定する。デフォルトはすべてONでOFF=0、ON=1<br>
+          <br>
+          <a href="index.html">index に戻る</a>
+          <br>
+		</p>
+<div id="footer">
+Copyright 2000-2005 Community Engine Inc. All rights reserved.</div>
+</body>
+</html>

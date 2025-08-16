@@ -1,0 +1,52 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html> <head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>mm-suite official document (Japanese)</title>
+<style type="text/css">
+P {
+  TEXT-INDENT: 1em
+}
+</style>
+
+</head>
+
+<body>
+<h1>各サーバの設定ファイルの書式</h1>
+<p>
+各サーバの設定ファイルの書式を逐一ここに書くと、
+ドキュメントと実際の内容が乖離しやすいので、
+設定ファイルの中身にドキュメントを含めている(apache流)。
+ここではそれらへのハイパーリンクを示しておく。
+これらのリンクは mm-suite デフォルト状態から改造すると、
+リンクが切れる場合があるので注意する事。
+以下の各ファイルは、テンプレート(雛型)ファイルであり、
+このファイルに、各自が用意するオリジナル部分をさらに読みこませることで、
+実際の設定となる。
+各サーバは、複数のコマンドライン引数が与えられると、
+各引数をファイル名として認識し順番に読みこむ。
+後に読みこまれた方に書かれている設定が既存の設定を上書きしていく。
+</p>
+
+
+<h3>各サーバのテンプレートファイルの書式</h3>
+<ul>
+  <LI><a href="../gmsv/gmsv_template.conf">gmsv/gmsv_template.conf</a>
+  <LI><a href="../msgsv/msgsv_template.conf">msgsv/msgsv_template.conf</a>
+  <LI><a href="../dbsv/dbsv_template.conf">dbsv/dbsv_template.conf</a>
+  <LI><a href="../locksv/locksv_template.conf">locksv/locksv_template.conf</a>
+  <LI><a href="../authsv/authsv_template.conf">authsv/authsv_template.conf</a>
+  <LI><a href="../guildsv/guildsv.conf">guildsv/guildsv.conf</a>
+  <LI><a href="../swp/9001.conf">swp/9001.conf</a><BR>
+      SWP は例外で、常に2個の設定ファイルを読みこむ。
+      詳細は VCE のツールマニュアルを参照。
+</ul>
+
+
+<BR><BR>
+<a href="index-ja.html">index に戻る</a>
+<br>
+<hr>
+<font size=-1>
+Copyright 2000-2005 CommunityEngine Inc. All rights reserved.<BR>
+
+</body> </html>

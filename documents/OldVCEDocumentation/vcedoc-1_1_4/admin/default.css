@@ -1,0 +1,11 @@
+body {  background-color: #FFFFFF}
+h1 {  color: #FFFFFF; background-color: #000066}
+h2 {  list-style-type: none; background-color: #009999; color: #FFFFFF; line-height: 120%; font-size: medium}
+h3 {  text-decoration: underline}
+.code {  background-color: #FFFFDD; border: 1px #808080 dotted; padding: 10px}
+table     {background-color:#D0D0D0;}
+tr        {background-color:#F8F8F8;}
+th        {background-color:#D0D0D0; color:#606060; font-weight:bold; text-align:center;}
+tr.header {background-color:#D0D0D0; color:#606060; font-weight:bold; text-align:center;}
+.func {  font-weight: bold; color: #000099; list-style-type: square; border: 1px #999999 solid}
+.command { background-color: #DDDDDD; border: 1px #808080 dotted; padding: 10px }

@@ -1,0 +1,142 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html> <head>
+<title>VCE admin tool</title>
+</head>
+
+<body>
+<h1>VCE admin tool について</h1>
+
+<h2>VCE admin toolの目的</h2>
+
+<p>
+  VCE admin tool の目的は，
+VCEを利用したサーバーアプリケーションおよび，
+システム全体の管理を簡単にすることです．
+</p>
+
+
+<h2>VCE admin tool 配布キット</h2>
+<p>
+  VCE admin tool は VCE のパッケージ内に含まれています.
+ただし，CE が本体をバージョンアップし続けるので，
+アプリケーション開発側は，
+「プラグイン」や「VCE monitor API」を通して各種機能を実装しておくと，
+将来のバージョン相違問題を回避することができます．
+</p>
+
+
+
+<h2>現在の進行状況</h2>
+
+<P>
+  現在 VCE admin tool の開発状況は，骨組みの設計と実装が終了
+したところです．
+実装済機能とそうでない機能は、以下の通りです。<br>
+  過去のバージョンからの変更は、<a href="changes.html">変更履歴</a>を参照して下さい。
+</p>
+
+<p>実装済の機能
+<ul>
+  <li>各ホストの情報の取得
+  <li>各プロセスのdead/aliveの確認
+  <li>各プロセスの起動、停止
+  <li>ユーザーによる権限の制限
+  <li>各プロセスのログを統一的に取得
+  <li>各プロセスのログのリアルタイム監視(grep likeな検索)
+</ul>
+
+<p>未実装(実装予定)の機能
+
+<ul>
+  <li>外部アプリとの連係
+</ul>
+
+
+<h2>VCE admin toolの構成要素</h2>
+
+VCE admin tool は以下の部分から成りたっています．
+
+<ul>
+  
+  <LI>admcli<BR>
+      InnovaDSXP.OCX というDLLを使って作られた GUI インターフェイスで
+      す．
+      admsvに接続して，最新情報を表示したり，
+      操作をしたりします．
+      詳しくは, admcli パッケージ内の help をご覧ください.
+      
+
+      
+  <LI><a href="admin_server.html">admsv</a><BR>
+      管理用サーバープログラムです．
+      サーバーサイトのどこかに設置され，常時起動し，
+      各サーバーと，rsvに接続し，情報を収集します．
+      チャットなどの機能もここで実現します．
+      
+
+  <LI><a href="remote_server.html">rsv</a><BR>
+      管理したい各マシンに1個づつこのプロセスを走らせます．
+      専用の SSHサーバーのようなもので，
+      アプリケーションの外側，マシン自体を監視します．
+      gmsv を起動したりマシン全体の負荷を見るするのはrsvです．
+
+
+  <LI><a href="http://vce.ce-lab.net/doc/ja/monitor.html">VCE monitor API</a><BR>
+      各サーバーアプリケーションのプログラムでは
+      このAPIを使って，
+      モニターされる側として実装すべき機能を実装し，登録します．<BR>
+      コマンドの実装のしかたについては,
+      <a href="monitor_command.html">モニターコマンドについて</a>
+      を参照してください。
+
+  <LI><a href="vcelog.html">VCE Log API</a><BR>
+      ログを統一的なフォーマットで出力するAPIです。<BR>
+      また、ログをadmsvで検索できるようにrsvに転送するLog WriterAPIも含みます。
+      
+</ul>
+<img alt="監視ツールのネットワーク構造" src="admin_arch.gif">
+
+
+<!--
+<h2>パッケージの展開</h2>
+
+<ol>
+  <LI>admin_2003_07_15.tgz といった配布パッケージを適当な場所で展開する
+  <LI>admin ディレクトリができるので，その中で make を実行
+  <LI>admin/cli ディレクトリの中にクライアントがあるので
+      それをコンパイル(admcli.sln)
+      
+</ol>
+-->
+
+<h2>マシン構成について</h2>
+
+<P>
+gmsv,swp,admsv,rsv など複数のサーバーを同じマシンに同居させることも可能です．
+信頼性のためにそれぞれを別のマシンに分散させることも可能です．
+プロジェクトにとって最適な配置をしていくことが大切ですが，
+冒頭の図で説明したような構成が典型的です．
+</p>
+
+
+
+<h2>使用される単語について</h2>
+
+<p><a href="words.html">VCE admin tools 内で使われる単語について</a>を参照してください。
+
+  
+<h2>VCE-AdminToolへの対応手順 </h2>
+
+<p>
+debug_print ディレクトリ内に、VCEを利用したサーバアプリケーションにAdminToolを組込むためのスケルトンコード debug_print.c があります。<br>
+<a href="debug_print.html">debug_print.cについて</a>を参照してください。<br>
+対応時のよくある質問は<a href="faq.html">こちら</a>をご覧ください。
+<br>
+<br>
+
+<br>
+<hr>
+<font size=-1>
+Copyright 2000-2005 CommunityEngine Inc. All rights reserved.<BR>
+
+</body> </html>

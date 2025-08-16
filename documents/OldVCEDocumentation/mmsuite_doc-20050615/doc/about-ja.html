@@ -1,0 +1,372 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html> <head>
+<title>mm-suite about</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<style type="text/css">
+P {
+  TEXT-INDENT: 1em
+}
+</style>
+</head>
+
+<body>
+<h1>mm-suite 概要説明</h1>
+
+
+
+<div align=right><img src="images/momonga_one.gif"></div>
+<h3>mm-suite とは</h3>
+<p>
+  mm-suite は、通信用ミドルウェアである
+<a href="http://vce.ce-lab.net/">VCE</a> を用いた
+サーバー集中型リアルタイムオンラインゲームのスケルトンコードである。
+
+VCE のクラスタリング機能を用いた高度な負荷分散を備えたゲームサーバーを
+簡単に開発できる。
+
+Win32 DirectX を用いた、ひととおりの操作が可能なクライアント
+プログラムも添付されているため、
+すぐにサーバに接続してインクリメンタルな開発に着手することができる。
+パッケージ展開後すぐにLinuxマシン上でコンパイル・実行できる。
+</p>
+
+<h3> mm-suite 設計上のポリシー</h3>
+<p>
+  mm-suite は、開発効率を高め、
+プログラムの動作速度(コストパフォーマンス)を向上させ、
+ダウンタイムを軽減するために、以下のような設計ポリシーを持っている。
+</p>
+<ul>
+  <li>シングルスレッド<BR>
+      pthread 等を用いたスレッディングは、 CPU が1個か2個しかないような
+      安価なマシンでは、大した性能向上につながらない。
+      さらに、オンラインゲームサイトにとって、
+      マシンが2台以上必要なことは明白であるため、
+      結局マルチプロセスにすることが必要である。
+      したがって、 mm-suite ではシングルスレッド・マルチプロセスの
+      クラスタリング構成とした。
+
+  <LI>client-server 3階層構造<BR>
+      mm-suite では，以下の図に示すように，
+      アプリケーションを3階層にわけて実装する．
+      <BR>
+      <img src="images/3layer.gif"><BR>
+      ゲームの内容(ロジックやルール)は GMSV に集中的に実装され、
+      キャラクター情報の保存やメッセージング、認証、ロック管理などは、
+      単機能のバックエンドサーバとして別々に実装され、
+      別プロセスとして動作する。
+      GMSV にはゲームのバージョンアップごとにバグが混入し、
+      しばしばクラッシュすることになるので、
+      これらのバックエンド機能を別プロセスにすることで、
+      全体のダウンタイムを減少させることができる．
+      また，別のマシンにプロセスを分担させることにより，
+      性能向上を計ることができる．
+
+  <LI>コンテンツのセキュリティ：小さいクライアント<BR>
+      オンラインゲームのクライアントに多くの機能を持たせると、
+      ユーザーによる不正行為を受けやすくなってしまうため，
+      できるだけ多くの処理をサーバが行なうほうがよい。
+      ユーザの入力はできるだけ細かい粒度でサーバに通知され、
+      サーバが許した行動だけが反映される。
+      mm-suite に付属しているデフォルトプロトコル定義ファイルでは，
+      できるだけ抽象度を低くしたプロトコルの例を紹介している．
+
+  <LI>統一的なメンテナンス用API<BR>
+      複数のゲームを一人の管理者がメンテナンスできるようにならない限り、
+      オンラインゲームのメンテナンスコストは下がらない。
+      mm-suite ではこれを実現するために、
+      すべてのサーバが統一されたフォーマットの状態ファイルを
+      出力し、それをリモートからSSHなどにより取得することでメンテナンス
+      作業を行なう。
+      また、バックエンドのサーバや SWP など、
+      GMSV プロセス以外はすべてどのゲームでも共通に使えるようにし、
+      設備のパフォーマンスの無駄が省けるようになっている。
+      これらに加えて，リモートからmm-suiteのサーバに接続して
+      メンテナンス効率を向上させる方法も実装されている．
+
+  <LI>シンプルで共通なデータベースの構造<BR>
+      "mm-suite" のバックエンドでは，
+      できるだけシンプルでどのゲームでも共通に使えるデータベースの
+      デザインを心掛けている．
+
+
+</ul>
+
+
+<h3>suite ディレクトリの内容</h3>
+<p>
+  mm-suite を展開すると、mmsuite ディレクトリをトップに
+以下のディレクトリが作成される。
+</p>
+<ul>
+  <LI>authsv<BR>
+      バックエンドの認証サーバのソースコードが格納されている。
+  <LI>dbcommon<br>
+      dbsvとの通信を取り扱うライブラリのソースコードが格納されている。
+  <LI>dbsv<BR>
+      バックエンドのキャラクタ情報保存サーバのソースコードが格納されている。
+  <LI>doc<BR>
+      ドキュメント一式が格納されている。
+  <LI>gmsv<BR>
+      ゲームサーバのソースコードが格納されている。
+  <LI>guildsv<BR>
+      バックエンドのギルド管理サーバのソースコードが格納されている。
+  <LI>locksv<BR>
+      ロック管理サーバのソースコードが格納されている。
+  <LI>msgsv<BR>
+      メッセージングサーバのソースコードが格納されている。
+  <LI>proto<BR>
+      VCE の gen.rb に読みこませる、各プロトコルファイルが格納される。
+  <LI>swp<BR>
+      VCE に付属のSWP の設定ファイルが格納される。
+  <LI>tester<BR>
+      ゲームサーバをテストするプログラム群のソースコード
+  <LI>vce<BR>
+      VCE ライブラリやヘッダのコピーを格納するためのディレクトリ
+  <LI>wincli<BR>
+      Win32 DirectX サンプルクライアントプログラム。
+      プロジェクトごと格納されている。
+  <LI>Makefile<BR>
+      各サーバを起動したり終了させたり、全体を build したり
+      するための Makefile
+</ul>
+
+      
+<h3>開発マシンへのインストール</h3>
+<p>
+  開発用マシンは最低1台必要である。
+また，メモリチューンをしない場合で，
+すべてのサーバを1個のマシン上で起動する場合は
+そのマシンにおいて512Mバイト程度のメモリを必要とする．
+</P>
+<p>
+  バージョンについては
+Linux(RedHat 6.2 以降, glibc 2.1.3 以降、gcc 2.91 以降が適切)の
+マシンがあればサーバをコンパイル、起動することができる。
+また、 wincli ディレクトリにある win32/DirectX 用のデモプログラムは、
+wincli ディレクトリごとwindowsマシンにコピーして VisualStudio から開き、
+コンパイルすることで実行できる。
+<a href="wincli-ja.html">wincli の説明</a><BR>
+</p>
+
+
+<h3>サーバのコンパイル</h3>
+<p>
+  mm-suite のサーバーをコンパイルするには、 mmsuite ディレクトリで
+</p>
+<pre>
+shell% make 
+</pre>
+とするだけだが、ひとつ注意が必要なのは、 mmsuite/vce ディレクトリに、
+VCE の本体パッケージに含まれる libvce???.a,gen.rb,vce.h,swp を
+コピーしておく事である。 mm-suite のコンパイルと実行には、
+これらのファイルが不可欠である。VCE のパッケージ自体は、
+<a href="http://vce.ce-lab.net/">vce.ce-lab.net</a> から取得できる。
+
+
+<h3>サーバ実行の前に</h3>
+<p>
+ サーバを実行する前に、 DBSV/MSGSV が依存している MySQL をセットアップ
+する必要がある。(<a href="mysql-ja.html">MySQLセットアップ</a>を参照)
+MySQL自体がインストールできたら、さらに MySQL 内のデータベースを
+初期化する。このデータベースは mm-suite の各種サーバーが依存している，
+テスト動作のために必要なデータベース群である．
+この初期化をするためには，
+</p>
+
+<pre>
+mysql&gt; drop database storage;
+mysql&gt; create database storage;
+mysql&gt; drop database storage2;
+mysql&gt; create database storage2;
+mysql&gt; drop database storage3;
+mysql&gt; create database storage3;
+</pre>
+これで"storage"データベースを作ったあとに，
+各テーブルを"storage"データベース内に作成する．
+
+<pre>
+shell % mysql -u storage storage  &lt; guildsv/table.sql
+shell % mysql -u storage storage2 &lt; dbsv/init_table.sql
+shell % mysql -u storage storage3 &lt; dbsv/init_table.sql
+
+</pre>
+<!--
+<pre>
+shell % mysql -u storage storage &lt; sqllib/contact_tbl.sql
+shell % mysql -u storage storage &lt; sqllib/char_tbl.sql
+shell % mysql -u storage storage &lt; sqllib/mailbox_tbl.sql
+shell % mysql -u storage storage &lt; sqllib/bbs_tbl.sql
+</pre>
+-->
+
+  として、表を作成する。この方法は繁雑なので，dbsv、guildsv ディレクトリの中に
+ある Makefile を利用して，
+<Pre>
+shell % cd mmsuite/dbsv
+shell % make install_tables
+shell % cd mmsuite/guildsv
+shell % make table
+</pre>
+<p>
+とする方法もある．
+</p>
+<p>
+ここでエラーメッセージが出た場合は、各バックエンドは起動に失敗する。
+</p>
+<p>
+マップを移動する際、クライアントが接続先を変更することがある。
+そのためにサーバがクライアントにどこに接続すればよいか指定しなければならない。
+その情報を与えるために、
+gmsv/data/fieldtab.txtにswpサーバのアドレスを割り振る。
+</p>
+<pre>
+8001 192.168.1.203 9001 land_0 dungeon_0
+8003 192.168.1.203 9003 island_0
+</pre>
+<p>
+これを
+</p>
+<pre>
+8001 (swpサーバのアドレス) 9001 land_0 dungeon_0
+8003 (swpサーバのアドレス) 9003 island_0
+</pre>
+<p>
+という具合に変更する。
+</p>
+
+
+<h3>コンパイル方法</h3>
+<p>
+mm-suite はデフォルト状態でコンパイルされたバイナリが含まれているが，
+全体をリビルドしたいときは，各ディレクトリ内で
+</p>
+
+<pre>
+shell% cd mmsuite
+shell% cd gmsv
+shell% make depend
+shell% make
+shell% cd ../msgsv
+shell% make depend
+shell% make
+...
+</pre>
+<p>
+を実行していく．
+これを一挙に実行するために， mmsuite のトップディレクトリで，
+単純に一発で make する方法もある．これについては Makefile を参照．
+</p>
+
+
+<h3>実行方法</h3>
+<p>
+すべてのサーバ群を同じ端末内で混在させて起動するには、
+mmsuite ディレクトリで、
+</p>
+<pre>
+shell% make start
+</pre>
+<p>
+とするだけである。各サーバを独立した端末内で起動するには、
+各サーバのディレクトリ内で
+</p>
+<Pre>
+shell% cd dbsv
+shell% make start
+shell% cd ../authsv
+shell% make start
+shell% cd ../gmsv
+shell% make start
+</pre>
+<p>
+などとする。どのサーバも、無事起動すると  "start loop" という出力をする。
+mm-suite を使いはじめて最初の場合は，
+各サーバーが正しく動作をするか確認するために，ひとつづつ起動して
+ログが正しく出力されるかを確認することを推奨する．
+mmsuite ディレクトリにある Makefile で全体を一度に起動すると，
+エラーメッセージが混ざってしまって，何が問題なのかが，
+わかりにくくなってしまう．
+</p>
+<p>
+各サーバは，設定ファイルなどにミスがあったり bind に失敗したら起動しない。
+また、バックエンド群だけを起動するには、
+mmsuite ディレクトリ内で
+</p>
+<Pre>
+shell% cd mmsuite
+shell% make start_be
+</pre>
+<p>
+とする。GMSV と FES だけを起動するには、
+</p>
+<pre>
+shell% cd mmsuite
+shell% make start_fe
+</pre>
+<p>
+とする。いずれも内部で make -C しているだけである。
+</p>
+
+<h3>UNIX端末からのテスト</h3>
+<p>
+ GMSV のすべての機能をテストするには、 wincli が必要だが、
+pingテスト、ユーザー認証テストなど、単純なテストに関しては、
+tester ディレクトリ内にあるテストプログラムが使える。
+mmsuite/tester 以下にあるテストプログラムは以下のようにして起動できる。
+詳細は、<a href="tester-ja.html">tester-ja.html</a> を参照。
+</p>
+
+<pre>
+shell% ping_test 1 100 localhost:9001
+shell% auth_test 1 100 localhost:9001
+</pre>
+<p>
+各テストプログラムは、各クエリにかかった時間やトータル時間、
+Q/sec などを計測して出力するのでそのままベンチマークプログラムとして使える。
+</p>
+
+
+
+<h3>接続された状態の図</h3>
+<p>
+  すべてのサーバが起動して接続されれば、以下のような状態になる。
+</p>
+<img src="images/mm_test_diagram.gif">
+<BR><BR>
+<p>
+  各サーバの隣のオレンジ色の数字は、どのポートで待ちうけているかを示す。
+  各サーバの意味については、 <a href="cluster-ja.html">cluster-ja.html</a>
+を参照。
+</p>
+
+<h3>結論</h3>
+<p>
+  以上までで、mm-suite デフォルト状態のサーバのコンパイル、起動、
+接続テストが完了したので、ソースコードを変更しながらの開発サイクルを
+開始することができるだろう。
+</p>
+
+
+
+<h3>注意点(SQLに関して)</h3>
+<p>
+  RDBMS をあまり使わない C言語専門のゲームプログラマにとって MySQL
+を使うことには抵抗がある場合がある。
+<!--そのために sqllib を用意したが、
+それでもまだ、SQL の困難はゼロにすることができない。-->
+ネットワークゲームにとって SQL はほぼ必須なので、
+基礎的な SQL文だけでも軽く勉強をしておくと、
+今後の開発において時間が節約できることは間違いない。
+</p>
+
+
+<BR><BR>
+<a href="index-ja.html">index に戻る</a>
+
+<br>
+<hr>
+<font size=-1>
+Copyright 2000-2005 CommunityEngine Inc. All rights reserved.<BR>
+
+</body> </html>

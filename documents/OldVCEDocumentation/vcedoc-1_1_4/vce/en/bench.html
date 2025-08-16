@@ -1,0 +1,318 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html> <head>
+<link rel="stylesheet" href="../vce.css" type="text/css">
+<title>VCE 1.1.4 official document (English) </title>
+</head>
+
+<body>
+<h1>VCE Benchmark results</h1>
+
+<p>
+This page discusses, through a benchmark test,
+what sort of performance can be produced using the VCE. 
+</p>
+
+<h2>Environment</h2>
+<p>
+Ethernet is inexpensive and immediately replaceable hardware.
+Here, testing was performed in an environment using the most common
+100Base-TX and a regular switch.
+In this environment, 2 "ping -f" tests were run simultaneously and
+the results were about 14000 pkt/s with a data size of 64 bytes or less.
+With a data size of 100 bytes, they were 5100 pkt/s;
+with 1000 bytes, they were about 1200 pkt/s.
+</p>
+<BR>
+<p>
+Each end of "ping -f" test machines were respectively
+a P3-1GHz*1 and a P3-933MHz*2.  
+CPU utilization at threshold speed was stable and below 1% for both.
+<BR>
+</p>
+<BR>
+<p>
+No problems with the network, machines, or test environment itself were found 
+through testing.
+</p>
+
+<h2>Program Used for the Test</h2>
+<pre>
+autotest/nogen_sv :  Test server not using VEC (echoes back)
+autotest/nogen_vecsv :  Test server using VEC (echoes back)
+autotest/nogen_cl :   Client (expects an echo)
+</pre>
+<p>
+The test measured "queries per second" (Q/s).
+The test will follow following steps:
+</p>
+<ol>
+  <LI>Start the server
+  <LI>Multiple clients are connected
+  <LI>Confirm clients have entered a steady state successfully
+  <LI>Measure Q/s in server side
+</ol>
+
+<p>
+The server echoes received data as-is,
+so the ratio of the amount received to the amount sent was exactly 1:1
+for this test.
+In addition, attention must be paid to whether the server checks
+to see if received data is arranged in correct sequence,
+if the buffer contents are correct, and the like.
+During 100 Mbps communication,
+memory bandwidth on the order of 400 Mbps is eaten up in order to
+perform this check,
+so this accounts for several percent of the threshold speed.
+</p>
+<p>
+Query size, the number of clients, the presence or absence of VEC,
+and the presence or absence of encryption can significantly affect
+test results, so each of the settings was changed and measured.
+With regard to the number of clients, significant variation was
+observed with 10 or fewer clients;
+with 10 or more, this variation lessened.    
+</p>
+
+<h2>General Phenomena</h2>
+<p>
+When transmitting data at maximum speed using 1 session,
+communication is through a "(long) fat pipe,"
+so sufficient buffer size must be prepared on both the server and client side.
+The band cannot be used to full advantage if this is not done.
+A buffer of 1 Mbyte or more should be prepared for a session with
+100 Mbps to allow smooth data transfer.
+</p>
+
+
+<h2>Connection</h2>
+<p>
+With up to about 1000 clients, experimentation with 1 client machine
+per 1 server machine is possible even if no particular work is done on
+kernel settings.
+To do this, you will type
+</p>
+<pre>
+limit openfiles 1024
+</pre>
+<p>
+in your command shell.
+</p>
+
+
+<h2>In case of unencrypted, no Relays</h2>
+<p>
+The VEC is not used with the lightest contents and neither is encryption.
+Encryption is not even used in part with the following connections:
+</p>
+<pre>
+        192.168.1.0/24
+ Server --- Switch ---- Client
+ P3 933        |         P3 1G
+               +------- Client ... (for numerous connections)
+
+</pre>
+<p>
+As shown below, delayed or nodelay is written on the far right.
+Generally, if NODELAY is present Q/s decreases but response improves.
+When the query size is small, that difference is noticeable.
+When the number of clients increases or queries are larger,
+that gap shrinks.
+The notation <font color=red>k Q/s</font> stands for 1000 queries per second.
+</p>
+<Pre>
+1byte, 1 client : 21.9k Q/s (nodelay)
+1byte, 1 client : 50.1k Q/s (delayed)
+1byte, 16 client : 31.5k Q/s (nodelay)
+1byte, 16 client : 36.6k Q/s (delayed)
+1byte, 512 client : 19.9k Q/s (nodelay)
+32byte, 1 client : 21.4k Q/s (nodelay)
+32byte, 512 client : 19.5k Q/s (nodelay)
+128byte, 128 client : 20.8k Q/s (delayed)
+256byte, 16 client : 19.1k Q/s  (nodelay)
+256byte, 16 client : 29.0k Q/s (delayed)
+256byte, 128 client : 15.4k Q/s (delayed)
+256byte, 256 client : 15.1k Q/s (delayed)
+256byte, 512 client : 13.3k Q/s (delayed)
+512byte, 16 client : 15.7k Q/s (nodelay)
+512byte, 16 client : 18.9k Q/s (delayed)
+1024byte, 16 client : 10.2k Q/s  (nodelay) It drops rapidly here (for Ether)
+1100byte, 16 client : 9.2k Q/s (nodelay)
+1200byte, 16 client : 8.3k Q/s (nodelay)
+1400byte, 16 client : 7.2k Q/s (nodelay)
+1500byte, 16 client : 6.6k Q/s (nodelay)
+1700byte, 16 client : 1.4k Q/s (nodelay)
+2048byte, 16 client : 2.2k Q/s (nodelay)
+3000byte, 16 client : 1.6k Q/s (nodelay)
+3000byte, 16 client : 2.0k Q/s (delayed)
+</Pre>
+<p>
+In all the cases above, CPU utilization reaches almost 100% at the point
+where maximum speed is put out;
+the server process is waiting for I/O most of that time.
+Even while waiting for I/O, the kernel (device driver) is working,
+so on the part of the CPU there is almost no time in which
+it can be used for other purposes. 
+</p>
+<p>
+ After all, 50.1k Q/s is the maximum speed when no encryption and no relay.
+Of course this performance will vary affected by NICs,
+and the effect of NIC is also same in all following tests.
+</p>
+
+<h2>In case of using encryption</h2>
+<p>
+
+If Blowfish/64bit encryption is used with a P3 933MHz,
+the Q/s below is produced regardless of the number of connections.
+Q/s decreases to a large extent, though in this case most of the CPU time
+is used for encryption processing.
+There is almost no time to use it for other purposes.
+If, for example, 3.0 k Q/s is utilized when using a 16-byte query,
+50% of the CPU will be free.
+</p>
+<pre>
+1byte,  10 client : 9.4k Q/s (delayed)
+1byte,  256 client : 7.7k Q/s (delayed)
+16byte,  10 client : 7.6k Q/s (delayed)
+16byte,  256 client : 6.0k Q/s (delayed)
+256byte,  10 client : 2.4k Q/s (delayed)
+256byte,  256 client : 2.1k Q/s (delayed)
+1024byte,  10 client : 741 Q/s (delayed)
+2048byte,  10 client : 378 Q/s (delayed)
+</pre>
+<p>
+It is clear looking at these results that the P3 933MHz machine has, at rough estimate, the following Blowfish encryption capability. 
+<pre>
+2048 * 378 * 8bit * (full duplex) = 12.3 Mbps
+</pre>
+</p>
+
+<H2>In case of using relays, but no encryption</h2>
+<p>
+Testing measured whether speeds were enhanced using relays even when
+not using encryption.
+The protocol header for communications between the relay server and
+actual(main) server has less than half of a TCP header,
+so exceeding the previous 50.1 k Q/s is highly likely.
+Here, experimentation was performed by separating networks so that
+traffic between the relay server and actual server did not interfere
+with client and relay server traffic.
+The first test results indicated that Q/s received by the Proxy are at
+most 50.1 k Q/s, so whether that value would be produced was first examined.
+As a result, a value of 69.5 k Q/s was produced.
+The reason the speed was faster than 50.1 k Q/s was that the algorithm of
+the VCE's client search engine is simply faster
+(though it does consume more memory) than the kernel's TCP/IP socket hash.
+</p>
+<p>
+ Nextly, let's put clients in the Proxy machine.
+As a result, a value of 106.9 k Q/s was produced.
+This value is certain to be close to maximum speed
+for a 1-byte query at 100 Mbps.
+</p>
+
+<pre>
+
+        192.168.0.0/24            192.168.1.0/24
+
+Server ----- Switch ----- Proxy ---- Switch ---- Client
+P3 933                    P3 1G          |       P3 600*2
+                                         +------ Client
+                                                 P3 550
+</pre>
+<pre>
+1byte, 1 client : 2.5k Q/s
+1byte,  60 client : 69.5k Q/s
+1byte,  128 client : 106.9k Q/s
+16byte,  128 client : 83.0k Q/s
+64byte,  128 client : 58.5k Q/s
+128byte,  128 client : 30.5k Q/s
+256byte,  1 client : 12.8k Q/s
+256byte,  4 client : 15.5k Q/s
+256byte,  16 client : 18.0k Q/s
+1024byte, 8 client : 7.7 Q/s
+</pre>
+<p>
+  If packets are larger, exceeding 256 bytes, Q/s will decrease
+more than when communicating directly without using relays.
+This is due to the relay server header.
+However, the server's CPU usage even in this case is below 10%,
+which differs from cases of no relay.
+This is due to reasons such as processing with the VCE's client search
+routine and performing I/O in large units.  
+</p>
+
+<h2>In case of using both relays and encryption </h2>
+<p>
+Finally, the case was tested when encryption of communications between
+the client and relay was used.
+This pattern lets the relay server display its best side.
+As a result of values obtained in previous tests,
+a single relay was thought to have proxy capacity of about  9 k Q/s.
+Proxy - Client communications in the same network environment as used in
+previous experiments were encrypted with Blowfish/8.
+As a result, values of
+</p>
+
+<pre>
+1byte, 10 client, 1 swp : 9.3k Q/s
+1byte, 128 client, 1 swp : 9.5k Q/s
+2048byte, 10 client, 1 swp : 380 Q/s
+</pre>
+<p>
+were produced, so they are clearly according to theory for the most part.
+At this stage, there was still leeway for the Server's NIC,
+so another relay server was booted on the machine which the
+Server was running (one P3 933MHz was excess) and linked to the
+localhost Server to see if Q/s would increase directly.
+Upon doing so, 19.1 k Q/s, or almost double the original value,
+was attained.
+</p>
+
+<pre>
+1byte, 20 client, 2 swp : 19.1k Q/s
+2048byte, 20 client, 2 swp : 842 Q/s
+2048byte, 30 client, 3 swp : 1260 Q/s
+</pre>
+
+<p>
+If number of swp machines is increased, Q/s clearly increased linearly.
+Naturally, the Server's CPU utilization at this point is below 1%;
+clearly, encryption processing has been fully externalized from main server.
+If there were more CPUs (machines), the maximum performance on the
+Server side could be verified, but currently there are not enough machines
+in our test environment (sorry about that!).
+In all likelihood, having about 5 more swp machines would be acceptable
+in order to achieve Q/s so as to operate the Server's NIC at full capacity.
+</p>
+
+
+
+<h2>Test with 1000Base</h2> 
+<p>
+Verification with 100Base was finished for the most part,
+so testing with 1000Base was to be next,
+but this testing will be performed after a test environment
+is completed within the Community Engine.
+</p>
+
+
+<h2>Summary</h2>
+<p>
+The fact that swp processing performance is 12.3 Mbps with a P3 1GHz,
+that swp should certainly be used when using encryption,
+and that the effects of swp when exchanging large packets without
+using encryption were not that dramatic were clarified through the experiment.
+In addition, the first thoughts must be about what level of Q/s
+the application requires when developing applications using the VCE;
+the form of swp must be designed in response.
+</p>
+
+<p><br>
+
+  <br>
+&quot;PlayStation&quot; is registered trademark and is trademark of Sony Computer Entertainment Inc.<br>
+  <a href="index.html">return to index</a></p>
+<div id="footer">
+Copyright 2000-2005 Community Engine Inc. All rights reserved.</div>
+</body> </html>

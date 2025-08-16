@@ -1,0 +1,362 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html> <head>
+<link rel="stylesheet" href="../vce.css" type="text/css">
+<title>VCE 1.1.4 official document (English) </title>
+</head>
+
+
+<body>
+
+<h1>A Brief Explanation of VCE </h1>
+
+<p>
+  This page describes the Virtual Community Engine (VCE) for developers who are using VCE for the first time. 
+</p>
+
+
+<h2>What Problems Does VCE Try to Solve? </h2>
+
+<p>
+VCE provides easy, stable, fast, safe networking library for advanced TCP/IP network applications. VCE's major goal is to achieve effective application development, and reduce total cost of ownership of server site. 
+
+Especially by using VCE's SWP relay architecture and use of unique protocol, you can easily implement a server-site which is accessed by tens of thousands of client terminals sending 1 or 2 packets every second. Even in this case, only 1 or 2 intel PC are needed. 
+</p>
+
+<h2>Design Policy</h2>
+
+<p>
+  As mentioned above, VCE's main goal is to achieve overall
+high cost performance when you make a massively accessed client-server
+oriented applications. So we've chosen following design policies:
+</p>
+<ul>
+  <LI>"Focuses on  C language API"<BR>
+
+      VCE API has it's basis on C language.
+      That's just because C is actually the fastest.
+      When making client-server massive contents,
+      "Number of Concurrent Users" is the primal business interest.
+      So, we think VCE have to be written in fastest language.
+      </p>
+      <p>
+      But, for some cases like making maintainance tools,
+      other "slow-but-easy-going" language interfaces are provided
+      in addition to C API.
+      Ruby/Kylix wrappers are included in VCE package.
+      You can make special maintainance tools using those APIs.
+     </p>
+
+   <LI>"Single-threaded, event-driven"<BR>
+      <p>
+      On ordinary inexpensive IA32 PC machines ( 1 or 2 CPUs at most ),
+      you cannot get great performance by a lot of kernel threads.
+      And, of course, it's far easier to debug single-threaded program
+      especially using C language.
+      </p>
+      <p>
+      To simulate multi-task, VCE uses callback functions to get
+      messages from network. When a message is arrived, a
+      callback function is called.
+      </p>
+       <p>
+        The VCE uses an event-driven programming model with a callback function        so that multiple tasks can be executed in parallel in a single-thread env       ironment. 
+	  
+	 Also, VCE has a task manager which is equivalent to user-level
+      threads. You can make use of all these tools to make
+      asyncronus programs.
+      </p>
+
+  <LI>"Relay Server"<BR>
+	  <p>
+	  The VCE supports a structure where a relay server is sandwiched betwee          n an application server and clients (though not using a relay server            is possible).  
+	  The relay server gathers small packets from clients into one large pac          ket, performs SSL decoding, and forwards it to an application server,           which all simultaneously reduce the OS burden for the application ser           ver (Figure 1).
+	  </p>
+	  <BR>
+	  <img src="../images/vceabout_swp.gif">
+	  <BR>
+	  <p>
+	  With this method, an application server can use 95% or more of its CPU          time for conventional logic processing.  This feature slightly increa           ses the application's response time by a few milliseconds, but it allo          ws a substantial decrease in the number of application servers.  In ad          dition, a relay server can be used to provide multiple content types w          hen it is not dedicated to individual applications.  A minimum-level P          C server can be used as a relay server.  
+	  </p>
+
+  <LI>"Connection Switching"
+ <BR>
+	  <p>
+	  The VCE improves the processing performance of an application server, 
+          but in addition the requirement of having it coordinate several com-
+          puters in a cluster will occur.
+	   With the VCE, a relay server connects by round robin to every server
+          and it is equipped to dynamically assign TCP connections from clients.
+          Thus, servers are clustered and implementing applications becomes incr          edibly easy.  For details, see <a href="switch.html">
+           "Regarding Connection Switching."  </a>
+         </p>
+</ul>
+
+
+
+<h2>Other Features</h2>
+<p>
+  The VCE is also equipped with, in addition to functions to achieve a high level of performance as described earlier, features needed to create modern network applications. 
+</p>
+<ul>
+
+
+
+  <LI>"Encryption with OpenSSL"<BR>
+	  <p>
+    The VCE is provided with an OpenSSL library for all encryption processing.      Users can still receive benefits through future OpenSSL improvements (If        encryption in Ipv6 becomes common, instances where this function is not used    may arise). 
+	  </p>
+ 
+
+  <LI>"Straightforward RPC"<BR>
+	  <p>
+	  The RPC stub generator "gen.rb," which is included in the VCE as standard, supports a remote procedure control in a high-density proprietary format.  Protocol version management and prerequisite types also supported. 
+	  </p>
+
+
+  <LI>"Various Programming Tools"<BR>
+	  <p>
+	The VCE is equipped with a suite of required utilities for network applications that includes network address operations, text operations, memory operations, search operations, and various executable binaries. 
+	  </p>
+
+</ul>
+
+<h2>Actual Application Development</h2>
+<p>
+  A correct understanding of C or Ruby programming language and basic knowledge about the Internet such as IP addresses and TCP protocol are required to use the VCE and develop applications.  This document has omitted descriptions of these subjects.  
+</p>
+<BR>
+<p>
+The following sections assume C language is used.  Basic knowledge required for VCE programming is described and then the lines of code for "minimumsv.c" and "minimumcl.c" included in the VCE package are explained in detail.  
+</p>
+
+
+<h2>tcpcontext_t, conn_t, Record Transmission, and the Parser Function</h2>
+<p>
+ A developer must understand the concepts of these topics in order to be able to develop VCE applications. 
+</p>
+<UL>
+
+
+  <LI>tcpcontext_t<BR>
+	  <p>
+	  tcpcontext_t is a structure that stores necessary information on how 
+          to communicate with the other party (a connecting server for clients 
+          and originating clients for a server).  It stores various settings 
+          relating to communications, such as if encryption is required or not,           the maximum number of connections, and buffer size.  Settings for por           tions that are not set with the vce_tcpcontext_create function can be           performed with a function with the prefix "vce_tcpcontext_" such as 
+          vce_tcpcontext_set_conn_parser. 
+	  
+	  tcpcontext_t can manage multiple conn_t structures, and all conn_t              settings derived from tcpcontext_t are based on tcpcontext_t settings.          The VCE can simultaneously manage multiple settings. 
+	  </p>
+
+  <LI>conn_t<BR>
+	  <p>
+	 conn_t retains necessary information about data transmission for each 
+         connecting party.  tcpcontext_t retains shared information with respect         to all of the connecting parties and conn_t retains information (such 
+         as the IP address) with respect to each connecting party. 
+	 Thus, combining the information retained by conn_t and tcpcontext_t 
+         provides all of the necessary information for transmission.  
+	 conn_t has information on which tcpcontext_t it is derived from, to 
+         allow the sending of data to a specific party as illustrated in the
+         lines of code below. 
+	  
+	  </p>
+	  <pre>
+	  conn_t c = ...
+	  vce_conn_write( c, "hoge", 4 ); /* send four bytes of data */</pre>
+ 
+  <LI>Record Transmission<BR>
+	  <p>
+	  Generally, data is sent in the form of a stream without identifiable 
+          breaks with connection-type communications protocols.  If data is not           separated by some means, it cannot be processed. 
+	  The VCE is based on the philosophy that "processing incomplete data is
+          worse than not processing data at all," so all the data sent/received           using the VCE is always transmitted in the form of records. 
+	  </p>
+	  
+  <LI>Parser Function<BR>
+	  <p>
+	 Of all the important information retained by tcpcontext_t, settings for         the "parser function" are the most important. <BR>
+	  </p>
+
+	  <P>
+	 When conn_t receives information from a party, it first stores the inf          ormation sent from a party in the buffer.  Then, it checks to see if            records can be extracted from the information stored in the buffer.  If         a complete record can be extracted, it is passed to an application. 
+	 Here, the function that "checks to see if records can be extracted" is          the parser function.  When parser function finds a record and extracts          information, it calls a preset callback function using the now extract          ed record as an argument. 
+	  The callback function itself is defined by an application, so data is          passed to the application.  The vce_tcpcontext_set_conn_parser function         is used to set the parser function with respect to tcpcontext_t and the         function it calls.  The VCE provides vce_protocol_parser_bin16, 
+         vce_protocol_parser_bin32, and other functions as default parser func           tions. 
+
+  <LI>Unparser Function<BR>
+	  Since data can only be transmitted in records with the VCE, a recipi
+          ent does not receive data with boundaries that the sender does not in
+         tend.  To guarantee this, an obvious point is that a sender must use a
+         sending function that corresponds exactly to a parser function on the 
+         server.  In the VCE, this sending function, the reverse of the parser,
+         is called an "unparser" and unparser functions such as 
+         vce_protocol_unparser_bin16 for vce_protocol_parser_bin16 are included. </ul>
+
+<h2>Minimal Server/Client Code</h2>
+<p>
+ This section provides examples of a minimal server code, "minimumsv.c," and minimal client code, "minimumcli.c". 
+For main programs, see "autotest/minimumsv.c" in the VCE package.
+</p>
+
+<p>
+minimumsv.c waits for a connection from a client at port 23456. 
+ The heading includes vce.h and assigns the port number to a variable. 
+</p>
+<pre>
+#include "vce.h"
+
+unsigned short portnum = 23456;
+</pre>
+</p>
+<p>
+The next block defines a callback function that is called by the parser function.  A received record can be received with the arguments data and len.  Whoever sent it is identified by the argument ct. 
+Using vce_protocol_unparser_bin16 with respect to a sender, the data received is converted as-is and sent.  vce_errout is used instead of printf. 
+</p>
+<pre>
+int
+callback( conn_t ct, char *data, int len )
+{
+	char work[100];
+	vce_errout( "received data. %s\n",
+				vce_makecstr(work,sizeof(work),data,len ));
+	vce_protocol_unparser_bin16( ct, data, len );
+	return 0;
+}
+</pre>
+<p>
+The next block contains a main function.  It declares tcpcontext_t and calls vce_initialize().
+  </p>
+<pre>
+int main( int argc, char **argv )
+{
+	tcpcontext_t t;
+
+	vce_initialize();
+</pre>
+<p>
+  Next, tcpcontext_t, a shared setting for all connections, is initialized.  When the initialization of tcpcontext_t fails, the program terminates.  Encryption with a key length of eight is used.  
+</p>
+<pre>
+
+	t = vce_tcpcontext_create( 1, NULL, portnum, 2,
+							   1000,1000, 100, 1,8,0,0,0 );
+	if( !t ){
+		vce_errout( "cannot create tcpcontext\n" );
+		return 1;
+	}
+</pre>
+<p>
+Next, the parser function and parser callback function are defined.  The callback function set here is the one defined earlier. 
+</p>
+<pre>
+	vce_tcpcontext_set_conn_parser( t, vce_protocol_parser_bin16, callback );
+	vce_errout( "start loop\n" );
+</pre>
+<p>
+Then, it enters an infinite loop and continues calling the vce_heartbeat function.  This function performs all processing relating to the VCE.  This program has no means of normal termination.  
+</p>
+<pre>
+	while(1){
+		vce_heartbeat();
+	}
+	vce_finalize();
+	return 0;
+}
+</pre>
+<BR>
+<BR>
+<p>
+Now, minimumcl.c will be described.  
+First, including vce.h and storing a port number are the same, though because this program is a client, it defines "localhost" information, which specifies the host to which the client desires to connect.    
+</p>
+<pre>
+
+#include "vce.h"
+
+unsigned short portnum = 23456;
+char host[] = "localhost";
+</pre>
+<p>
+Next, a callback function is defined in the same manner as for a server.  Unlike a server, it terminates without returning received data.  A message to return data will cause a loop.  
+</p>
+<pre>
+int
+callback( conn_t ct, char *data, int len )
+{
+	char work[100];
+	vce_errout( "received data. %s\n",
+				vce_makecstr(work,sizeof(work),data,len ));
+	exit(0);
+	return 0;
+}
+</pre>
+<p>
+  The main function declares a "sent" flag in order to send once and declares a conn_t structure c to store a server connection.  
+</p>
+<pre>
+int
+main( int argc,char **argv )
+{
+	tcpcontext_t t;
+	int sent = 0;
+	conn_t c;
+</pre>
+<p>
+Then, tcpcontext_t is initialized.  Differences between this and the code for the server are a flag that specifies if it is a server or a client and a waiting port.  A waiting port is not required for a client. 
+</p>
+<pre>
+	vce_initialize();
+	t = vce_tcpcontext_create( 0, NULL, 0, 1, 1000,1000,100,1,8,0,0,0 );
+	if( !t ){
+		vce_errout( "cannot create tcpcontext\n" );
+		return 1;		
+	}
+</pre>
+<p>
+  A parser function is set in the same manner as for a server. 
+</p>
+<pre>
+	vce_tcpcontext_set_conn_parser( t, vce_protocol_parser_bin16, callback );
+</pre>
+
+<p>
+  It connects to a server.  If connection fails, the program is terminated.  If connection succeeds, information stored in c is used for subsequent communication with the server. 
+</p>
+<pre>
+	c = vce_tcpcontext_connect( t, host, portnum );
+	if( !vce_conn_is_valid( c )){
+		vce_errout( "cannot connect to server\n" );
+		return 1;
+	}
+</pre>
+<p>
+  vce_heartbeat is called in the main loop.  After confirm that sending using the vce_conn_writable function appears successful, information is sent using the unparser.  A "sent" flag is assigned so the program sends only once in the loop.  
+</p>
+<pre>
+	while(1){
+		vce_heartbeat();
+		if( sent == 0 && ( vce_conn_writable(c) > 0 ) ){
+            vce_errout( "send data\n" );
+			vce_protocol_unparser_bin16( c, "hoge" , 4 );
+			sent = 1;
+		}
+	}
+	vce_finalize();
+	return 0;
+}
+</pre>
+
+<h2>Summary</h2>
+<p>
+ The VCE has been explained in this section; if a developer understands these details, then sending information via C between all operating systems as Linux,Win32,and Playstation2(R) on which the VCE runs is possible.  
+The sample programs above do not use many of the VCE's major functions; however, the basic structure is the same for all sorts of sophisticated applications as well, and only the contents of the callback functions are more complicated.  
+</p>
+
+<p><br>
+
+  <br>
+&quot;PlayStation&quot; is registered trademark and is trademark of Sony Computer Entertainment Inc.<br>
+  <a href="index.html">return to index</a></p>
+<div id="footer">
+Copyright 2000-2005 Community Engine Inc. All rights reserved.</div>
+</body> </html>

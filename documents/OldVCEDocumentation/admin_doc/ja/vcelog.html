@@ -1,0 +1,117 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html> <head>
+<title>VCE Log format</title>
+</head>
+
+<body>
+
+<h1>VCE Logging API</h1>
+
+<h2>VCE Logging APIとは</h2>
+
+<p>VCE Logging APIは、<a href="log_format.html">VCE ログフォーマット</a>に
+基づいたログを出力するためのAPIです。
+<p>それらのログのフォーマット出力機能と、それらをログサーバ(rsv)に転送する機能を持ちます。
+
+
+<h2>簡単な使いかた</h2>
+
+<p>debug_print/sample にサンプルがありますので御覧下さい。<br>
+
+
+
+
+
+<h2>API</h2>
+
+<h3>Log API</h3>
+
+<p><b>void vce_log_init( printf_func_t printf_func )</b>
+
+<p>vcelogを初期化します。<br>
+printf_funcには、ログ表示をするための関数を指定します。<br>
+プロトタイプはprintfと同じなので、vce_erroutを指定する場合には、
+(printf_func_t)vce_errout というように、キャストをする必要があります。
+
+
+<p><b>int vce_log_add_type( int type, char *tag )</b>
+
+<p>ログタイプを追加します。
+
+
+<p><b>void vce_log_set_type_mask( unsigned int type )</b>
+
+<p>ログマスクを指定します。マスクは、表示させたいタイプのビットを立てた数値を指定します。<br>
+指定されたログ以外は、これいこう表示されなくなります。
+
+<p><b>void vce_log_set_type_mask_by_name( char *name, int on_off )</b>
+
+<p>ログマスクを名前で指定します。<br>
+vce_log_add_type()で指定したtagが名前になります。
+
+
+<p><b>void vce_log_print( int type, char *id, char *char_name, char *format, ... );</b>
+
+<p>VCEログフォーマットでログを出力します
+
+
+<p><b>void vce_log_vprint( int type, char *id, char *char_name, char *format, va_list va )</b>
+
+<p>vce_log_printのva_listバージョンです。
+
+<p><b>int vce_log_add_monitor_command()</b>
+
+<p>VCE-Monitor用のコマンドを追加します。<br>
+現在、追加されるコマンドは、set_logmask, get_log_typesです。
+
+
+<h3>Log Writer API</h3>
+
+<p>ログをrsvに転送するためのAPIです
+
+<p><b>int vce_logwriter_init( int num )</b>
+
+<p>ログライターを初期化します。<br>
+numには、ログライターの数を指定します。通常は、一つで十分でしょう。
+
+
+<p><b>logwriter_t *vce_logwriter_connect( char *addr, int port, int id )</b>
+
+<p>ログライターをrsvに接続します。<br>
+この関数を呼んだあとに、vce_logwriter_poll()を繰り返すことにより、ログライターがrsvに
+ログを書き込めるようになります。<br>
+ただし、それまでのログも一部はバッファにため込まれ、接続した瞬間に書き出されます。
+
+<p><b>admsvの検索機能と連係させるには、IDには、サービスポート(admcli.exeのプロセスWindowの
+Portの項目にでる数値)を指定してください。</b>この値をもとに、admsvはバインディングを行います。
+
+
+<p><b>int vce_logwriter_poll()</b>
+
+<p>vce_logwriter_connect()を呼んだ後に、この関数を定期的に呼ぶことで接続や、
+切断された際の再接続を行います。<br>
+５秒に１回程度呼ぶようにしてください。
+
+
+<p><b>int vce_logwriter_printf( logwriter_t *w, const char *format, ... )</b>
+
+<p>文字列をrsvに書き出します。<br>
+接続されていない場合は、バッファリングされます。
+
+
+<p><b>int vce_logwriter_vprintf( logwriter_t *w, const char *format, va_list va )</b>
+
+<p>vce_log_writer_printfのva_list版です。
+
+
+
+<br>
+<br>
+<br>
+<hr>
+<font size=-1>
+Copyright 2000-2005 CommunityEngine Inc. All rights reserved.<BR>
+
+</body>
+
+</html>

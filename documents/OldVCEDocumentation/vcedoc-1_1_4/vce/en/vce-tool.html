@@ -1,0 +1,112 @@
+<html>
+<head>
+<link rel="stylesheet" href="../vce.css" type="text/css">
+<title> VCE-SDK Tools Document </title>
+</head>
+<body>
+<h1> VCE-SDK Tools Document </h1>
+<h2>Tools index by name</h2>
+<!-- make_tool_nameindex -->
+<ol>
+<li><a href="#als">als</a></li>
+<li><a href="#bf">bf</a></li>
+<li><a href="#hextext">hextext</a></li>
+<li><a href="#stderrback.rb">stderrback.rb</a></li>
+</ol>
+<h2>Description of all commands</h2>
+<!-- make_tooldef -->
+<a name="als"></a>
+<table id="tooldef">
+<tr><th colspan="2" id="tooldef_title">
+<B>als</B></th></tr>
+<tr><th>Summary</th><td>pending.</td></tr>
+<tr><th>Compatibility</th><td>linux</td></tr>
+<tr><th>Usage</th><td>als [portnum]
+</td></tr>
+<tr><th>Description</th><td>pending.
+</td></tr>
+<tr><th>Example</th><td><pre>als 12345</pre>
+</td></tr>
+<tr><th>Bugs/TODO</th><td>pending
+</td></tr>
+</table><br><br>
+<a name="bf"></a>
+<table id="tooldef">
+<tr><th colspan="2" id="tooldef_title">
+<B>bf</B></th></tr>
+<tr><th>Summary</th><td>Encrypt many files by password.</td></tr>
+<tr><th>Compatibility</th><td>linux</td></tr>
+<tr><th>Usage</th><td>bf [-d] [-p password] infile infile ...
+</td></tr>
+<tr><th>Description</th><td>This tool encrypts an input file by using a password.
+The Blowfish algorithm is used for encryption.
+It is a block encryption in 8-bytes unit. <BR>
+<B>-d</B> option decodes an encrypted file.<BR>
+If<B>-p</B> option is not specified,
+it prompts you to input a password (getpasswd). <BR>
+The original file is not deleted when its encryption is finished.
+The encrypted file will be saved with ".bf" added at the end of original
+file name.
+To decrypt an encrypted file,
+the same password used for encryption is required.
+</td></tr>
+<tr><th>Example</th><td><pre>
+bf somefile.txt somefile2.txt
+   (enter a password at a terminal and do encryption)
+bf -d somefile.txt.bf somefile2.txt.bf
+   (enter a password at a terminal and do decryption)
+</pre>
+</td></tr>
+<tr><th>Bugs/TODO</th><td>TODO Since it enciphers after extracting the contents of a file into
+a memory, the file wouldn't be encrypted if the file is too big for
+total amount of available memory.
+</td></tr>
+</table><br><br>
+<a name="hextext"></a>
+<table id="tooldef">
+<tr><th colspan="2" id="tooldef_title">
+<B>hextext</B></th></tr>
+<tr><th>Summary</th><td>Convert binary files into VCE-hex-text format.</td></tr>
+<tr><th>Compatibility</th><td>linux</td></tr>
+<tr><th>Usage</th><td>hextext [-d] [-v] infile infile infile ...
+</td></tr>
+<tr><th>Description</th><td>This was originally created to test the
+vce_make_hex_text_from_buffer function.<BR>
+<B>-d</B>  If this option is added decoding is done,
+and if it is omitted encoding is carried out.
+You can convert as many files as you want to at one time.
+When conversion is successful, a new file with ".hextext" appended
+after the input file name is created as in "INFILE.hextext".
+The source file is not deleted.
+When a hextext format file with a name of "hoge.text" is decoded
+successfully, the file named "hoge" will be overwritten,
+so caution is necessary.
+In addition, when the <B>-v</B> option is specified,
+the version information is displayed and a normal exit occurs.
+</td></tr>
+<tr><th>Example</th><td><pre>hextext a.txt b.txt</pre>
+</td></tr>
+<tr><th>Bugs/TODO</th><td>hextext loads all files into RAM in the first step of encoding,
+so you cannot encode/decode large files that is too large to be
+loaded on RAM.  The maximum size of input files is about 10 or
+100MBytes. ( It's dependent on the amount of RAM put in the machine.)
+</td></tr>
+</table><br><br>
+<a name="stderrback.rb"></a>
+<table id="tooldef">
+<tr><th colspan="2" id="tooldef_title">
+<B>stderrback.rb</B></th></tr>
+<tr><th>Summary</th><td>Automatically compress VCE's log files</td></tr>
+<tr><th>Compatibility</th><td>linux</td></tr>
+<tr><th>Usage</th><td>ruby stderrback.rb DIRNAME
+</td></tr>
+<tr><th>Description</th><td></td></tr>
+</table><br><br>
+<!-- make_tooldef end -->
+<BR><BR>
+<p><a href="index.html">return to index</a><br></p>
+<div id="footer">
+Copyright 2000-2005 Community Engine Inc. All rights reserved.
+</div>
+</body>
+</html>

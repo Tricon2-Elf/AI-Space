@@ -1,0 +1,118 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel="stylesheet" href="../vce.css" type="text/css">
+<title>VCE 1.1.4 official document (Japanese)</title>
+</head>
+
+<body>
+<h1>TCPコネクション管理システム</h1>
+<p>
+VCEにはTCPのコネクションを管理するために3段階の構造(体)を定義する。
+最も大きな構造がTCPコンテキストで、
+TCPコンテキストは複数のTCPコネクション(ソケット)を管理する。
+そして1本のTCPコネクションには、複数のサーキット(circ_t)が含まれる。
+VCEは1本のTCPコネクション中に複数の仮想回路を設定できるようになっているので
+それを扱うためにこのような3段階になっている。
+tcpcontextの階層図を以下に示す。
+</p>
+<img src="../images/tcpcontext_jp.gif">
+<BR><BR>
+
+
+<h2>TCPコンテキストの種類</h2>
+<p>
+サーバ専用の設定項目(ソケットをバインドするアドレス)や、
+クライアント独自の設定項目(接続先IPアドレス等)、
+両方に共通の項目(暗号化など)があり、すべてをまとめてTCPコンテキストという。
+TCP/IPネットワーキングにおいて、
+サーバ側とクライアント側の実装には異なる点がいくつかあるため、
+VCEでは、サーバコンテキストとクライアントコンテキストという、
+2種類のTCPコンテキストを用意する。これら2種類を切りかえるためには、
+vce_tcpcontext_create 関数の第一引数を1にしたり0にしたりする。
+またこれらのTCPコンテキストを操作するための基本となる変数の型が
+tcpcontext_t であり、 vce.h で定義されている。
+</p>
+<BR>
+
+<h2>サーバコンテキスト</h2>
+<p>
+サーバコンテキストは、TCPのサーバを管理する。
+1つのサーバコンテキストは1個のbind-listenされたサーバソケットに対応し、
+複数のコネクションを用いたネットワークサービスを提供する。
+サーバコンテキストを使うには以下の段階を踏む。
+</p>
+<ol>
+<LI>必要に応じてプロトコル処理ルーチンを定義し、 vce_tcpcontext_createに
+備える。
+<LI>vce_tcpcontext_create を呼びだす。第一引数を1とする。
+<LI>vce_tcpcontext_set_conn_parser 関数を用いて、
+ネットワークからの入力データをレコード単位に分割するためのパーサと、
+そのパーサによって呼びだされる、1で定義した処理ルーチンを登録する。
+<LI> vce_heartbeat を呼びだし続ける。
+<LI> 処理が終了したら、 vce_tcpcontext_cleanup を呼びだす。
+</ol>
+
+<h2>クライアントコンテキスト</h2>
+<p>
+クライアントコンテキストは、TCPのクライアントを管理する。
+クライアントコンテキストを使うには基本的には以下の段階を踏む。
+
+<ol>
+<LI>必要に応じてプロトコル処理ルーチンを定義し、 vce_tcpcontext_createに
+備える。
+<LI>vce_tcpcontext_create を呼びだす。第一引数を0とする。
+<LI>vce_tcpcontext_set_conn_parser 関数を用いて、
+ネットワークからの入力データをレコード単位に分割するためのパーサと、
+そのパーサによって呼びだされる、1で定義した処理ルーチンを登録する。
+<LI>サーバにconnectする。
+<LI>vce_heartbeat を呼びだし続ける。
+<LI> 処理が終了したら、 vce_tcpcontext_cleanup を呼びだす。
+</ol>
+
+サーバもクライアントもほとんど同じで、 vce_tcpcontext_create への
+引数が異なるだけである。
+</p>
+<p>
+TCPコネクションを直接操作するには、 conn_t 構造体を使い、
+仮想回路(circuit)を直接操作するには、 circ_t 構造体を使う。
+これらの構造体は、 vce.h で定義されている。
+</p>
+<p>
+TCPコンテキストは、コネクション(conn_t)と仮想回路(circ_t)に対して
+別々にソースアドレス制限をかけるフィルタを装備している。
+なぜ別々に設定できるかというと、中継サーバがconn_tを使用して
+本サーバにアクセスしている状況で中継サーバにアクセスしてくる
+クライアントのソースアドレスを制限したいからである。
+中継サーバは通常のアプリケーションでは本サーバの近くに置かれ、
+厳密にアドレスフィルタをかけ、
+クライアントに関しては自由に接続させるという風に使う。
+</p>
+<p>
+デフォルトではTCPコンテキストのソースアドレスフィルタはOFFになっていて、
+すべての接続要求を受けいれる。vce_tcpcontext_add_conn_ipv4_filter
+関数などを用いてひとつでもフィルタを指定すると、
+まずすべての接続をデフォルトで拒否するようになり、
+その中からACCEPT設定になっているソースネットワークアドレスを持つ
+クライアントだけを検索して、接続を許可するかどうかを決定する。
+したがって、ただひとつのネットワークからの接続を受けいれる設定にする場合は、
+たとえば以下のようなコードを書けばいいことになる。
+<pre>
+vce_tcpcontext_add_conn_ipv4_filter(t,"192.168.0.0","255.255.255.0", FILTER_POLICY_ACCEPT );
+</pre>
+以上のコードにより、
+ 192.168.0.* ネットワークからの接続要求だけ受けいれる設定となる。
+</p>
+
+<BR><BR>
+
+<br><br>
+<a href="index.html">index に戻る</a>
+<br>
+
+<div id="footer">
+Copyright 2000-2005 Community Engine Inc. All rights reserved.</div>
+
+</body> </html>

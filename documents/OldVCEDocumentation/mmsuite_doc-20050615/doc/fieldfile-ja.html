@@ -1,0 +1,145 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html> <head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>mm-suite official document (Japanese)</title>
+<style type="text/css">
+P {
+  TEXT-INDENT: 1em
+}
+</style>
+
+</head>
+
+<body>
+<h1>フィールド情報ファイルの書式</h1>
+
+<p>
+  1個のフィールドを初期化するには1個のフィールド設定ファイルが必要である。
+フィールド設定ファイルには、
+フィールドの特性に関するすべての情報と、地形情報が含まれる。
+1行にひとつの情報が含まれる。GMSV のソースコードでは、
+field.c に読みこみルーチンがある。
+地形情報は三角形の情報のみで、その三角形に衝突すると何が起こるかも記述する。
+</p>
+<p>
+GMSV は起動時に1回だけこの地形情報を読みこむ。
+地形情報が格納されているディレクトリ名を指定すると、
+そのディレクトリにあるファイルを再帰的にたどって有効な中身をもつ
+ファイルだけ、読みこむ。
+デフォルト状態では、 ".txt" の拡張子をもつファイルだけ読みこむ。
+</p>
+
+<h3>各ディレクティブの意味</h3>
+<p>
+  ここでは、各行に記述するトークンの意味を説明する。
+</p>
+<ul>
+  <LI>version=NUMBER<BR>
+      フィールドのバージョン。
+      GMSV が誤ったバージョンのフィールドを読みこまないようにする。
+  <LI>min_x=NUMBER<BR>
+      地形のx座標の最小値。世界の果て。負の値になることもできる。
+  <LI>min_y=NUMBER<BR>
+      地形のy座標の最小値。
+  <LI>max_x=NUMBER<BR>
+      地形のx座標の最大値。
+  <LI>max_y=NUMBER<BR>
+      地形のy座標の最大値。
+  <LI>x_per_grid=NUMBER<BR>
+      1グリッドあたりのX方向の移動量。
+      これは今後対応していく、グリッド式マップのための情報である。
+  <LI>y_per_grid=NUMBER<BR>
+      1グリッドあたりのY方向の移動量。
+  <LI>name=STRING<BR>
+      フィールド名。ユーザに見せるフィールドの名前ではなくて、
+      NPC や hyper link の設定に使う文字列であり、
+      スペースとコンマ以外の文字からなる。
+  <LI>type=STRING<BR>
+      フィールドのタイプを指定する。現在は polygon, grid
+      のどちらかを指定できるが、実際には grid は動作しない。
+  <LI>data=STRING<BR>
+      地形データを1個追加する。
+      STRING のフォーマットは、
+      <pre>
+      DATATYPE,PARAM,PARAM,PARAM,PARAM....
+      </prE>
+      となっているが、現在は
+      <Pre>
+      triangle,X1,Y1,X2,Y2,X3,Y3,EVENTSTRING
+      </pre>
+      だけがサポートされている。現在は triangle のみだが、将来は、
+      別な図形もサポートされる予定である。
+      EVENTSTRING のフォーマットは、デリミタに ":" を使い、
+      <pre>
+      EVNETTYPE:PARAM:PARAM:...
+      </pre>
+      である。以下はEVENTTYPE ごの説明。
+      <ul>
+        <LI>collision<BR>
+            衝突を意味する。この三角形の中に入ることはできない。
+        <LI>link:FIELD:X:Y<BR>
+            ハイパーリンクを意味する。
+            この三角形に入ると、別の場所に強制的に移動する。
+            FIELD は land_0 のようなフィールド名で、
+            X:Y は座標である。
+            行きさきが collision の範囲にあると、移動できない。
+            また行きさきが別のワールドになっている場合は、
+            自動的に別のサーバにキャラクタが転送される。
+      </ul>
+</ul>
+
+<h3>例</h3>
+<p>
+  以下はmm-suiteデフォルト状態の land_0 フィールドの中身である。
+</p>
+<pre>
+#
+# land_0 : 地上マップ
+#
+#
+version=1
+min_x=0
+min_y=0
+max_x=640
+max_y=480
+x_per_grid=0
+y_per_grid=0
+name=land_0
+type=polygon
+
+# 左上の平行四辺形
+data=triangle,20,270,62,295,245,106,collision
+data=triangle,62,295,285,132,245,106,collision
+
+# 左下の四角形
+data=triangle,61,324,0,371,279,479,collision
+data=triangle,0,371,0,479,279,479,collision
+
+# 真中下の三角形
+data=triangle,348,405,468,479,237,479,collision
+
+# 右上の大きな三角形
+data=triangle,272,0,640,0,640,243,collision
+
+# 右上のドアの平行四辺形
+data=triangle,380,113,416,94,545,180,collision
+data=triangle,380,113,513,197,545,180,collision
+
+# 右上のワープエリア ( to dungeon_0 )
+data=triangle,419,134,470,170,419,207,link:dungeon_0:455:174
+data=triangle,419,134,419,207,366,170,link:dungeon_0:455:174
+
+# 右下のワープエリア ( to island_0 )
+data=triangle,490,390,542,426,542,356,link:island_0:208:211
+data=triangle,542,426,542,356,594,390,link:island_0:208:211
+</pre>
+
+
+<BR><BR>
+<a href="index-ja.html">index に戻る</a>
+<br>
+<hr>
+<font size=-1>
+Copyright 2000-2005 CommunityEngine Inc. All rights reserved.<BR>
+
+</body> </html>

@@ -1,0 +1,120 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html>
+<head>
+<title>VCE monitor command</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<link rel="stylesheet" href="../default.css" type="text/css">
+</head>
+
+<body>
+<p><a href="index.html">[トップ]</a> <a href="changes.html">[変更履歴]</a> 
+  <a href="map.html">[目次]</a> <a href="words.html">[用語]</a> <a href="faq.html">[FAQ]</a> | <a href="admcli/index.html">[AdmCli]</a> 
+  <a href="admin_server.html">[ADMSV]</a> <a href="remote_server.html">[RSV]</a> 
+  | <a href="vcelog.html">[VCE-Log]</a> <a href="monitor_command.html">[VCEモニター]</a> 
+</p>
+
+<h1>Monitor Commandについて</h1>
+<h2>Monitor Command とは</h2>
+<p>Monitor Commandは、VCE monitor APIによって管理されるコマンド類です。<br>
+  VCEに実装されている基本コマンドと、VCEを使った各アプリケーションによって 実装されたコマンドがあります。 
+<h2>全体の流れ</h2>
+<h3>サーバー側の流れ</h3>
+<ol>
+  <li>モニターサーバーの準備を行う<br>
+    vce_monitor_server_enable で、サーバを利用可能にします。 詳細は、<a href="http://vce.ce-lab.net/doc/vce/ja/vce-api.html#monitor">monitor</a> 
+    を参照して下さい。 
+  <li>アプリケーション依存のモニターコマンドを実装する<br>
+    <pre class="code">
+    int command_helloworld( conn_t c, int argc, char **argv ){
+        return vce_monitor_server_replay( c, 0, "hello world!!" );
+    }</pre>
+    のようなコールバック関数を必要なコマンドの数だけ作成して、中身を実装します。 
+  <li>モニターコマンドを登録する<br>
+    上で、作成した関数を、vce_monitor_add_command で、Monitor Commandに追加します。 
+</ol>
+<h3>クライアント側の流れ</h3>
+<p>クライアントは、開発者が実装することもできますが、通常は、admcliで アクセスするか汎用プロトコルクライアントを使用します。 
+<p>admcliでコマンドを実行するには、ProcessWindowsで、コマンドを実行させたいプロセスを選択し、 右クリックメニューからコマンド実行を選択します。<br>
+  すると、コマンド実行ウィンドウが出てくるので、実行したいコマンド("netstat"など)を実行します。<br>
+  コマンドは、スペースで区切られた引数をとることもできます。("ping 12345"などのように)<br>
+  また、ALIVE状態のプロセス以外では、コマンドは実行できません。 
+<h2>標準コマンドについて</h2>
+<p>ADMSVがVCE monitorを実装したアプリケーションから情報を取得するための標準的な コマンドがいくつか存在します。 
+<p>これらのコマンドは、実装されていなくてもエラーなどは起こりませんが、管理ツールと合わせて利用 するためには、実装されていることが必要です。 
+<p>コマンドの一覧を下に示します 
+<ul>
+  <li>ping [tick_int]<br>
+    pingを打ちます。 "[tick_int]"という形で返答を返します 
+  <li>netstat<br>
+    VCEで使っているnetworkのリソースを文字列で返します 
+  <li>netinfo<br>
+    admsvがネットワーク情報を取得するために使用するコマンドです。 
+  <li>get_port<br>
+    使用しているポートを返します。<br>
+    最初にvce_tcpcontext_createしたサーバーコンテキストのポートを返しますので、<br>
+    主に監視したいポートは最初にcreateして下さい。 
+  <li>get_conn<br>
+    get_portで返したportの接続数を返します。<br>
+  <li>suicide<br>
+    プロセスをその場で終了します.これは、exit(0)を呼ぶだけです。 
+  <li>prof<br>
+    プロファイリング用のファイル(gmon.out)を出力します。(linuxのみ) 
+  <li>shutdown<br>
+    アプリケーションを安全に終了します。<br>
+    これは、アプリケーション依存の作業なので、各アプリケーションが実装しなくてはなりません。 
+  <li>get_name<br>
+    アプリケーションの名前を返します。<br>
+    これは、アプリケーション依存の作業なので、各アプリケーションが実装しなくてはなりません。<br>
+    "GMSV world1"の用に、アプリケーション名と、どのサーバーかを区別 できる形の文字列を返すのがよいでしょう<br>
+    この名前は、admcli上で、表示されます。 
+  <li>get_login<br>
+    アプリケーション依存のログイン人数を返します。<br>
+    これは、アプリケーション依存の作業なので、各アプリケーションが実装しなくてはなりません。 
+</ul>
+<p>ping, netstat, suicide, prof, netinfo コマンドは、 vce_monitor_server_add_standard_commands()で登録されます。 
+<h2>ユーザーコマンドについて</h2>
+<p>ユーザーが作成したコマンドは、vce_monitor_server_add_command()で登録します。 
+<p>登録されたコールバック関数は、VCE monitorを通して呼び出されます。 
+<p>VCE monitor API は、PULLモデルのため、vce_monitor_server_add_command() で登録したコールバック関数内で、１回だけvce_monitor_server_replayを返す必要があります。<br>
+  現在の使用では、monitor server側が自発的に情報を送ることはできません。 
+<h2>具体的な利用例</h2>
+<p>具体的な利用例をしたに示します 
+<pre class="code">
+static int monitor_command_shutdown( conn_t _c, int argc, char **argv )
+{
+    done = 1;
+    vce_monitor_server_replay( _c, 0, "shutdown start" );
+    return 0;
+}
+
+int main()
+{
+  vce_initialize();
+  if( vce_monitor_server_enable( PORT, MAX_CONNECTION, "password" ) < 0 ){
+    /* エラー処理 */
+  }
+  if( vce_monitor_server_add_standard_commands() ){
+    /* エラー処理 */
+  }
+  if( vce_monitor_server_add_command( "shutdown", 
+                                      1, /* 引数無し */ 
+                                      command_shutdown,
+                                      "shutdown server" );
+    /* エラー処理 */
+  }
+
+  /* メイン処理 */
+
+}  
+</pre>
+<h2>内部構造について</h2>
+<p>内部構造は、バージョンによって変わるかも知れません。この構造に依存したコードを 書くことは推奨できませんが、挙動を予測する上で訳に立つ可能性があります。 
+<p>VCE monitorでは、監視されるプロセスが設定されたポートで接続を受け付け、 監視するプロセスがそのポートに接続をおこないます。<br>
+  接続はデフォルトでは、RIJNDAELの鍵長16で暗号化されます。 
+<p>プロトコルは、monproto.txtに記述されているものを使用しています。<br>
+
+<hr>
+Copyright 2000-2005 CommunityEngine Inc. All rights reserved.<br>
+
+</body>
+</html>

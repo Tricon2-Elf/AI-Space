@@ -1,0 +1,60 @@
+body {
+//  background-color: #ffffdf;
+  background-color: #ffffff;
+  background-image: none;
+  color: #000000;
+  
+}
+a:link {
+  color: blue;
+  text-decoration: none;
+}  
+a:visited, a:active {
+  color: red;
+  text-decoration: none;
+}
+a:hover {
+  color: #002468;
+  text-decoration: underline;
+}
+
+h1 {
+  background-color: #0080ff;
+  color: #ffffff;
+  padding: 2 2 2 4;
+}
+h2 {
+  background-color :#be8aec;
+  color: #ffffff;
+  padding: 2 2 2 4;
+}
+
+h3{
+  background-color :#704dd5;
+  color: #ffffff;
+  padding: 2 2 2 4;
+}
+h4 {
+  background-color :#5555aa;
+  color: #ffffff;
+  padding: 2 2 2 4;
+}
+hr {
+  position: absolute;
+  width: 60%
+  left: 0;
+}
+.folder {
+  background-color :#ffcccc;
+  padding: 2 2 2 4;
+  color: #0080ff;
+}  
+.comment {
+  background-color : none;
+}
+.link {
+  background-color : none;
+}
+dt {
+  font-weight: bold;
+}

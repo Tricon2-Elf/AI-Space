@@ -1,0 +1,159 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel="stylesheet" href="../vce.css" type="text/css">
+<title>VCE 1.1.4 official document (Japanese)</title>
+</head>
+
+<body>
+<h1>vce.h で定義されている型</h1>
+
+<p>vce.h ではVCEアプリケーションが直接に参照するための
+  構造体がいくつか定義されている。
+  本文書ではその型すべてについての説明を行う。
+</p>
+<h2><code>conn_t</code></h2>
+	  <p>1本のTCPコネクションに対応する構造体。
+主に vce_protocol_???? という名前をもつ関数群で使用される。</p>
+	  <table id="bb">
+		<tr><td>メンバ名</td><td>内容</td></tr>
+		<tr><td>void *p</td><td>VCE内部データへのポインタ</td></tr>
+		<tr><td>unsigned int serial</td><td>シリアル番号</td></tr>
+      </table>
+	  <p>VCEは、アプリケーションが conn_t 型の情報をアプリケーション内部に
+	  蓄積してしまうことによってVCE内部とアプリケーション内部の整合性が取れ
+	  なくなることに対処するために、conn_t 型の内部のシリアル番号を含めて
+	  いる。シリアル番号が古くなっている場合には、すでにそのコネクションは
+	  VCE内部では存在しないことを意味するため、アクセス不能としエラーを返す。
+        <br>
+      コネクションが有効かどうかは vce_conn_is_valid関数を用いる。
+  <b>このconn_tの内部メンバの値を変更しないでください！</b></p>
+	  <h2><code>circ_t</code></h2>
+	  <p>VCEは1本のTCPコネクションの中に複数の仮想回路を入れることができるが、
+	  circ_tは、その仮想回路ひとつに対応する。
+	  主に vce_vecprotocol_??? という名前をもつ関数群で使用される。
+サンプルコードは、 vec_sv_main.c で見ることができる。</p>
+	  <table id="bb">
+		<tr><td>メンバ名</td><td>内容</td></tr>
+		<tr><td>void *p</td><td>VCE内部データへのポインタ</td></tr>
+		<tr><td>unsigned int serial</td><td>シリアル番号</td></tr>
+      </table>
+	  <p>シリアル番号の用途は、 conn_t と同じである。
+      有効かどうかの確認は、vce_circ_is_valid関数を用いる。
+        <br>
+        <b>circ_tの内部メンバの値を変更しないでください！</b></p>
+	  <h2><code>tcpcontext_t</code></h2>
+	  <p>VCE において TCP を使う場合の設定情報を引きだすための構造体である。
+	  メンバについてはすべて VCE の内部に隠蔽されているので、アプリケーション
+	  からはアクセスできない。
+	  vce_tcpcontext_create 関数のみがこの型の値を返す。
+	  実際には tcpcontext_t は void* であり、VCE内部でキャストして使用される。<!--      
+  <h2><code>LOCK_PRIO</code></h2>
+	  共有メモリ関数(mshareカテゴリ)において、
+	  ロック取得要求時の優先順位である。
+	  現在以下の値が定義されている。
+	  <pre>
+	  PRIO_IDLE = -1
+	  PRIO_HIGHEST = 0
+	  PRIO_0 = 0
+	  PRIO_1 = 1
+	  PRIO_2 = 3
+	  PRIO_3 = 3
+	  PRIO_LOWEST = 3
+	  </pre>
+	  ロックの優先度は、「同じ領域のロックを同時に取得したい場合に、
+	  優先度が高い要求が先にロックを取得する」というルールで実装されている。
+	  <BR>
+	  優先度の効き具合は、たとえば、
+	  同じ領域に対して2つのクライアントが異なる優先度で
+	  連続して取得要求したとすると、3対1となる。さらに4つのクライアントが
+	  PRIO_0からPRIO_3 まででそれぞれ連続で取得要求を出すと、
+	  PRIO_3のクライアントは、ほぼ永久にロックを取得できない状況となる。
+	  同じ優先度の要求が重なる場合は、「早いもの勝ち」となる。
+	  <BR><BR>
+-->
+        <!--      
+  <h2><code>struct memshare_status</code></h2>
+	  <table>
+		<tr><TD>メンバ名</td><td>内容</td></tr>
+		<tr><TD>unsigned int lock_request_count</td>
+		<td>ロック要求を受けた回数</TD></tr>
+		<tr><TD>unsigned int lock_release_count</td>
+		<td>ロック解放要求を受けた回数</TD></tr>
+		<tr><TD>unsigned int lock_timeout_count</td>
+		<td>ロックがタイムアウトした回数</TD></tr>
+		<tr><TD>unsigned int request_request_count</td>
+		<td>ロック要求がタイムアウトした回数</TD></tr>
+		<tr><TD>unsigned int uptime_sec</td>
+		<td>mshareが稼働している時間の長さ(秒)</TD></tr>
+      </table>
+	  「ロックがタイムアウト」する事と「ロック要求がタイムアウト」する
+	  事は異なる。
+	  前者は、一旦取得されたロックが解放されないことによる
+	  タイムアウトであるのに対し、後者はキューにたまっているロック要求が
+	  あまりにも優先度が低いせいでロック取得に至らなかった状況をあらわす。
+	  <BR><BR>
+-->      
+  
+  </p>
+	  <h2><code>BINDATATYPE</code></h2>
+	  
+	  <p>vce_binary_pack, vce_binary_unpack 関数の呼びだし時には
+	    <code>struct bin_info</code> の配列を初期化するが、
+その時にメンバtに代入する値。バイナリデータの型をあらわす。</p>
+	  <pre>
+	  SINGLE_CHAR      1個のchar
+	  SINGLE_SHORT     1個のshort
+	  SINGLE_INT       1個のint
+	  CHARARRAY_8      256要素までのcharの配列
+	  CHARARRAY_16     65536要素までのcharの配列
+	  CHARARRAY_32     16M要素までのcharの配列(4Gでない事に注意)
+	  SHORTARRAY_8     256要素までのshortの配列
+	  SHORTARRAY_16    655536要素までのshortの配列
+	  SHORTARRAY_32    16M要素までのshortの配列
+	  INTARRAY_8       256要素までのintの配列
+	  INTARRAY_16      65536要素までのintの配列
+	  INTARRAY_32      16M要素までのintの配列
+</pre>
+	  
+  <h2><code>struct bin_info</code></h2>
+	  <table id="bb">
+		<tr><td>めんば名</td><td>内容</td></tr>
+		<tr><td>BINDATATYPE t</td><td>データの種類</td></tr>
+		<tr><td>unsigned int maxu</td><td>要素の最大数(unpack)</td></tr>
+		<tr><td>unsigned int n</td><td>要素数(pack,unpack)</td></tr>
+		<tr><td>void *p</td><td>入出力データへのポインタ</td></tr>
+      </table>
+	  <p><code>t</code>は、データの型を指定する。
+	    <code>maxu</code>はunpackの時だけ使用され、
+	  アプリケーションが用意した受けいれバッファの最大レコード数を指定する。
+	    <code>n</code>は、packの場合は、出力バッファに書きこみたい要素の数を、
+	  unpackの場合は、実際にunpackされた要素数を代入して返す。
+	    <code>p</code>は、packの場合は出力するデータの配列、
+	  unpackの場合は実際に読みこまれたレコードの数が入る。
+	  
+
+        <!--      
+  <h2><code>memshare_cli_t</code></h2>
+	  共有メモリのクライアント側用の関数を使用するための識別子である。
+	  tcpcontext_t と同じで、void* となっている。
+	  vce_mshare_client_?? という名前をもつ関数で主に使用される。
+	  <BR><BR>
+	  
+  <h2><code>memshare_serv_t</code></h2>
+	  共有メモリのサーバ側用の関数を使用するための識別子である。
+	  vce_mshare_server_?? という名前をもつ関数で主に使用される。
+	  <BR><BR>
+-->
+        <br>
+        <br>
+        <a href="index.html">index に戻る</a>
+        <br>
+  
+</p>
+	  <div id="footer">
+Copyright 2000-2005 Community Engine Inc. All rights reserved.</div>
+
+</body> </html>

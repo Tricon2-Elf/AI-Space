@@ -1,0 +1,90 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html> <head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>sqllib benchmark</title>
+</head>
+
+<body>
+<h1>sqllib ベンチマーク</h1>
+
+<p>
+  sqllib ライブラリには sqllibtest が付属している．
+このプログラムを使って，
+実際にゲームのバックエンドとして使った場合の MySQL のベンチマークができる．
+このメモでは， sqllib のベンチマーク結果を示す．
+</p>
+<p>
+ローカルで実行した場合，リモートで実行した場合，
+また各種マシンやディスクで実行した場合の値を比較することで，
+最もコストパフォーマンスのよいパターンを探す助けになるだろう．
+</p>
+
+
+<h3>Q/s</h3>
+<p>
+  このテストでは，Query/second を重視する．
+1回のクエリーは，数十KB(デフォルトでは 20KB)
+のキャラクター情報を保存する．
+sqllibtest はランダムなユーザーID を生成して高速にクエリーを発行するが，
+秒間何回の入出力ができるのかを調べる．
+</p>
+
+
+<h3>テストの準備</h3>
+<p>
+charinfo テーブルを作成しておく事．
+</p>
+
+<h3>LOCAL TEST(single P3 500MHz + 192MB RAM + ATA33 7200RPM IDE 50GB)</h3>
+<p>
+テストその1で使う環境は以下の通り．
+</p>
+<pre>
+1万ユーザ. 1ユーザあたり3キャラ，データ量 20KB*3=60KB
+</pre>
+<pre>
+insert     292
+loadbytag  175
+delbytag   206
+save       230*3
+blankslot 1172*3
+load       267*3
+delete     171*3
+</pre>
+
+<h3>LOCAL TEST(Dual P3 800MHz + 768MB RAM + ATA33 7200RPM IDE 60GB)</h3>
+<pre>
+insert      296
+loadbytag   234
+delbytag    231
+save        203*3
+blankslot  1043*3
+load        232*3
+delete      369*3
+</pre>
+
+<h3>LOCAL TEST(Dual P3 600MHz + 1GB RAM + 7200RPM SCSI 20GB)</h3>
+<pre>
+insert      223
+loadbytag   372
+delbytag    607
+save        111*3
+blankslot  1535*3
+load        476*3
+delete      164*3
+</pre>
+
+<h3>LOCAL TEST(Dual P3 600MHz + 1GB RAM + e2fs 512MB ramdisk)</h3>
+<pre>
+insert        463
+loadbytag     353
+delbytag      631
+
+</pre>
+
+<br>
+<hr>
+<font size=-1>
+Copyright 2000-2005 CommunityEngine Inc. All rights reserved.<BR>
+
+</body> </html>

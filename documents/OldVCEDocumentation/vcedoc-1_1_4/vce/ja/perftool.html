@@ -1,0 +1,260 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel="stylesheet" href="../vce.css" type="text/css">
+<title>VCE 1.1.4 official document (Japanese)</title>
+</head>
+
+<body>
+<h1>サーバのチューニング用ツール解説</h1>
+
+<p>
+  ゲームサーバを実際に動作させて、望みの性能を得るためには、
+最適なコードを書くことはもちろんだが、
+マシンの設定やネットワークの構成など、
+様々な外部の障害を取りのぞく必要がある。
+最適なコードでも最適な環境でないと目的の性能を発揮することはできない。
+このドキュメントでは、Linux においてパフォーマンスのチューニングをするときに
+使うツール群を使う基本を説明する。
+</p>
+
+
+
+<h2>メモリのチェック</h2>
+<p>
+メモリが足りないとスワップが激しく起こって性能が出ない。
+メモリが足りているかは常にチェックしておきたい。
+</p>
+
+
+
+<h3>コマンド "free"</h3>
+<pre>
+% free
+           total       used       free     shared    buffers     cached
+Mem:       1036176    1033184       2992      27144      66244      86308
+-/+ buffers/cache:     880632     155544
+Swap:      1052216     294136     758080
+</pre>
+
+<p>
+メモリの空き容量を調べる。上の例は、
+メモリが足りていないためスワッピングが激しく起こっている状態のマシンである。
+Mem の行が物理メモリ、Swap の行がスワップの量。(KB)
+Mem の free が 2992KBと、スワップの 294MBに対して小さすぎるため、
+カーネルがスワップを必要としていることがわかる。
+下の例は、メモリが十分に足りている状態のマシン。
+</p>
+<pre>
+             total       used       free     shared    buffers     cached
+Mem:        384312     382136       2176          0      23336      62856
+-/+ buffers/cache:     295944      88368
+Swap:        72252         80      72172
+</pre>
+<p>
+ Swap の used のところが 80KB と、小さいことから、
+カーネルはスワップを必要としていないことがわかる。
+</p>
+
+
+<h3>ファイル "/proc/interrupts"</h3>
+<p>
+  もっと直接的に、スワップファイルシステム(ディスク)へのアクセスの
+量を調べるには、 /proc/interrupts というファイルの内容を見る。
+以下はあるサーバでのファイルの中身である。
+</p>
+<pre>
+        CPU0       CPU1       
+0:  193087070          0          XT-PIC  timer
+1:         16          2    IO-APIC-edge  keyboard
+2:          0          0          XT-PIC  cascade
+8:          1          0    IO-APIC-edge  rtc
+13:          1          0          XT-PIC  fpu
+14:          4          3    IO-APIC-edge  ide0
+18:   39802902   45878220   IO-APIC-level  eth0
+30:         17         28   IO-APIC-level  aic7xxx
+31:   23232546   25673945   IO-APIC-level  aacraid
+NMI:          0
+ERR:          0
+</pre>
+<p>
+  このファイルでは、このマシンの CPU に対する I/O デバイスからの割りこみを
+カウントした数が記述されている。
+  このマシンには ide0、 aic7xxx、 aacraid
+の3系統のディスクデバイスがあることがわかる。
+このうち使われているのは aacraid という RAID ドライバのみである。
+毎秒1回程度このファイルを見ると、
+aacraid の割りこみ回数が秒間数十回〜数百回増加しているのがわかる。
+この数値の増加が激しいほどディスクアクセスが多いことを意味している。
+物理メモリが十分足りているマシンでファイルアクセスを特にしない場合は、
+この割りこみ数は秒間数回程度しか増えていかない。
+</p>
+
+
+<h2>ネットワーク関連</h2>
+
+<h3>コマンド "netstat"</h3>
+<p>
+  ネットワークからの入力や出力の滞り具合を調べるには、
+"netstat" コマンドを使用する。 "netstat -tn" コマンドを使うと、DNSの逆引き
+をしないため高速である。以下の例は、
+あるオンラインゲームのサーバマシンでの netstat の出力結果である。
+</p>
+<pre>
+Active Internet connections (w/o servers)
+Proto Recv-Q Send-Q Local Address           Foreign Address         State      
+tcp        0      0 172.17.10.20:15000      211.130.240.238:1030    ESTABLISHED 
+tcp        0     40 172.17.10.20:15000      61.118.199.190:1153     ESTABLISHED 
+tcp        0  17997 172.17.10.20:15000      210.229.12.84:1043      FIN_WAIT1   
+tcp        0      0 172.17.10.20:22         172.17.10.21:1783       ESTABLISHED 
+tcp        0  40289 172.17.10.20:15000      63.51.15.43:1032        FIN_WAIT1   
+tcp        0  37609 172.17.10.20:15000      61.207.85.80:12353      FIN_WAIT1   
+tcp        0      0 172.17.10.20:1559       172.17.10.52:22         ESTABLISHED 
+tcp        0      0 172.17.10.20:22         61.206.158.202:62257    ESTABLISHED 
+tcp    23830      0 172.17.10.20:1539       172.17.10.50:22         ESTABLISHED 
+tcp        0      0 172.17.10.20:22         61.206.158.202:61451    ESTABLISHED 
+tcp        0  32041 172.17.10.20:15000      210.228.251.110:1067    FIN_WAIT1   
+tcp        0  32017 172.17.10.20:15000      210.153.179.57:1033     FIN_WAIT1   
+tcp        0  37857 172.17.10.20:15000      43.224.42.88:4309       FIN_WAIT1   
+tcp        0  36297 172.17.10.20:15000      61.207.124.64:3047      FIN_WAIT1   
+tcp        1   4161 172.17.10.20:15000      210.253.84.62:1060      CLOSING     
+tcp        0  32065 172.17.10.20:15000      61.201.236.60:1149      FIN_WAIT1   
+tcp        0  37961 172.17.10.20:15000      211.13.107.123:1034     FIN_WAIT1   
+tcp        0  38153 172.17.10.20:15000      61.210.191.109:65087    FIN_WAIT1   
+tcp        0  37857 172.17.10.20:15000      43.237.216.61:1304      FIN_WAIT1   
+tcp        0  37985 172.17.10.20:15000      61.200.42.190:63652     FIN_WAIT1   
+tcp        0  32197 172.17.10.20:15000
+</pre>
+
+<p>
+   Recv-Q が受信バッファ、Send-Qが送信バッファのたまり具合を意味する。
+送信バッファが30KBを越えているような場合は、送信相手がデータを受けとれない
+状況に陥いっている可能性が高い。また受信バッファが同様の場合は、
+サーバプロセスの能力が限界を越えている場合が多い。
+</p>
+
+
+
+<h2>プロセス</h2>
+
+<h3>コマンド "top"</h3>
+<p>
+  "top" コマンドは Linux においてマシンの利用状況を見るための簡単なツールである。
+出力される情報のうちぱっと見てわかりにくい項目について、簡単に解説する。
+</p>
+<ul>
+  <li>"load average"
+      <p>3つの数値が並んでいるが、
+      左から、過去1分、5分、15分の「実行待ちプロセス数の平均」である。
+      「実行舞ちプロセス」とは、
+      各CPUごとにあるプロセス待ち行列に入っているプロセスである。
+      システムコール呼びだしでスリープしているプロセスは。
+      この待ち行列には入っていない。
+      したがってCPUを常に必要とするようなプロセスが1個あったら、
+      load average は約 1.0 上昇することになる。
+      SMPマシンにおいてCPU が2個以上ある場合は、
+      待ち行列もCPUの個数に応じた数が用意されていて、
+      すべての待ち行列に入っているプロセスの合計数が表示されるため、
+      load average が 2.0 をこえていない場合は、
+      どのプロセスも要求通りCPUを与えられていることになる。</p></li>
+      
+
+  <li>プロセスの状態
+      <p>"STAT" でSはスリープ、RはCPU使用中、 DはI/O中(主にディスクアクセス)
+      Wはプロセスがスワップページアウトされている状態、
+      Nは優先度が低い状態である。</p></li>
+      
+</ul>
+
+<h3>コマンド "ps"</h3>
+<p>
+  "ps" は Linux において実行中のプロセスの情報を見るためのコマンドである。
+"ps axuw" とすれば 全ユーザが動かしているプロセスを知ることができる。
+サーバが起動しているかどうかなどの確認はこのコマンドを利用するとよい。
+</p>
+<pre>
+USER       PID %CPU %MEM   VSZ  RSS TTY      STAT START   TIME COMMAND
+root         1  0.0  0.0  3044  564 ?        S    Jul13   0:01 init [3]                                              
+root         2  0.0  0.0     0    0 ?        SN   Jul13   0:00 [ksoftirqd/0]
+root         3  0.0  0.0     0    0 ?        S<   Jul13   0:00 [events/0]
+root         4  0.0  0.0     0    0 ?        S<   Jul13   0:00 [khelper]
+root         5  0.0  0.0     0    0 ?        S<   Jul13   0:00 [kacpid]
+root        20  0.0  0.0     0    0 ?        S<   Jul13   0:00 [kblockd/0]
+root        21  0.0  0.0     0    0 ?        S    Jul13   0:00 [khubd]
+root        30  0.0  0.0     0    0 ?        S    Jul13   0:00 [pdflush]
+root        31  0.0  0.0     0    0 ?        S    Jul13   0:00 [pdflush]
+root        33  0.0  0.0     0    0 ?        S<   Jul13   0:00 [aio/0]
+root        32  0.0  0.0     0    0 ?        S    Jul13   0:01 [kswapd0]
+ :
+ :
+ :
+user1   19706  0.0  0.0  4904  728 pts/0    S    14:03   0:00 make -C authsv start
+user1   19707  0.0  1.5 18128 16300 pts/0   S    14:03   0:00 ./authsv authsv_template.conf authsv_original.conf
+user1   19713  0.1 12.7 158960 132492 pts/0 S    14:03   0:00 ./dbsv dbsv_template.conf 7001.conf
+user1   19715  0.1 12.7 159672 132492 pts/0 S    14:03   0:00 ./dbsv dbsv_template.conf 7003.conf
+user1   19722  0.0  1.4 17484 15052 pts/0   S    14:03   0:00 ./guildsv guildsv.conf
+user1   19728  0.1  1.8 21424 18892 pts/0   S    14:03   0:00 ./locksv locksv_template.conf 3001.conf
+user1   19730  0.0  1.8 21088 18864 pts/0   S    14:03   0:00 ./locksv locksv_template.conf 3003.conf
+user1   19744  0.0  0.0  3324  900 pts/1    RN+  14:10   0:00 ps auxw
+</pre>
+
+<p>
+ user1 というユーザが "ps auxw"を実行した場合の例である。
+これをみると、user1が、MM-suiteのバックエンドサーバを起動していることが
+わかる。
+</p>
+
+
+<h3>コマンド "lsof"</h3>
+<p>
+  "lsof" は 標準コマンドではないが、プロセスによって使われているファイルやポートを確認するのに便利である(逆も可能)。
+</p>
+
+<pre>
+% /usr/sbin/lsof -c authsv
+
+COMMAND   PID   USER   FD   TYPE DEVICE    SIZE    NODE NAME
+authsv  19707  user1  cwd    DIR  253,0    4096 7553285 /opt/user1/src/mmsuite.old/authsv
+authsv  19707  user1  rtd    DIR  253,0    4096       2 /
+authsv  19707  user1  txt    REG  253,0  592467 7553149 /opt/user1/src/mmsuite.old/authsv/authsv
+authsv  19707  user1  mem    REG  253,0  108332 7159812 /lib/ld-2.3.3.so
+authsv  19707  user1  mem    REG  253,0 1512400 7225345 /lib/tls/libc-2.3.3.so
+authsv  19707  user1  mem    REG  253,0   47244 4505651 /lib/libnss_files-2.3.3.so
+authsv  19707  user1    0r   CHR    1,3            3513 /dev/null
+authsv  19707  user1    1u   CHR  136,0               2 /dev/pts/0
+authsv  19707  user1    2u   CHR  136,0               2 /dev/pts/0
+authsv  19707  user1    3u  IPv4 828828             TCP *:4001 (LISTEN)
+authsv  19707  user1    4u  IPv4 828829             TCP *:4002 (LISTEN)
+authsv  19707  user1    9u   CHR  136,0               2 /dev/pts/0
+</pre>
+<p>
+ プロセスを指定してこのコマンドを実行すると、使われている共有ライブラリや使用しているポートを表示する。
+</p>
+
+
+<h3>コマンド "kill", "killall"</h3>
+  "kill"、"killall" コマンドでシグナルを送ってプロセスを停止させることができる。
+
+
+<br><br>
+<h2>ファイルやデータ操作</h2>
+
+<h3>コマンド "tail"</h3>
+<p>
+  "tail" はファイルの最後の10行を表示するコマンドである。
+"tail -f" とすると最後の行まで表示し、その後終了せず、それより後にファイルに追加された内容を表示し続けるので、ログの監視時に便利である。
+</p>
+
+
+<br><br>
+
+<br><br>
+<a href="index.html">index に戻る</a>
+<br>
+
+<div id="footer">
+Copyright 2000-2005 Community Engine Inc. All rights reserved.</div>
+
+</body> </html>

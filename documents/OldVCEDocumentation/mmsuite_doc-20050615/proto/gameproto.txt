@@ -1,0 +1,374 @@
+
+		 mm-suite  GMSV -- CLIENT 間通信プロトコル
+
+		 サーバ側では circ_t を、 クライアント側では conn_t を使う。
+         先頭のコアコマンド，認証コマンド，
+         キャラ操作コマンド，コンタクトリスト操作コマンド の部分は，
+         各ゲームでそれほど変わらないので，必要に応じて削除していけばよい．
+
+         
+		 
+=protocolname gameproto
+=serverconnection circ
+
+=workbufsize 32768
+  1個のプロトコルで送りたいデータ量よりも大きいサイズが必要．
+  
+=version 10001
+  プロトコルのメジャー番号 
+
+#
+#
+# コアコマンド
+#
+#
+#
+#
+
+  
+= c2s 1 ping ( int msgid, int majorversion, int minorversion, int tick )
+= s2c 2 pong ( int msgid, int majorversion, int minorversion, int tick )
+
+  クライアントが ping を撃つと、サーバ(GMSV)は pong を返す。
+クライアントは自分のバージョンを送る。 majorversion は、
+gameproto.txt で定義しているプロトコルメジャー番号である。 minorversion は
+gen.rb が作りだすプロトコルのサブ番号。
+サーバは自分のバージョンを同じように返す。
+majorversion, minorversion  の両方が一致していない場合は、
+サーバは「バージョンチェック OK」のフラグを立てないので、
+以降のサービスを受けられなくなる。クライアントは最初にかならず
+ping を1回送信しなければならない。
+サーバは tick 引数の値をそのまま返す．
+クライアントはこの値をどのように使ってもよいが，
+GetTickCount などの返り値を入れて送ればゲームサーバまでの
+ RTT を検出するのに使えるので便利である．
+
+
+= s2c 4 shutdown_pasv ( char reason[200] )
+
+  GMSVが何らかの原因で落ちるとき、前もって判断できるときは
+クライアントに教える。
+
+#
+# AUTH 関係コマンド
+# GMSV は、 create_user, delete_user, check_password
+# に関しては AUTHSV に対してそのままスルーする。
+#
+
+= c2s 5 create_user   ( int msgid, char password[32], char nick[32] )
+= s2c 6 create_user_r ( int msgid, int result, char new_id[32] )
+
+  新しいユーザーIDをひとつ取得する。そのユーザーの nickname とパスワードを
+新規作成の情報として指定できる。 結果は0なら成功で、0以外ならエラーコード
+である。成功の場合のみ、new_id には意味のある値が返る。
+
+= c2s 7 delete_user   ( int msgid, char id[32], char password[32] )
+= s2c 8 delete_user_r ( int msgid, int result )
+
+  ユーザーを削除する。result が0なら成功、それ以外なら失敗。
+  削除するにはパスワード入力が必要である。
+
+= c2s 9 check_password   ( int msgid, char id[32], char password[32], char cdkey[32] )
+= s2c 10 check_password_r ( int msgid, int result )
+
+  パスワードをチェックする。CD-KEY も同時にチェックする。
+  CD-KEYとは，
+  おなじ CD を使うユーザが2人同時にログインしようとしてきたら弾くためのIDで，
+  LOCKSVにCDKEYをそのまま送ることで実現されている。
+  成功したら0、失敗したら0以外が返される。
+  check_password がAUTHSV により許可されて成功したら、GMSV は以降の
+  操作コマンドを受けつけるようになる。
+  また、それらの操作コマンドで UID が必要な場合に備えて、
+  UID を状態バッファにキャッシュする。
+
+= c2s 11 change_password    ( int msgid, char id[32], char password[32], char new_password[32] )
+= s2c 12 change_password_r ( int msgid, int result )
+
+  パスワードを変更する。
+  成功したら0、失敗したら0以外が返される。
+
+= c2s 13 logout_user       ( int msgid )
+
+  ユーザが、接続を終了する。これを受けると GMSV は資源をすべて解放し、
+  ユーザーロックを解除し、接続を切る。接続が切られるので、返答はなし。
+  
+#
+# キャラ操作関係(ストレージとも言う)
+#
+# mm-suite では、1ユーザが複数キャラクタスロットをもち、
+# 同時には唯一のキャラしか操作できないゲームを想定している。
+# 
+# create_character, delete_character は、キャラを作成したり削除したりする。
+# login_character では、あるキャラクタを「カレントキャラクタ」に指定する。
+# ゲームはこのカレントキャラクタの状態を変更していくプロセスである。
+# save_current_character は、カレントキャラクタを単純に保存する。
+# logout_character は、カレントキャラクタを保存して終了する。
+# logout_character コマンドは，キャラクターをログアウトさせるだけで，
+# logout_user のようにユーザーのゲームセッションを終了するわけではない．
+#
+
+= c2s 15 create_character    ( int msgid, char name[128], int hp )
+= s2c 16 create_character_r  ( int msgid, int result, int new_slotid )
+
+  キャラクタを作成する。作成するときのヒントとなる情報として、
+  キャラ名と、デモ用の hp (ヒットポイント)を指定できる。
+  実際のゲームではもっと多様なキャラ作成オプションがあり得る。
+  new_slotid は result が 0 (成功)のときだけ意味をもつ。
+  new_slotid は、新規作成してキャラを格納したスロット番号。
+
+  
+= c2s 17 delete_character    ( int msgid, int slotid )
+= s2c 18 delete_character_r  ( int msgid, int result )
+
+  キャラクターを削除する。成功したらresult は0。失敗なら0以外
+
+
+= c2s 19 login_character   ( int msgid, int slotid )
+= s2c 20 login_character_r ( int msgid, int result )
+= s2c 22 character_serial_pasv  ( int c_serial )
+
+  指定したキャラクタをロードして、ゲーム世界にログインする。
+  GMSV は保存されている情報を元に位置を再現し、
+  自分が管理している場所でない位置に存在しているなら、
+  コネクションスイッチングを使って飛ばす。
+  このコマンドが成功したら、指定したキャラクタは
+  「カレントキャラクタ」として設定され、これ以降 save_current_character
+  コマンドで変更後のキャラクタを保存できるようになる。
+  また、移動やアイテム操作などの操作は、すべて「カレントキャラクタ」
+  に対して行なわれる。
+  GMSV は、lockproto のロック機能を使って、キャラクターのログインを排他する
+  ために、 login_character を受けると、ロックを ON にする。
+  login_character_r で成功したらすぐ直後に返される c_serial は、
+  プレイヤーキャラクタの識別用シリアル番号である。
+  このコマンドは、 サーバ内部の都合でときどきユーザーキャラクターの
+  シリアルが変化したときに送られる(スイッチしたときなど)。
+  notify_graphics 関数とかと同じ種類の値である。
+
+  *注意*
+    クライアントは character_serial_pasv をうけとったら、
+  一旦、画面に表示されているすべてのキャラクターを消さなければならない。
+  
+= c2s 23 save_current_character   ( int msgid )
+= s2c 24 save_current_character_r ( int msgid, int result )
+
+  カレントキャラクタを保存する。カレントキャラクタは、 GMSV が
+  状態バッファに保存しているので、スロット等を指定することはない。
+  カレントキャラクタが初期化される前に呼びだすとエラー。
+
+
+= c2s 25 logout_current_character   ( int msgid )
+= s2c 26 logout_current_character_r ( int msgid, int result )
+
+    カレントキャラクタを保存して解放する。
+  この後はカレントキャラクタが存在しないので、
+  ゲームの操作はすべて無効となる。
+
+
+= c2s 27 get_character_tag_list   ( int msgid )
+= s2c 28 get_character_tag_list_r ( int msgid, int result, stringarray tags[100][128], int slotids[100] )
+
+   キャラクターのタグ情報をすべて取得する。
+   tags[n] と slotids[n] は対応している。
+   スロットIDを配列に入れて返している理由は，
+   キャラクターを削除した場合に，途中の番号に抜けが生じる事があるからである．
+
+#
+#
+# 空間内移動関係
+#
+# 位置を送ったらその近くにいる、移動を知りたい人やモノにその移動が伝わる。
+#
+# double/float はマシン依存なので整数で通信。
+#
+
+=c2s 71 notify_location ( int x, int y, int z )
+=s2c 72 notify_location_pasv ( int c_serial, int x, int y, int z )
+
+  mm-suite における位置交換に関する処理。
+  1. Client において移動したら移動後の位置をsvに notify_location を
+     使って通知する。
+  2. GMSV はその位置が進入可能か調べ、何らかの理由でダメだったら座標を
+     notify_location_r を使って返す。
+	 これと同時に、近くにいるプレイヤキャラクタに、
+	 notify_location_pasv を送る。
+  3. Client は notify_location_r を受けとったらキャラをワープさせる。
+
+  4. このコマンドで位置情報を受けつけたときに，そのキャラクターが
+     まだクライアント内に存在していない場合は，
+     c_serial の値を get_character_info コマンドで指定してそのキャラクター
+     の状態を得る．
+
+=c2s 73 forecast_location   ( int x, int y, int z )
+=s2c 74 forecast_location_pasv ( int c_serial, int x, int y, int z )
+
+  最終的にどこまで移動したいのかを，クライアント同士で通信するために
+  使われる．gmsvは，このメッセージに関しては，チートのチェックをせずに
+クライアントからクライアントへ送る．
+  このコマンドの目的はmm-suiteにおける移動のみため上のレスポンスを良くする
+ことである．mm-suiteでは，チートチェックを厳密にやるために，
+ちょっと移動するごとにnotify_locationを送りだしているが，
+この「ちょっと移動」は通常200ミリ秒とかのディレイになるので，
+このディレイを節約するために，このコマンドがある．
+ユーザーからみても，レスポンスがよいように見える．
+  このコマンドは移動開始後の一回目の notify_location のかわりに送られる．
+1回目の notify_location は送らない．
+で，今後移動していく予定の場所をまえもって伝える．
+これをうけたクライアントは，その場所に向かってキャラクターを移動開始
+させればよい．
+  おそらくこのコマンドを使ってレスポンスをよくすることで，
+  移動パケットが2割～3割増えることになる．そのトラフィックを節約したい
+場合は，このコマンドを削除するとよい．
+
+
+=c2s 81 get_character_info   ( int c_serial )
+=s2c 82 get_character_info_r ( int c_serial, char uid[32], char nick[64], int base_type )
+
+  キャラクターの情報を得る。
+  アプリケーションによってクライアントプログラムで表示したい
+  キャラクターの情報は異なるが、その場合はこのコマンドは変更されることになる。
+  mm-suite デフォルトでは、キャラクターの種類によらず、
+  nickname メンバ変数の内容をそのまま送信する。
+  serial がメッセージの一意性として十分なので msgid フィールドはない。
+  base_type をこのコマンドで返すのは、 base_type は滅多な事では変化しない
+  という仮定に基いている。
+
+
+=s2c 86 field_info_pasv ( char id[32] )
+
+  フィールドの情報を送る。
+  キャラクターはかならずどこかの field に存在するが、
+  キャラクタがログインしたり field が変更されたりしたら、
+  サーバが能動的に送る。
+
+=c2s 87 notify_graphics      ( int base_type )
+=s2c 88 notify_graphics_pasv ( int c_serial, int base_type )
+
+  キャラクタグラフィックの状態変化を通知する。
+  
+  クライアントが状態を変更したい場合は notify_graphics コマンドを使う。
+  ただしセキュリティの都合上、多くのゲームではクライアントは自分の
+  基本グラフィックタイプを変更できないようになっているので適宜制限ルーチンを
+  受信関数の中にインプリメントするとよい。
+
+  GMSV は notify_graphics コマンドを受けつけると、見える範囲にいる
+  ほかのキャラクタに notify_graphics_pasv コマンドを使って送信する。
+  またサーバの中で自発的にキャラクタグラフィックが変更された場合も同様に
+  通知する。
+
+=c2s 89 notify_temporary_motion       ( int motion_type, int param[4] )
+=s2c 90 notify_temporary_motion_pasv  ( int c_serial, int motion_type, int param[4] )
+
+  一時的なグラフィックエフェクトをほかのプレイヤーに送る。
+  これにはたとえば，手をふる，座る，寝る，攻撃するなど，
+  キャラクターの外見を一時的に操作するために使う。
+  基本的な外観を変更したいときは、 base_type を変更するために，
+  notify_graphics_pasv コマンドを使用する．
+  mm-suite デモでは、 motion_type は
+  1 : 攻撃アクション。 param[0]:攻撃位置のx   param[1]:攻撃位置のy
+  となっている。これはアプリケーションごとに定義されるものである。
+  GMSV は、 SHOW_DISTANCE の範囲内にいるすべてのユーザープレイヤー
+  に、この情報をどこにも記憶せずにそのまま同報する。
+
+
+=s2c 92 notify_connect_change_pasv	(char IPAddress[100], int portnum)
+
+  サーバ間の移動をおこなう際に接続先を変更するように
+  通知する。
+
+
+=c2s 93 warp_check_password_login_character	(int msgid, int majorversion, int minorversion, int tick, char id[32], char password[32], char cdkey[32], int slotid )
+=s2c 94 warp_check_password_login_character_r (int msgid, int result )
+  
+  サーバ間の移動をおこなう際にパスワードのチェックと
+  キャラクターのログインを一度におこなう。
+  
+  
+=c2s 95 get_field_data    ( int msgid, int x1, int y1, int x2, int y2 )
+=s2c 96 get_field_data_r  ( int msgid, int result, int x1[1000], int y1[1000], int x2[1000], int y2[1000], int x3[1000], int y3[1000], int type[1000] )
+
+  範囲指定をして、地形のデータをサーバから取る。
+  mm-suiteでは地形のデータは3角形ポリゴンの集合体なので，
+  (x1,y1)から(x3,y3)までが定義されている．
+  
+  type は、現在は EVENTTYPE の値をそのまま入れるので、
+  1 なら COLLISION, 2 ならLINK という事になる。
+  クライアントでこれらの情報をどう活用するかは自由。
+  mm-suite デモでは、 ローカルコリジョンを on/off できるが、
+  通常のゲームでは常に Onのほうがよいだろう。
+  データは、 result=0 のとき以外意味をもたない。
+
+  クライアントは、何らかの範囲管理アルゴリズムを塔載して、
+  (x1,y1,x2,y2) をできるだけムダなく送信し、
+  サーバの負荷を軽減するように努力するべきである。
+
+
+=s2c 98 notify_delete_pasv ( int c_serial, int opt )
+
+  あるシリアル番号を持つキャラクターを画面から抹消せよとの指令。
+  このコマンドを受けたクライアントは、シリアル番号が一致するキャラクターを
+  抹消する事。 opt で「死にかた」を指定できる。
+  opt=0 で、いきなり抹消。
+  opt=1 で、戦闘(攻撃)の結果の死。
+  アプリケーション固有の死にかたは、この opt に値を追加する。
+  
+#
+# チャット送信関係
+#
+#
+#
+=c2s 101 talk       ( char msg[200] )
+=s2c 102 talk_pasv  ( int c_serial, char msg[200] )
+
+  チャットメッセージを送信する。
+  c_serial はキャラのシリアル番号で、 notify_graphics コマンドとかで
+  使う値とおなじ。
+  
+  mm-suiteのデモでは，ローカルエコーは存在しない。
+  送信が受理されたら、 pasv で各ユーザに返される(自分にも)が、
+  そのときにはユーザ ID で送信するので、実際に誰が発言したかは
+  アプリケーションの実装に任される。
+
+  サーバーが何らかのエラーを検出して talk できなくても、エラー等は
+  返されずデータはすべて破棄される。
+  
+
+#
+#
+# そのほかの行動関数
+#
+#
+
+=c2s 131 attack    ( int dx, int dy )
+
+  攻撃をする。モードレスタイプの mm ゲームにおいて、
+  フィールド上に存在する相手に対して攻撃をする。
+
+  dx, dy  は、攻撃の方向だけを表現している。実際には攻撃が有効な最大距離
+  は決まっている。また、頻度に関しても厳密な制限があり、単にこのパケットを
+  たくさん送っても無意味である。クライアントでは、 少なくても0.2秒の間隔を
+  あけて、攻撃パケットを送信する(そうすると1個のパケットにshrink されない)。
+  
+
+#
+#
+# アプリケーション特有のキャラ状態変更通知
+#
+#
+
+=c2s 151 get_character_status         ( int c_serial )
+=s2c 152 character_status_notify_pasv ( int c_serial, int maxhp, int hp )
+
+  アプリケーション固有の、キャラクター状態変数の変化を要求/通知するコマンド。
+  character_status_notify_pasv は、その名の通り、要求しなくても
+  サーバから送られる事がある。明示的に character_get_status コマンドを
+  使って pasv を要求することもできる。
+  
+  mm-suite デモでは、キャラクタは、アプリケーション固有の変数は
+  「HP」しかないので、このコマンドの引数も hp しかない。
+  アプリケーションが複雑化すると、状態変更を通知したい項目は
+  多岐にわたるので、カテゴリごとに通知関数を作ることになる。
+  ( character_parameter_notify, character_item_notify, などなど )
+
+  hp は、攻撃されたりして キャラクタの HP が変化したらサーバからクライアント
+  に送信される。
+  

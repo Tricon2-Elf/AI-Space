@@ -1,0 +1,575 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel="stylesheet" href="../vce.css" type="text/css">
+<title>VCE 1.1.4 official document (Japanese)</title>
+</head>
+
+<body>
+<h1>VCE を使った開発の実際</h1>
+
+<p>
+  ここでは、VCE を初めて利用する開発者のために、
+VCE の基本を大まかに説明する。
+</p>
+
+<h2>もくじ</h2>
+<ul>
+  <li><a href="#problems">VCE が解決しようとしている問題</a></li>
+  <li><a href="#policy">デザイン・ポリシー</a></li>
+  <li><a href="#function">その他の機能</a></li>
+  <li><a href="#develop">アプリケーション開発の実際</a></li>
+  <li><a href="#basic">tcpcontext_t,conn_t,レコード単位の通信、パーサ関数</a></li>
+  <li><a href="#minimum">最小のサーバ/クライアント</a></li>
+  <li><a href="#rpc">gen.rbを利用した独自RPCの実装</a></li>
+  <li><a href="#link">WindowsでVCEのライブラリをリンクする方法</a></li>
+  <li><a href="#summary">まとめ</a></li>    
+</ul>
+<h2><a name="problems"></a>VCE が解決しようとしている問題</h2>
+
+<p>
+  VCEは、TCP/IPによる分散ネットワーク・アプリケーション開発のための、
+安定・高速・安全な通信ライブラリである。そのデザインにおいては、アプリケーションの開発効率と、
+サーバ集中型コンテンツの設備コストパフォーマンスの向上を狙っている。特に中継サーバと独自のプロトコルを用いたアーキテクチャを採用することで、
+数万にのぼるクライアントが毎秒1〜2回といった高頻度で暗号化アクセスするような
+サーバをごく小数のPC (1〜2)台で構成することが可能である。
+</p>
+
+
+<h2><a name="policy"></a>デザイン・ポリシー</h2>
+<p>
+  VCEは、上で述べたようにサーバ集中型コンテンツの
+総合的なコストパフォーマンス向上を狙っている。そのために以下のようないくつかの方法を採用している。
+</p>
+<ul>
+  <li>「C言語中心主義」<BR>
+      <p>
+      VCE ではC言語を使って最高のパフォーマンスを引きだすことを中心に
+      置いている。サーバ集中型コンテンツでは、
+      サーバの同時接続ユーザ数がビジネス上の決定的に
+      重要な変数になるため、
+      処理能力を高めることに最高の優先順位を与える。      </p>
+      <p>
+      ほかの言語用のAPIも、管理用ツールなどを作る場合など、
+      時と場合によっては役にたつので、
+      Ruby用の wrapper も提供している。      Ruby/gtk を使って、
+      RAD 的に専用のメンテナンスツールを作るといった拡張が簡単に可能だ。      </p>
+  <li>「シングルスレッド・イベントドリブン」<BR>
+	  <p>
+      CPU 数が1〜2個しかないような非力なマシンでは、
+      複数のカーネルスレッドを起動するアプローチは効率がよくない。      また、プログラムをシングルスレッド化することで、
+      特に C言語APIを用いる場合は、デバッグ効率が良くなる。      オンラインゲームのサーバでは大量のメモリにアクセスするため、
+      必ずしもデュアルコアマシンの性能をフルに活かすことができず、
+      開発効率を優先させるべき時が多い.
+      </p>
+      <p>
+	  シングルスレッド環境で複数の仕事を並行的に実行できるようにするために、
+	  VCE では、コールバック関数によるイベントドリブンプログラミングモデル
+	  を採用している。またユーザーレベルスレッドと同等の動作をする、
+      タスクエンジンを内蔵している。      </p>
+
+  <li>「中継サーバ」<BR>
+	  <p>
+	  VCE は、アプリケーションのサーバとクライアントの間に、
+	  中継サーバをはさむ構造をサポートしている(使わないことも可能)。
+	  この中継サーバは、クライアントからの小さいパケットを1個の大きな
+	  パケットにまとめてアプリケーションのサーバに転送して
+	  アプリケーションのサーバの OS 負荷を軽減すると同時に、
+	  SSL デコーディングなども行なう(図1)。
+	  </p>
+	  <BR>
+	  <img src="../images/vceabout_swp.gif">
+	  <BR>
+	  <p>
+	  これによって、アプリケーションのサーバは 95% 以上の CPU 時間を
+	  本来のロジック処理に使うことができる。
+	  この機能により、アプリケーションの応答速度は数ミリ秒増加するが、
+	  アプリケーションのサーバの台数を大幅に減らすことができる。
+	  またこの中継サーバはアプリケーションごとの*専用でない*ため、
+	  複数コンテンツを提供するときに流用可能であるという特徴がある。
+	  中継サーバ用には最低水準の PC サーバが利用可能である。
+	  </p>
+	  
+  <!--
+  <li>「コネクションスイッチング」<BR>
+	  <p>
+	  VCE の採用によってアプリケーションのサーバの処理性能は向上するが、
+	  それでもやはり複数台を協調させてクラスタリング構成を取る必要は出てくる。
+	  そこで VCE では中継サーバが全サーバに「総当たり」で接続し、
+	  クライアントからのTCPコネクションを動的に振りわける機能を実装した。
+	  これによりサーバをクラスタ化してアプリケーションを実装することが
+	  非常に容易になる。詳細に関しては
+	  <a href="switch.html">コネクションスイッチングに関して</a>
+	  を参照。
+	  </p>
+  -->    
+</ul>
+
+<h2><a name="function"></a>その他の機能</h2>
+<p>
+  VCE では、以上で説明したような高性能を達成するための機能の他にも、
+現代的なネットワークアプリケーションを作るために必要な機能も同時に備えている。
+</p>
+<ul>
+  <li>「OpenSSLによる暗号化」<BR>
+	  <p>
+	  VCE ではすべての暗号の処理を OpenSSL ライブラリを利用
+	  して実装している。将来の OpenSSL の機能強化による恩恵を
+	  そのまま受けることができる。
+	  (将来 IPv6上での暗号化が一般的になれば使われない場面も出てくるだろう)
+	  </p>
+
+  <li>「単純明快な RPC」<BR>
+	  <p>
+	  VCE に標準添付される RPC スタブジェネレータ "gen.rb" は、
+	  高密度で独自形式のリモートプロシージャコールをサポートする。
+	  プロトコルバージョン管理、必要最低限の型などをサポートする。
+	  </p>
+
+  <li>「各種プログラミングツール」<BR>
+	  <p>
+	  VCE はネットワークアプリケーションに必要なユーティリティ群を
+	  一通り備えている。それらの中にはネットワークアドレス操作、
+	  テキスト操作、メモリ操作、検索エンジン、
+	  各種実行可能バイナリなどが含まれる。
+	  </p>
+
+<!--  <li>「マルチプラットフォーム」<BR>
+	  <p>
+	  VCE は Linuxなど POSIX互換OS のほかにも、 Win32, PS2 など
+	  複数のOSをサポートする。
+	  この事により、アプリケーションの
+	  サーバ/クライアントのマルチプラットフォーム化が容易になる。
+	  また現在は C言語と Ruby言語の2種類だけの対応となっているが、
+	  将来は複数言語による開発もサポートされる。
+	  </p>
+    -->
+  <li>「監視ツール」<BR>
+      <p>
+      VCE admin tool で、VCEを利用したサーバアプリケーションおよび、
+      システム全体を簡単に管理することができる。
+      Windows用GUIも含まれている。
+      </p>
+      
+</ul>
+
+
+<h2><a name="develop"></a>アプリケーション開発の実際</h2>
+<p>
+  VCE を使ってアプリケーションを開発するには、
+C言語または Ruby言語の正しい理解と、
+IPアドレスや TCP プロトコルに関するインターネットの基礎知識がまず必要である。
+それらに関する解説はここでは省略する。
+</p>
+<BR>
+<p>
+以降では、C 言語を使う場合を想定して、
+VCE プログラミングに必要な基礎知識を解説したあと、
+VCE のパッケージに含まれる "minimumsv.c" と "minimumcl.c"
+のふたつのコードに対して解説を加える。
+さらに、gen.rbを利用して独自RPCを実装する場合について解説する。
+</p>
+
+
+<h2><a name="basic"></a>tcpcontext_t,conn_t,レコード単位の通信、パーサ関数</h2>
+<p>
+  VCE アプリケーションを開発できるようになるためには、
+見出しに掲げた4つの考え方を理解する必要がある。
+</p>
+<UL>
+  <li>tcpcontext_t
+	  <p>
+	  tcpcontext_t は、相手(クライアントなら接続先サーバ、
+	  サーバなら接続元クライアント)とどのように通信するのかを設定するために
+	  必要な情報を記憶しておくための構造体である。
+	  暗号の有無、最大コネクション数、バッファサイズなど、
+	  通信に関するあらゆる設定を記憶する。
+	  vce_tcpcontext_create 関数で設定しきれない分についての設定は、
+	  vce_tcpcontext_set_conn_parser など "vce_tcpcontext_"
+	  という接頭辞がついている関数で行なうことができる。
+	  
+	  tcpcontext_t は複数の conn_t を管理することができ、
+	  tcpcontext_t から派生するすべての conn_t の設定は、
+	  派生した tcpcontext_t の設定に基く。
+	  VCE はこの設定を同時に複数個管理することができる。
+	  </p></li>
+
+  <li>conn_t<BR>
+	  <p>
+	  conn_t は通信相手ごとのデータ送受信に必要な情報を保持する。
+	  つまり、tcpcontext_t はすべての相手に共通の情報を保持するのに対して、
+	  conn_t は各通信相手ごと(IPアドレスなど)に関する情報を保持する。
+	  したがって、 conn_t が保持している情報と tcpcontext_t が保持している
+	  情報を合わせれば、通信に必要な情報がすべて揃うことになる。
+	  conn_t は内部に、
+	  「どの tcpcontext_t から派生したか」という情報を持っているので、
+	  たとえば以下のコードで正確に相手にデータを送信することが可能である。
+	  </p>
+	  <pre>
+	  conn_t c = ...
+	  vce_conn_write( c, "hoge", 4 ); /* 4バイトのデータを送信 */</pre>
+
+  <li>レコード単位の通信<BR>
+	  <p>
+	  一般的にコネクション型の通信プロトコルでは、
+	  データはストリームという形で、区切りがわからないように送られてくるため、
+	  何らかの方法でデータを切り刻まなければ処理できない。
+	  VCE は、
+	  「不完全なデータを処理する事は、
+	  データを処理しない事よりも悪い事である。」
+	  という哲学に基いているので、
+	  VCE を使って発信/受信するすべてのデータは確実に
+	  レコードの形で送信される。
+	  </p>
+	  
+  <li>パーサ関数<BR>
+	  <p>
+	  tcpcontext_t が保持している情報のうち、
+	  「パーサ関数」の設定が特に重要である。
+	  </p>
+
+	  <P>
+	  conn_t が相手から情報を受けとった時には、
+	  まずデータを送信してきた相手からの情報をバッファに溜めこむ。
+	  そしてバッファに溜まっている情報からレコードを取りだせるかどうか
+	  調べて、完全なレコードが取りだせる場合は、
+	  アプリケーションに渡す。
+	  ここで「レコードを取りだせるかどうか」調べる関数がパーサ関数であり、
+	  パーサ関数はレコードを見つけると情報を取りだして、
+	  あらかじめ設定されているコールバック関数を、
+	  いま取りだしたデータを引数にして呼びだす。
+	  このコールバック関数の実体がアプリケーションによって
+	  定義されているが為に、アプリケーションにデータが渡るのである。
+	  tcpcontext_t に対してパーサ関数と、
+	  そのパーサが呼びだす関数を設定するには、
+	  vce_tcpcontext_set_conn_parser 関数を使用する。
+	  VCE はデフォルトのパーサ関数として、
+	  vce_protocol_parser_bin16,	
+	  vce_protocol_parser_bin32, などいくつか用意している。
+
+  <li>アンパーサ関数
+	  <p>VCE ではレコード単位の通信のみが可能なので、
+	  受信者は送信者が意図しない境界をもつデータを受信することはない。
+	  これを保証するには、
+	  送信者は サーバのパーサ関数に正確に対応した送信関数を使う必要があるのは
+	  明白である。 VCE では、この送信用関数をパーサの逆で 「アンパーサ」
+	  と名付け、
+	  vce_protocol_parser_bin16 などに対応して、
+	  vce_protocol_unparser_bin16 などと命名して内蔵している。</p></li>
+	  
+</ul>
+
+
+<h2><a name="minimum"></a>最小のサーバ/クライアント</h2>
+
+<p>
+  ここでは、VCE を使用してできる最小のサーバコード "minimumsv.c" と
+最小のクライアントコード "minimumcli.c" を例にとる。
+プログラム本体については、 VCE パッケージの "linuxlib/autotest/minimumsv.c" 等を
+参照の事。
+</p>
+
+<p>
+minimumsv.c は、ポート 23456 番でクライアントからの接続を待つ。
+冒頭部分
+</p>
+<pre>
+#include "vce.h"
+
+unsigned short portnum = 23456;
+</pre>
+<p>
+では、 vce.h をインクルードし、ポート番号を変数に代入している。
+</p>
+<p>
+次の部分では、パーサ関数によって呼びだされるコールバック関数を定義している。
+受信したレコードは引数 data, len によって受けとることができる。
+引数 ct によって誰が送信してきたかを知る。
+vce_protocol_unparser_bin16 を使って、
+送信者に対して、受信したデータをそのままレコード化して送信する。
+vce_errout は printf の代わりに使用している。
+</p>
+<pre>
+int
+callback( conn_t ct, char *data, int len )
+{
+	char work[100];
+	vce_errout( "received data. %s\n",
+				vce_makecstr(work,sizeof(work),data,len ));
+	vce_protocol_unparser_bin16( ct, data, len );
+	return 0;
+}
+</pre>
+<p>
+  次に main 関数が来る。
+ tcpcontext_t を宣言し、 vce_initialize() 関数を呼ぶ。
+</p>
+<pre>
+int main( int argc, char **argv )
+{
+	tcpcontext_t t;
+
+	vce_initialize();
+</pre>
+<p>
+  次に、全コネクションの共通設定である tcpcontext_t を初期化する。
+tcpcontext_t の初期化に失敗した場合は、プログラムを終了する。
+鍵長8の暗号を使用している。
+</p>
+<pre>
+	t = vce_tcpcontext_create( 1, NULL, portnum, 2,
+							   1000,1000, 100, 1,8,0,0,0 );
+	if( !t ){
+		vce_errout( "cannot create tcpcontext\n" );
+		return 1;
+	}
+</pre>
+<p>
+次に、パーサ関数とパーサーコールバック関数を定義する。
+ここで設定するコールバック関数は、さきほど定義した callback 関数である。
+</p>
+<pre>
+	vce_tcpcontext_set_conn_parser( t, vce_protocol_parser_bin16, callback );
+	vce_errout( "start loop\n" );</pre>
+<p>
+次に永久ループに入り、 vce_heartbeat 関数を呼びだし続ける。
+この関数が VCE に関連するすべての処理を行なう。
+このプログラムは正常に終了する手段を持たない。
+</p>
+<pre>
+	while(1){
+		vce_heartbeat();
+	}
+	vce_finalize();
+	return 0;
+}
+</pre>
+
+<p>
+次に minimumcl.c を解説する。
+まず、 vce.h をインクルードしてポート番号を記憶するのは同じだが、
+このプログラムはクライアントであるため、どのホストに繋ぐのかを指定する、
+"localhost" という情報を定義している。
+</p>
+<pre>
+#include "vce.h"
+
+unsigned short portnum = 23456;
+char host[] = "localhost";
+</pre>
+<p>
+次に、サーバと同様に、コールバック関数を定義している。
+サーバと異なるのは、受信したデータを返信せず、
+いきなり終了している事である。
+返信するとメッセージがループしてしまう。
+</p>
+<pre>
+int
+callback( conn_t ct, char *data, int len )
+{
+	char work[100];
+	vce_errout( "received data. %s\n",
+				vce_makecstr(work,sizeof(work),data,len ));
+	exit(0);
+	return 0;
+}
+</pre>
+<p>
+  次に main 関数だが、1回だけ送信するために sent というフラグを
+宣言しているほか、サーバとの接続を記録しておくために c という
+conn_t を宣言して、connect 後の送信に備えている。
+
+</p>
+<pre>
+int
+main( int argc,char **argv )
+{
+	tcpcontext_t t;
+	int sent = 0;
+	conn_t c;
+</pre>
+<p>
+次に tcpcontext_t を初期化する。
+サーバと異なる点は、自分がサーバであるかクライアントであえるかを設定する
+フラグと待ちうけポートだけである。クライアントは待ちうけポートは必要ない。
+</p>
+<pre>
+	vce_initialize();
+	t = vce_tcpcontext_create( 0, NULL, 0, 1, 1000,1000,100,1,8,0,0,0 );
+	if( !t ){
+		vce_errout( "cannot create tcpcontext\n" );
+		return 1;		
+	}
+</pre>
+<p>
+  サーバと同様にパーサ関数を設定する。
+</p>
+<pre>
+	vce_tcpcontext_set_conn_parser( t, vce_protocol_parser_bin16, callback );
+</pre>
+
+<p>
+  サーバに接続する。接続に失敗したらプログラムを終了する。
+接続に成功したら、ここで c  に記憶したコネクション情報をつかって、
+今後送信する。
+</p>
+<pre>
+	c = vce_tcpcontext_connect( t, host, portnum );
+	if( !vce_conn_is_valid( c )){
+		vce_errout( "cannot connect to server\n" );
+		return 1;
+	}
+</pre>
+<p>
+  メインループで vce_heartbeat を呼びだす。
+vce_conn_writable 関数を使って送信が確実に成功しそうなことを確認してから、
+アンパーサを使って情報を送りだす。
+ループの中で 1回だけ送信するように、 sent フラグに1を代入する。
+</p>
+<pre>
+	while(1){
+		vce_heartbeat();
+		if( sent == 0 && ( vce_conn_writable(c) > 0 ) ){
+            vce_errout( "send data\n" );
+			vce_protocol_unparser_bin16( c, "hoge" , 4 );
+			sent = 1;
+		}
+	}
+	vce_finalize();
+	return 0;
+}
+</pre>
+
+
+<h2><a name="rpc"></a>gen.rbを利用した独自RPCの実装</h2>
+<p>
+  ここでは、gen.rbを使用して独自のプロトコルを定義した場合の作成手順を説明する。プログラムについては、VCEパッケージの "linuxlib/autotest/gen_sv.c"等を参照の事。
+</p>
+<ol id="lib">
+  <li>通信モデルを決める
+      <p>最初に通信モデルを決めなければならない。
+      通信モデルとは、「どのプロセスとどのプロセスがどのように通信するのか」
+      と、プロトコルの大体の仕様のことである。</p></li>
+ 
+  <li>具体的なプロトコルを決める
+      <p>VCEでは、 プロトコルジェネレータ "gen.rb" を用いることによって、
+      クライアントからサーバの関数を直接呼びだすことをシミュレートできる。
+      つまり、クライアントで</p>
+      <pre>  hogeproto_LOGIN_send( id, password )</pre>
+      <p>という関数を呼びだすと、何らかの通信がおこなわれてサーバで</p>
+      <pre>  hogeproto_LOGIN_recv( id, passwd )</pre>
+      <p>という関数が呼びだされることになる。
+      ここで引数の値が同じであることが重要で、
+      サーバはネットワーク上を何が流れているのかを意識することなく、
+      処理に専念できる。これは "Remote procedure call" や "Remote method invocation"
+      などと言われることもある。ネットワーク上を関数呼びだしが流れるというイメージ
+      をもてばよい。</p>
+      <p>もはや、通信アプリケーションは
+      ストリームのバイト列を処理するルーチンを一切書かずに作れるのである。<br>
+      さて、上の例でサーバがLOGINの結果をクライアントに返すには、サーバ上で</p>
+      <pre>  hogeproto_LOGIN_RES_send( result )</pre>
+      <p>という関数を呼びだし、クライアントでは、それを受信すると</p>
+      <pre>  hogeproto_LOGIN_RES_recv( result )</pre>
+      <p>という関数が呼びだされる。
+        <BR>
+      これらの関数の実体は、gen.rbによって生成される。</p></li>
+
+  <li>gen.rb の設定ファイルを書く
+      <p>「ネットワーク上に関数を流す」ことを現実とするのは、
+      gen.rb というツールである。 gen.rb は拡張子からもわかるように
+      オブジェクト指向スクリプト言語 "Ruby" のスクリプトであり、
+      Plain text の設定ファイルから、C言語のソースファイルを吐きだす。
+      この吐きだされたソースファイル中で、</p>
+      <pre>  hogeproto_LOGIN_send
+  hogeproto_LOGIN_recv
+  hogeproto_LOGIN_RES_send
+  hogeproto_LOGIN_RES_recv
+</pre>
+      <p>関数の実体の定義がされているのである。
+      gen.rb は、サーバ用ソースとクライアント用ソースを出力するので、
+      それぞれをサーバとクライアントでコンパイルするだけである。
+      C言語のソースコードはWindowsでもコンパイルできるようになっている。
+      <BR>
+      gen.rb の設定ファイルの詳しい内容については、
+      <a href="gen.html">「gen.rb プロトコルジェネレータリファレンス」</a>
+      を参照。<p></li>
+      
+  <li>TCPコンテキストの内容を决める
+      <p>通信モデルが決まったら、TCPコンテキストの内容を決める。
+      TCPコンテキストの内容を決めるとは、
+      <code>vce_tcpcontext_create</code>関数の引数をぜんぶ定義する事である。
+      <br>
+      TCPコンテキストは、サーバ用、クライアント用があり、
+      またアプリケーションによってはサーバにもクライアントにもなる中間の
+      サーバが存在する場合もある。
+      その場合はふたつのTCPコンテキストを定義することになる。</p></li>
+
+      
+  <li>パーサ関数を設定する
+      <p>gen.rb が出力しているソースコードの中に、</p>
+      <pre>  hogeproto_sv_pcallback
+  hogeproto_cli_pcallback</pre>
+     <p> のふたつの関数が定義されている。
+      これらの関数は、ソケットから入力されたデータを解析して
+      必要な関数(hogeproto_LOGIN_recv など)を呼びだすルーチンになっている。
+      これを、</p>
+      <pre>  vce_tcpcontext_set_conn_parser 関数</pre>
+  <p>または、</p>
+  <pre>  vce_tcpcontext_set_circ_parser 関数
+</pre>
+	<p>(gen.rbの設定ファイル serverconnectionによる)
+      の引数(pcallback引数)に指定すると、プロトコルジェネレータが有効になる。
+      <br>
+      プロトコルジェネレータは任意のものが利用でき、
+      必ずしも gen.rb を使用する必要はない。
+      特殊なプロトコルを使いたい場合は独自で定義することも可能である。
+      ただし、gen.rb の出力コードはトラフィックが少なくなるようにチューン
+      されているので、できれば gen.rb を使用したほうがよいだろう。</p></li>
+
+  <li>クライアントだったら connect する</li>
+  <li>永久ループを定義する
+      <p><a href="#minimum">「最小のサーバ/クライアント」</a>を参照のこと。</p></li>
+
+  <li>関数を呼出す
+      <p>gen.rb が出力している関数を呼びだして通信する。</p>
+</ol>
+
+
+<h2><a name="link"></a>WindowsでVCEのライブラリをリンクする方法</h2>
+<p>
+  Windows VisualStudio 等の中で .cpp ファイルでVCEの関数を使用する場合は、
+以下の設定が必要である。
+
+<UL>
+  <li>コンパイルオプションに /D __cplusplus を追加する。
+	  これで vce.h でVCEの関数の C リンケージの設定がおこなわれる。
+	  このオプションは通常、C++のコンパイラが自動的に付けるため
+	  必要ない場合が多い。</li>
+  <li>vcewin32_??.lib をリンカが見付けられる場所に置く</li>
+</ul>
+.c ファイルでVCEの関数を使用する場合は最初から C リンケージになるので
+問題ない。
+</p>
+
+<br>
+<h2><a name="summary"></a>まとめ</h2>
+<p>
+  以上、 VCE の概要説明をしてきたが、
+ここまでの内容を理解すれば、 Linux,Win32, Playstation2 など、
+VCE が動作するすべての OS 間で、
+C言語による情報通信が可能になる。
+上のプログラム例では、 VCE の重要な機能のほとんどを使っていないが、
+どんなに高機能なアプリケーションでも基本的な構造は同じで、
+コールバック関数の中身が複雑になっているだけである。
+</p>
+<p><br>
+
+  <br>
+&quot;PlayStation&quot; is registered trademark and is trademark of Sony Computer Entertainment Inc.<br>
+  <a href="index.html">index に戻る</a></p>
+<div id="footer">
+Copyright 2000-2005 Community Engine Inc. All rights reserved.</div>
+
+</body> </html>

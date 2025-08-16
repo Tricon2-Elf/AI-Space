@@ -1,0 +1,142 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel="stylesheet" href="../vce.css" type="text/css">
+<title>VCE 1.1.4 official document (Japanese)</title>
+</head>
+
+
+<body>
+<h1>VCE の圧縮機能</h1>
+<p>
+VCEには、自動的に通信内容を圧縮して送受信する機能があります。<br>
+一般的なゲームなら送受信データ量が約半分になることが期待できます。
+</p>
+
+<h2>圧縮の実行</h2>
+<p>
+  <code>vce_tcpcontext_set_compress</code>にて初期化、送受信データの最大サイズを指定すると
+  パケットデータが圧縮されます。<br>
+
+  後はvce内部で、<br>
+<br>
+   圧縮→暗号化→送信<br>
+   受信→復号化→解凍<br>
+<br>
+  の順に処理されます。<br>
+  暗号化処理の際にパケットデータの大きさに関わらず圧縮を試みます。<br>
+  <code>vce_tcpcontext_reset_compress</code>呼び出しにて圧縮処理を終了します。<br>
+</p>
+
+
+<h2>圧縮のアルゴリズム</h2>
+<p>
+  Zip やgzip に使われているLZSS法というアルゴリズムを採用しています。
+  内部でDEFLATE 圧縮アルゴリズムを使います。<br>
+  詳しくは解説しませんが、具体例として以下の方法です。<br>
+  LZSS法のアルゴリズムは"ABABABCBA"というテキストを"AB<2,4>C<4,2>"といった流れで圧縮します。<br><br>
+
+  圧縮のバックエンドとして、zlibを使用しており、その権利表記は以下の通りです。<br>
+<code>
+Copyright(C) 1995-2004 Jean-loup Gailly and Mark Adler
+</code>
+</p>
+
+
+<h2>圧縮の有効なデータ</h2>
+<p>
+  テキストデータなら同じ語句を繰り返し多く配置しているデータに対して有効です。
+  バイナリデータでも、同じデータ群を繰り返し多く配置しているほど圧縮効率が
+  上がります。<br>
+<ul id="lib">
+  <li>テキストファイルの例
+  <p>例えばこのテキストファイル(compress.html)の場合、"圧縮"という語句が多く配置されているので、この部分が圧縮されます。
+  登場回数もそれなりに多いので圧縮効率は並みで60%位かと思われます。</p></li>
+  <li>バイナリファイルの例
+  <p>16進数にて0000001A,0000008Eなど上位24ビットが全て0で構成されているデータ
+  が多数存在するデータは、効率よく圧縮されます。</p></li>
+</ul>  
+  テキスト、バイナリともに繰り返し規則のないデータは圧縮効率は非常に悪いです。
+  もともと圧縮されているようなデータも圧縮効率は非常に悪いです。
+</p>
+
+
+<h2>圧縮のCPU負荷</h2>
+<p>
+  大きいパケットサイズより小さいパケットサイズの集まりのほうがCPU負荷は
+  小さくなります。圧縮の効率なら、大きいパケットサイズのほうが有利です。
+  パケットサイズの大きさに比例して圧縮の効率が上がり、CPU負荷が大きくなります。
+  圧縮できる最低サイズは60バイトくらいです。データの配置的には圧縮するデータが
+  連続しているほうがCPU負荷が小さくなります。<br>
+  <b>[例]</b>
+<pre>
+LHA LHA AAA BBB LHA LHA CCC DDD LHA より
+LHA LHA LHA LHA LHA AAA BBB CCC DDD のほうが圧縮にかかるCPUの負荷が小さい。
+</pre>
+</p>
+
+
+<h2>圧縮解凍のためのワークバッファのサイズ</h2>
+<p>
+  <code>vce_tcpcontext_set_compress()</code>で32MBまで設定できます。
+  送受信データの圧縮前の最大値を設定してください。
+</p>
+
+<h2>圧縮しないと思ったら</h2>
+<p>
+<ul>
+   <li>データの並びやサイズにより圧縮しなかった
+</ul>       
+  が考えられます。
+
+</p>
+
+<h2>データサイズを知るための関数</h2>
+<p>
+  読みこみ、書きこみデータの圧縮したときのサイズ、展開したときのサイズ、を取得できる関数
+<ul>
+  <li>vce_get_tcp_packet_read_size()
+  <li>vce_get_tcp_packet_write_size()    
+</ul>
+があります。
+
+<h2>具体的な性能例</h2>
+<p>
+弊社のgumonjiで、クライアント１台に対して計測した結果です。<br>
+クライアントを手動で操作したため、全く同じ条件ではありませんが、
+圧縮あり・なしの状態で、ほぼ同様の操作を４回づつ実行しました。<br>
+
+●圧縮あり
+<table id="bb">
+  <tr><td>client&nbsp;(byte)&nbsp;&nbsp;&nbsp;&nbsp;</td><td>server&nbsp;(byte)</td></tr>
+  <tr><td>14329</td><td>76638</td></tr>
+  <tr><td>11316</td><td>94950</td></tr>
+  <tr><td>12615</td><td>82656</td></tr>
+  <tr><td>11541</td><td>88360</td></tr>
+</table>
+
+<br>●圧縮なし
+<table id="bb">
+  <tr><td>client&nbsp;(byte)&nbsp;&nbsp;&nbsp;&nbsp;</td><td>server&nbsp;(byte)</td></tr>
+  <tr><td>25911</td><td>597500</td></tr>
+  <tr><td>20321</td><td>482142</td></tr>
+  <tr><td>19418</td><td>490394</td></tr>
+  <tr><td>23188</td><td>536638</td></tr>
+</table>
+</ul>
+
+(性能結果については、さらに詳しいデータを掲載予定です。)
+</p>
+
+<br><br>
+<a href="index.html">index に戻る</a>
+<br>
+
+
+
+<div id="footer">
+Copyright 2000-2005 Community Engine Inc. All rights reserved.</div>
+
+</body> </html>

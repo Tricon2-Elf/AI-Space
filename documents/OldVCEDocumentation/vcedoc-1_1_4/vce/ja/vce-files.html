@@ -1,0 +1,94 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<link rel="stylesheet" href="../vce.css" type="text/css">
+<title> VCE-SDK Filesマニュアル </title>
+</head>
+<body>
+<h1>VCE-SDK Filesマニュアル </h1>
+<h2>各ファイルの名前順目次</h2>
+<!-- make_file_nameindex -->
+<ol>
+<li><a href="#libvce.a">libvce.a</a></li>
+<li><a href="#vce.h">vce.h</a></li>
+<li><a href="#vcewin32.lib">vcewin32.lib</a></li>
+</ol>
+<h2>各ファイルの説明</h2>
+<!-- make_filedef -->
+<a name="libvce.a"></a>
+<table id="filedef">
+<tr><th colspan="2" id="filedef_title">
+<B>libvce.a</B></th></tr>
+<tr><th>概要</th><td>VCE for Linux static リンクライブラリ</td></tr>
+<tr><th>対応OS</th><td>linux,darwin</td></tr>
+<tr><th>詳細説明</th><td>libvce.a は Linux用のstatic リンク用ライブラリである。
+VCE のすべての関数が定義されている。
+実際にパッケージに含まれているライブラリファイル名は、
+<pre>
+libvce-0_2_1.a
+</pre>
+というような名前になっているが、マニュアル中ではすべて、 libvce.a
+という表記になっている。
+VCEのユーザは、このファイルの名前をできるだけ変更せずにアプリケーションと
+リンクするのが望ましい。その理由は、もしも名前を変更してしまうと、
+VCEがバージョンアップしたときに問題が発生した場合、
+その問題を追いかけにくくなるからである。<BR><BR>
+<B>依存ライブラリ</B><BR>
+VCEgg においては、 GNU の GMP ライブラリ(3.0)と GNU の C ライブラリ(2.1.2)
+に依存している。GMPライブラリはセキュリティルーチンの多倍長整数演算のために、
+Cライブラリはファイルやそのほか、あらゆる機能において依存している。
+現在コミュニティーエンジンではGMPライブラリに依存しない
+オリジナル演算ルーチンを開発しているが、GMPは計算速度において常に
+世界トップクラスであるため、
+アプリケーション開発者のポリシーに基づいて選択できるようにしていく。
+
+</td></tr>
+</table><br><br>
+<a name="vce.h"></a>
+<table id="filedef">
+<tr><th colspan="2" id="filedef_title">
+<B>vce.h</B></th></tr>
+<tr><th>概要</th><td>C言語 VCEヘッダファイル</td></tr>
+<tr><th>対応OS</th><td>linux,win32,other,darwin</td></tr>
+<tr><th>詳細説明</th><td>vce.h はVCEgg APIのすべての関数のプロトタイプ宣言や、
+extern変数宣言を含む。<BR>
+<B>C++環境でコンパイルする場合の注意</B>
+コンパイラに __cplusplusマクロを定義するように指定してしている状態でコンパイル
+すること。 VCEggのコードは本来UNIXのC言語で作られているためC言語のlinkageを持つが、
+たとえばマイクロソフト VisualStudio などではC++ linkage がデフォルトであり、
+C言語linkage されている関数を使うためには <code>extern "C" </code>して
+プロトタイプ宣言する必要があるためである。
+</td></tr>
+</table><br><br>
+<a name="vcewin32.lib"></a>
+<table id="filedef">
+<tr><th colspan="2" id="filedef_title">
+<B>vcewin32.lib</B></th></tr>
+<tr><th>概要</th><td>Windows 98/NT/2000 用静的リンクライブラリファイル</td></tr>
+<tr><th>対応OS</th><td>win32</td></tr>
+<tr><th>詳細説明</th><td>vcewin32.lib は、Win32環境用のライブラリファイルである。
+コンパイルには VisualStudio 6.0 を使用している。
+基本的にVCEの機能のほとんどが含まれている。
+<BR>
+vcewin32.lib のVCEパッケージ内のファイル名は、
+<pre>
+vcewin32_1_0_0.lib
+vcewin32_1_0_0mt.lib
+vcewin32_1_0_0mfc.lib
+</pre>
+のようになっており、<BR>
+最後にmtが付いている場合は、マルチスレッド用ライブラリ、<BR>
+mfcが付いている場合は、MFC対応版ライブラリ である。<BR>
+常にバージョンに関する混同をなくすため、
+このファイル名をできるだけ変更せずに利用することが望ましい。
+どうしても開発プロジェクトにおいてファイル名を変更をしたくない場合は、
+windowsショートカットを作成して利用すればよい。
+</td></tr>
+</table><br><br>
+<!-- make_filedef end -->
+<BR><BR><p><a href="index.html">indexに戻る</a><br></p>
+<div id="footer">
+Copyright 2000-2005 Community Engine Inc. All rights reserved.
+</div>
+</body>
+</html>

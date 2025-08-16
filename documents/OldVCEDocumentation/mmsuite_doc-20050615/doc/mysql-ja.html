@@ -1,0 +1,90 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html> <head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>mm-suite : MySQL</title>
+</head>
+
+<body>
+<h1>MySQL への依存性について</h1>
+
+
+
+<h3>MySQLのライセンスについて</h3>
+MM-Suiteは，    MySQLサーバとともに使うように作成されています．
+したがってMM-Suiteをベースに開発した商用サービスを
+展開したい場合は，MySQLサーバーの商用ライセンスを購入する必要があります．
+これはサーバーマシン1台あたり28000円からという価格になっています．
+購入に関しては，
+<a href="http://www.softagency.co.jp/order/licese.html">
+http://www.softagency.co.jp/order/licese.html</a>
+を参照してください．
+
+
+<h3>MySQL インストールと起動(ソースからの場合)</h3>
+ MySQL は linux/freeBSD といった UNIX ライクな OS なら大体どの OS でも
+稼働する。限界性能に関しては、TCP_NODELAY パッチ( www.ce-lab.net からダウンロード
+可能)を当てる必要がある。<BR><BR>
+MySQL は <a href="http://www.mysql.com">mysql.com</a> から
+ダウンロードできる。
+現在バージョン4.x がリリースされているが， 3.23.3x などといった
+バージョンも，安定して利用可能である．
+以下のようにしてコンパイル、インストールする(通常の GNU autoconf の手順)。
+<pre>
+shell% cd /tmp
+shell% tar zxf mysql-12345.tgz
+shell% cd mysql-12345
+shell% ./configure 
+shell% make
+shell% su
+shell# make install
+</pre>
+
+インストールできたら以下のようにデータベースディレクトリを初期化する.
+データベースディレクトリは、
+各ユーザーの権限で作成、利用する。root では利用しない事。
+
+<pre>
+MySQL 3.23.x の場合
+shell% mysql_install_db --datadir=/home/ringo/mysql_data
+shell% safe_mysqld --datadir=/home/ringo/mysql_data
+MySQL 4.x の場合
+shell% mysql_install_db --datadir=/home/ringo/mysql_data
+shell% mysqld_safe --datadir=/home/ringo/mysql_data
+</pre>
+そして以下のようにして、 storage ユーザ(MySQL 独自のユーザ)が MySQL に
+自由にアクセスできるように設定する。
+
+<pre>
+shell% mysql -u root
+mysql&gt; grant all on *.* to storage@localhost;
+mysql&gt; exit
+shell% mysqladmin -u root reload
+</pre>
+
+以上で mm-suite における MySQL のセットアップは終了である。
+複数ホストを使ってクラスタリングとかもできるがその方法などについては
+今後ドキュメントとコードを拡張していく。
+
+
+<h2>MySQLインストールと起動(RedHat 7.2などの場合)</h2>
+ RedHat 7.2 など MySQL があらかじめインストールされている環境では，
+すでに mysqld サーバが起動している場合がある．
+そのような環境では，以下のように mysql のクライアントを操作するだけで
+セットアップが完了する．
+<pre>
+shell% mysql -u root -p
+Enter password:                root ユーザのパスワードを打つ
+mysql&gt; grant all on *.* to storage@localhost;
+mysql&gt; exit
+shell% mysqladmin -u root -p reload 
+</pre>
+
+
+<BR><BR>
+<a href="index-ja.html">index に戻る</a>      
+<br>
+<hr>
+<font size=-1>
+Copyright 2000-2005 CommunityEngine Inc. All rights reserved.<BR>
+
+</body> </html>

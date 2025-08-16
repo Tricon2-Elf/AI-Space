@@ -1,0 +1,144 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html> <head>
+<link rel="stylesheet" href="../vce.css" type="text/css">
+<title>VCE 1.1.4 official document (English) </title>
+</head>
+
+<body>
+<h1>Description of VCE monitoring function</h1>
+
+<h2>Index</h2>
+<ol>
+  <LI><a href="#about">About VCE monitoring</a>
+  <LI><a href="#system">System of VCE monitoring</a>
+  <LI><a href="#server">Server initialization</a>
+  <LI><a href="#client">Client initialization</a>
+</ol>
+
+<a name="about"></a>
+<h2>About VCE monitoring</h2>
+<p>
+VCE monitoring is unified API for supervising or operating
+the activity of remote servers using VCE from remote. 
+</p>
+<p>
+The various maintenance tools attached to VCE are constructed
+using this monitoring API from now on. 
+As the examples of this API,
+swp and swpadm programs are attached to the VCE package.
+</p>
+
+<a name="system"></a>
+<h2>System of VCE monitoring</h2>
+<P>
+ VCE monitoring is a simple server client system.
+Basically, in monitored server side,
+one tcpcontext is used and the connection from a remote is accepted.
+A TCP session is opened from monitor client to server,
+and a command is transmitted.
+</p>
+<p>
+Although a command is transmitted in the form of a text,
+RIJNDAEL with the key length 16 is used inside in order to achieve security. 
+Moreover, the "key" for accessing a function is needed
+for all command transmission.
+</p>
+<P>
+The list of the commands given in a string is
+completely in agreement with the command which can bring out
+the swpadm command.
+The swpadm command can birng out all the commands for monitoring. 
+Refer to <a href="switch.html#swpadm">Connection Switching function guide</a>
+</p>
+
+<a name="server"></a>
+<h2>Server initialization</h2>
+<p>
+In order for a monitor function to become effective,
+it is necessary to start a monitor server by the server side first.
+A vce_monitor_server_enable function is used for it. 
+Moreover, in order to support shutting down from remote,
+a shutdown-accept function must be prepared and it registers
+with a vce_monitor_server_set_shutdownwatcher function.
+The following codes are virtual codes which mount this flow.  
+</p>
+<pre>
+static void shutdown_func( void )
+{
+    exit(0);
+}
+int main()
+{
+  vce_initialize();
+  if( vce_monitor_server_enable( PORT, MAXMON, "password" )&lt;0){
+    /* error handling */
+  }
+  vce_monitor_server_set_shutdownwatcher( shutdown_func );
+}
+</pre>
+<p>
+In this code, it is important to define the function for a shutdown
+first and to have registered it later.
+When not defining a shutdown function,
+you cannot use shutdown function.
+In order for a shutdown not to be possible being conscious of security,
+it will also be good way not to configure this function.
+</p>
+
+
+<a name="client"></a>
+<h2>Client initialization</h2>
+<p>
+  The following procedures have to be completed in order to
+connect from the client for watching(for example, swp)
+to the server whose monitor function is configured.
+
+</p>
+<ol>
+  <LI>vce_monitor_client_enable<BR>
+      Call this function 
+  <LI>vce_monitor_client_set_replywatcher<BR>
+      Call this function with arguments
+  <LI>vce_monitor_client_add<BR>
+      Register a required number of monitoring hosts by function. 
+  <LI>vce_monitor_client_callable<BR>
+      Check whether command transmission by function is possible.
+  <LI>vce_monitor_client_call<BR>
+      Transmit a command by function. 
+  <LI>When replywatcher is registered,
+      a result can be received with the function.
+</ol>      
+<P>
+It is as follows when the above flows are coded into a virtual code.
+</p>
+<pre>
+int main()
+{
+  vce_initialize();
+  if( vce_monitor_client_enable( MAXMON ) &lt; 0 ){ /* error */ }
+  vce_monitor_client_set_replywatcher( repwatcher );
+  monitor_ent_t ment;
+  vce_monitor_ent_init( &ment, MON_HOST_ID, host, port );
+  if( vce_monitor_client_add( &ment ) &lt; 0 ){ /* error */ }
+  while(1){
+    vce_heartbeat();
+    if( sent == 0 &amp;&amp; vce_monitor_client_callable(MON_HOST_ID) &gt; 0 ){
+      if( vce_monitor_client_call( MON_HOST_ID, send_string ) &gt; 0 ){
+        /* ok !! */
+        break;
+      }
+    }
+  }
+}
+</pre>
+
+
+<p><br>
+
+  <br>
+&quot;PlayStation&quot; is registered trademark and is trademark of Sony Computer Entertainment Inc.<br>
+  <a href="index.html">return to index</a></p>
+<div id="footer">
+Copyright 2000-2005 Community Engine Inc. All rights reserved.</div>
+</body> </html>
+

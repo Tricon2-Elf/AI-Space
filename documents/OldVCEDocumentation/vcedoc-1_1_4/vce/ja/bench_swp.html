@@ -1,0 +1,450 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel="stylesheet" href="../vce.css" type="text/css">
+<title>VCE 1.1.4 official document (Japanese)</title>
+</head>
+
+
+<body>
+
+<h1>VCE最高速度ベンチマーク(SWPあり版)</h1>
+
+<h2>はじめに</h2>
+<p>
+このページは、VCEミドルウェアの通信速度を測定するベンチマーク結果の
+一部である。SWP とはVCEの最高性能を向上させるための中継サーバである。
+SWP を使用することによって、サーバアプリケーション全体の最大性能が
+大幅に向上する。 SWP を使用しない版のベンチマークは<a href="bench_noswp.html">こちら</a>。
+このページでは、SWP を用いたときの最大性能を測定する。
+</p>
+
+<h2>必要な環境</h2>
+<ul>
+
+  <li>TCP/IP通信で接続可能な2台のコンピュータ。
+  <li>gccが実行できること。
+  <li>unixのシェルスクリプトが実行できること。
+  <li>VCE最新版
+</ul>
+
+<h2>使い方</h2>
+
+<p>
+vce/bench/swpにベンチマークがあるので、そのディレクトリに移動する。
+benchsv.cがサーバプログラム、benchcl.cがクライアントプログラムで、
+このプログラムを編集して通信のための設定をおこなう。
+swpの設定はswtable.confと
+
+benchsv.cを開き、使用するポート番号と暗号の設定をおこなう。
+ポート番号はportnum変数の値を指定することでおこなう。
+<pre>
+unsigned short portnum = 23456;
+</pre>
+通信に使用する暗号の設定はcipher変数の値を指定することでおこなう。
+
+<pre>VCE_BLOCK_CIPHER cipher = VCE_BLOCK_CIPHER_NONE;</pre>
+
+
+
+次にswpの設定をおこなう。
+swtable.confを開きサーバのIPアドレスとポート番号の設定をおこなう。
+
+<pre>
+server=192.168.1.207,23456
+</pre>
+
+詳しくは<a href = "switch.html">コネクションスイッチ 機能解説</a> を
+参照していただきたい。
+vpbench.confを開き、swpのポート番号と暗号の設定をおこなう。
+ポートの設定は
+
+<pre>
+frontend_bind_port=23457
+</pre>
+
+のようにおこない、暗号の設定は
+
+<pre>
+server_cipher=none
+</pre>
+
+のようにおこなう。
+
+
+benchcl.cを開き、swpのIPアドレスとポートの番号と暗号の
+設定をおこなう。
+ポート番号はportnum変数の値を指定することでおこなう。
+
+<pre>
+unsigned short portnum = 23457;
+</pre>
+
+サーバのIPアドレスの設定はhost変数の値を指定することでおこなう
+
+<pre>
+char host[] = "192.168.1.20";
+</pre>
+
+通信に使用する暗号の設定はcipher変数の値を指定することでおこなう。
+
+<pre>
+VCE_BLOCK_CIPHER cipher = VCE_BLOCK_CIPHER_NONE;
+</pre>
+
+サーバプログラムのコンパイルはsv0シェルスクリプトを実行することで
+おこなう。
+
+<pre>
+$ ./sv0
+</pre>
+
+s.outという実行ファイルが生成されるので、サーバマシンでs.outを
+実行する。
+
+<pre>
+$ ./s.out &
+</pre>
+
+swpを起動するにはrunswシェルスクリプトを実行する。
+
+<pre>
+$ ./runsw
+</pre>
+
+
+<p>クライアントプログラムの実行はcl*_*シェルスクリプトを実行することで
+  おこなう。（*には0〜3の値が入る。）*の値によって通信速度を測定する
+  ときのパラメータが変わってくる。それは次の表のとおりである。
+</p>
+<table id="bb">
+  <tr>
+    <td>query size＼client </td>
+    <td>1 </td>
+    <td>10 </td>
+    <td>100 </td>
+    <td>999 </td>
+  </tr>
+  <tr>
+    <td>1 </td>
+    <td>cl0_0 </td>
+    <td>cl0_1 </td>
+    <td>cl0_2 </td>
+    <td>cl0_3 </td>
+  </tr>
+  <tr>
+    <td>10 </td>
+    <td>cl1_0 </td>
+    <td>cl1_1 </td>
+    <td>cl1_2 </td>
+    <td>cl1_3 </td>
+  </tr>
+  <tr>
+    <td>100 </td>
+    <td>cl2_0 </td>
+    <td>cl2_1 </td>
+    <td>cl2_2 </td>
+    <td>cl2_3 </td>
+  </tr>
+  <tr>
+    <td>1000 </td>
+    <td>cl3_0 </td>
+    <td>cl3_1 </td>
+    <td>cl3_2 </td>
+    <td>cl3_3 </td>
+  </tr>
+</table>
+
+
+
+Queryサイズ100byte、999クライアントの測定をおこないたい場合は、
+
+<pre>
+$ ./cl2_3
+</pre>
+
+と入力する。
+それにより、c.outという実行ファイルが生成され、指定したパラメータで、
+測定を開始する。
+測定結果はサーバ側のコンソールとs.txtファイルに10秒間ごとに次のように
+出力される。
+
+<pre>
+circ size = 10
+recieved querry = 94638
+query / sec = 9463.800000
+byte / sec = 9463800.000000
+</pre>
+
+<p>circ sizeはクライアント数を表し、recieved querryは10秒間にどのくらいの
+  Queryを受信したかを表す。query / secは1秒間に何Queryを受信したかを
+  表す値である。byte / secは1秒間に何バイトの送受信がおこなわれたかを示す
+  値である。
+  急に送信量を増やすと接続が途切れるため、通信量は徐々に増加するように
+  なっており、初期パラメータでは最高性能に到達するまで数十分かかることも
+  ある。そこでbenchcl.cのcoefficientの値を必要に応じて大きくしたり
+  小さくしたりすることで調節をおこなう。coefficientの値を大きくすると
+  送信量が増える割合が大きくなり最高性能に到達する時間が早くなるかわりに
+  接続が切れやすくなる。coefficientの値を小さくすると最高性能に到達する
+  時間が遅くなるかわりに接続が切れにくくなる。
+  
+</p>
+<p>測定を終了する場合は、クライアント側のコンピュータでは </p>
+<pre>
+$ killall c.out
+</pre>
+
+<p>と入力してクライアントプログラムを終了させる。
+</p>
+<p> 中継サーバのコンピュータでは </p>
+<pre>
+$ killall swp
+</pre>
+
+<p>としてswpを停止させる。
+</p>
+<p>サーバ側のコンピュータでは、 </p>
+<pre>
+$ killall s.out
+</pre>
+
+と入力してサーバプログラムを停止させる。
+</p>
+
+
+<h2>ベンチマーク結果</h2>
+
+<p>
+クライアントと中継用サーバにはPentium4 2GHzのCPUをもつPCを使い、
+サーバにPentium4 2.8GHzのCPUをもつPCを接続して測定をおこなった。
+以下の表が、暗号は用いないでswpを使用して通信をおこなった場合の
+ベンチマーク結果である。
+<table id="bb">
+  <tr>
+    <td>query size＼client </td>
+    <td>1 </td>
+    <td>10 </td>
+    <td>100 </td>
+    <td>1000 </td>
+  </tr>
+  <tr>
+    <td>1 </td>
+    <td>106 </td>
+    <td>108 </td>
+    <td>168 </td>
+    <td>67.0 </td>
+  </tr>
+  <tr>
+    <td>10 </td>
+    <td>103 </td>
+    <td>103 </td>
+    <td>166 </td>
+    <td>51.0 </td>
+  </tr>
+  <tr>
+    <td>100 </td>
+    <td>53.0 </td>
+    <td>34.0 </td>
+    <td>52.4 </td>
+    <td>10.0 </td>
+  </tr>
+  <tr>
+    <td>1000 </td>
+    <td>5.70 </td>
+    <td>5.60 </td>
+    <td>5.69 </td>
+    <td>1.85 </td>
+  </tr>
+</table>
+<p>
+
+<p>縦軸はquery sizeで送受信するQueryのbyte数をあらわす。
+  横軸はクライアント数である。通信速度は秒間に何kQ送受信できたかを
+  表す値で単位はkQ/sである。
+  Queryサイズごとにクライアント数を変化させた場合のグラフは
+  以下のとおりである。
+  <img src = "../images/swpbench_graph1.gif"><br>
+  
+
+  <!--
+暗号(RIJNDAEL/16)をswpとクライアントの間に使用した場合の
+ベンチマーク結果は以下のとおりである。
+<table border="1">
+<tr><td>
+query size＼client
+</td><td>
+1
+</td><td>
+10
+</td><td>
+100
+</td><td>
+1000
+</td></tr>
+
+<tr><td>
+1
+</td><td>
+46.7
+</td><td>
+74.1
+</td><td>
+63.6
+</td><td>
+16.9
+</td></tr>
+
+<tr><td>
+10
+</td><td>
+32.4
+</td><td>
+24.7
+</td><td>
+55.1
+</td><td>
+17.4
+</td></tr>
+
+<tr><td>
+100
+</td><td>
+22.5
+</td><td>
+15.6
+</td><td>
+19.0
+</td><td>
+9.17
+</td></tr>
+
+<tr><td>
+1000
+</td><td>
+5.64
+</td><td>
+4.8
+</td><td>
+2.99
+</td><td>
+0.937
+</td></tr>
+</table>
+縦軸はquery sizeで送受信するQueryのbyte数をあらわす。
+横軸はクライアント数である。通信速度は秒間に何kQ送受信できたかを
+表す値で単位はkQ/sである。
+Queryサイズごとにクライアント数を変化させた場合のグラフは
+以下のとおりである。
+<img src = "../images/swpbench_graph2.gif">
+-->
+  
+暗号(RIJNDAEL/16)をswpとクライアントの間に使用した場合の
+  ベンチマーク結果は以下のとおりである。
+</p>
+<table id="bb">
+  <tr>
+    <td>query size＼client </td>
+    <td>1 </td>
+    <td>10 </td>
+    <td>100 </td>
+    <td>300 </td>
+    <td>500 </td>
+    <td>700 </td>
+    <td>1000 </td>
+  </tr>
+  <tr>
+    <td>1 </td>
+    <td>80.5 </td>
+    <td>73.5 </td>
+    <td>57.6 </td>
+    <td>34.3 </td>
+    <td>25.2 </td>
+    <td>21.4 </td>
+    <td>16.7 </td>
+  </tr>
+  <tr>
+    <td>10 </td>
+    <td>41.9 </td>
+    <td>39.2 </td>
+    <td>51.1 </td>
+    <td>31.5 </td>
+    <td>23.7 </td>
+    <td>20.2 </td>
+    <td>15.9 </td>
+  </tr>
+  <tr>
+    <td>100 </td>
+    <td>28.8 </td>
+    <td>23.5 </td>
+    <td>17.3 </td>
+    <td>13.3 </td>
+    <td>8.55 </td>
+    <td>7.33 </td>
+    <td>6.03 </td>
+  </tr>
+  <tr>
+    <td>1000 </td>
+    <td>5.63 </td>
+    <td>3.58 </td>
+    <td>2.98 </td>
+    <td>1.7 </td>
+    <td>1.43 </td>
+    <td>1.19 </td>
+    <td>1.18 </td>
+  </tr>
+</table>
+<p>縦軸はquery sizeで送受信するQueryのbyte数をあらわす。
+横軸はクライアント数である。通信速度は秒間に何kQ送受信できたかを
+表す値で単位はkQ/sである。
+Queryサイズごとにクライアント数を変化させた場合のグラフは
+以下のとおりである。
+  <img src = "../images/swpbench_graph4.gif"><br>
+Queryサイズが100、クライアント数が500の場合swpは100%に近いCPUパワーを
+消費している。この時点でサーバのCPUパワーの消費は10%以下なので、
+大きいQueryサイズの場合は符号化、複合化にほとんど時間を取られており
+そこがボトルネックになっていると考えられる。
+</p>
+</p>
+<H2>結論</h2>
+<p>
+SWP を使わない場合の暗号あり通信の性能は、1000クライアント、10バイト/Query時で
+10.9Kq/secであった。それに対し、 SWPありの場合は、15.9 であった。
+この値を見ると、SWPによって約50%だけ性能が向上するように見えるが、
+もっとも重要なのは、SWPを使っている時は本体サーバのCPU利用率が10%以下と低い点である。
+以下に、10バイト/query, 1000クライアント時のデータを比較した。
+
+<table id="bb">
+  <TR><TD></TD><TD>サーバ側CPU</TD><TD>SWP側CPU</td><TD>kQ/sec</TD></tr>
+  <TR><TD>SWPあり</TD><TD>5%</TD><TD>100%</TD><TD>15.9</TD></tr>
+  <TR><TD>SWPなし</TD><TD>100%</TD><TD>--</TD><TD>10.9</TD></tr>  
+</table>
+
+したがって、SWPを使うことによって、サーバ側の余剰CPUを稼ぐことができ、
+アプリケーションの処理ロジックをさらに充実させることができることがわかる。
+
+さらに、SWPを複数個同時に使用することで、10万クエリ/秒も不可能ではない
+ことが予想される。
+</p>
+
+<h2>課題</h2>
+<p>
+次は、SWPを複数個同時に使用して最高性能を測定したい。
+  <br>
+  ただし、実際のアプリケーション開発においては、1秒あたりのクエリ処理数
+を厳密に最大化するよりも、SWPによって余ったCPUパワーを処理内容の高度化
+のために使うことが多い。
+</p>
+
+
+<br><br>
+<a href="index.html">index に戻る</a>
+<br>
+
+<div id="footer">
+Copyright 2000-2005 Community Engine Inc. All rights reserved.</div>
+
+
+</body>
+</html>

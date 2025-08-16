@@ -1,0 +1,857 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html> <head>
+<link rel="stylesheet" href="../vce.css" type="text/css">
+<title>VCE 1.1.4 official document (English) </title>
+</head>
+
+<body>
+<h1>VCE's Error Codes and Error Messages </h1>
+<p>
+There are two methods to identify an error in VCE; getting an error number by vce_get_last_error function and referring the output strings in the error log (vce_errout).  These methods are explained in below.
+</p>
+
+
+<h2>VCE's Error Codes</h2>
+<p>
+The following list contains the error codes of VCE.  New error codes may be added later, but existing ones will not be deleted nor modified.  So the following codes are valid for future versions.  
+<BR>
+The following list refers to the contents of vce.h.</p>
+ 
+ <ul id="lib">
+  <LI>#define VCE_NOERROR (0)
+	  <p>No error.</p></li>
+
+  <LI>#define VCE_EGENERIC (-1)
+	  <p>General error.</p></li>
+
+  <LI>#define VCE_EFULL  (-2)
+	  <p>Buffer is full.  </p></li>
+
+  <LI>#define VCE_EBUG   (-3)
+	  <p>Error is suspected to be caused by VCE's internal bug. </p></li>
+
+  <LI>#define VCE_ERANGE (-5)
+	  <p>Argument is out of range.  </p></li>
+
+  <LI>#define VCE_EINVAL (-6)
+	  <p>Invalid argument.</p></li>  
+  
+  <LI>#define VCE_EMEM   (-7)
+	  <p>Insufficient memory. </p></li>
+
+  <LI>#define VCE_ENOENT (-8)
+	  <p>No match was found or a file not found.</p></li>
+
+  <LI>#define VCE_EIO    (-9)
+	 <p>I/O error occurred with either socket or file. </p></li>
+
+  <LI>#define VCE_ESOCKET (-10)
+	  <p>socket() system call failed.  </p></li>
+
+  <LI>#define VCE_EBIND (-11)
+	  <p>bind() system call failed. </p></li>
+
+  <LI>#define VCE_EIPADDR ( -12)
+	  <p>Specified IP address is invalid.  </p></li>
+ 
+  <LI>#define VCE_ELISTEN (-13)
+	  <p>listen() system call failed. </p></li>
+
+  <LI>#define VCE_ECONFIG (-14)
+	  <p>Configuration is abnormal.  </p></li>
+
+  <LI>#define VCE_EHOSTNAME (-15)
+	  <p>Can not resolve host name.  </p></li>
+
+  <LI>#define VCE_EFCNTL (-16)
+	  <p>fcntl failed. </p></li>
+
+  <LI>#define VCE_ECONNECT (-17)
+	  <p>connect() system call failed. </p></li>
+
+  <LI>#define VCE_EBUFSMALL (-18)
+	  <p>Specified buffer is too small.</p></li>
+
+  <LI>#define VCE_EPROTO    (-19)
+	  <p>Byte string of protocol is invalid.  </p></li>
+
+  <LI>#define VCE_ENOTREADY (-20)
+	  <p>Access was attempted before encryption negotiation was completed.</p></li>
+      
+  <LI>#define VCE_ENEGO    (-21)
+	  <p>Encryption negotiation failed.  </p></li>
+
+  <LI>#define VCE_EPROTO_INVAL (-22)
+	  <p>Argument of protocol is invalid.</p></li>
+
+  <LI>#define VCE_EPROTO_ODD (-23)
+	  <p>The length of input record of protocol is abnormal. </p></li>
+
+  <LI>#define VCE_EPROTO_TOOLONG (-24)
+	  <p>Input data of protocol is too long.  </p></li>
+
+  <LI>#define VCE_ENOCALLBACK (-25)
+	  <p>Callback function is not defined.  </p></li>
+
+  <LI>#define VCE_ESUPPORT  (-26)
+	  <p>No longer supported.</p></li>
+
+  <LI>#define VCE_ECIRCSERIAL (-27)
+	  <p>Unable to perform I/O because the serial number of circ_t is different.</p></li>
+
+  <LI>#define VCE_ECONNSERIAL (-28)
+	  <p>Unable to perform I/O because the serial number of conn_t is different. </p></li>
+
+  <LI>#define VCE_EVECNOTREADY (-29)
+	  <p>Packet vectorizer is not ready. </p></li>
+
+  <LI>#define VCE_ENOCIRCPARENT (-30)<p>
+	  TCP connection that should include a virtual circuit does not exist.  </p></li>
+
+  <LI>#define VCE_EALIGNMENT (-32)<p>
+	  Alignment of specified object is invalid. </p></li>
+
+  <LI>#define VCE_EFORMAT (-33)<p>
+	  Format of string is abnormal. </p></li>
+
+  <LI>#define VCE_ESEARCH (-34)<p>
+	  Internal error of the search engine. </p></li>
+
+  <LI>#define VCE_ECONTENTLEN (-35)<p>
+	   Length of record's data part of protocol is invalid.  </p></li>
+
+  <LI>#define VCE_ECONNINIT (-36)<p>
+	  Connection table has not been initialized. </p></li>
+
+  <LI>#define VCE_EBADKEYLEN (-37 )<p>
+	  Encryption key length is invalid.</p></li>
+
+  <LI>#define VCE_EACCEPT (-38 )<p>
+	  accept() system call failed.  </p></li>
+
+  <LI>#define VCE_ESETSOCKOPT (-39)<p>
+	  setsockopt() system call failed.  </p></li>
+
+  <LI>#define VCE_EACCESSFILE (-40)<p>
+	  Cannot access the file. </p></li>
+
+  <LI>#define VCE_EWINSOCKINIT (-41)<p>
+	  Failed to initialize Winsock (win32 only) </p></li>
+
+  <LI>#define VCE_EWBFULL (-44)<p>
+	 Write buffer is full.  </p></li>
+
+  <LI>#define VCE_ELONGINPUT (-45)<p>
+	  Input buffer is too long. </p></li>
+
+  <LI>#define VCE_ETOOSHORT (-46)<p>
+	  Input buffer is too short.  </p></li>
+
+  <LI>#define VCE_EPROTO_BADLEN (-47)<p>
+	  Length of input record of protocol is abnormal (could be a crack). </p></li>
+
+  <LI>#define VCE_EPROTO_RESULT (-48)<p>
+	  Server returned an error at protocol. </p></li>
+
+  <LI>#define VCE_EPROTO_SERVERINVAL (-49)<p>
+	  Server returned an abnormal value (could be crack) </p></li>
+
+  <LI>#define VCE_EPROTO_BADCOMMAND (-50)<p>
+	  Specified protocol command does not exist. </p></li>
+
+  <LI>#define VCE_EFOPEN_W (-51)<p>
+	  Cannot open a file for writing. </p></li>
+
+  <LI>#define VCE_ERENAME (-52)<p>
+	  rename(2) system call failed.  </p></li>
+
+  <LI>#define VCE_ENOMORELOCK (-53)<p>
+	  Cannot accept lock any longer.  </p></li>
+
+  <LI>#define VCE_ENOTFOUND (-54)<p>
+	  Cannot find something (vce_get_XXX_search). </p></li>
+
+  <LI>#define VCE_ELENTOOLONG (-55)<p>
+	  Specified length is too long.  </p></li>
+
+  <LI>#define VCE_EDATASHORT (-56)<p>
+	  Data part is too short.</p></li>
+	  
+  <LI>#define VCE_EOPENDIR (-57)<p>
+	  Cannot open a directory. </p></li>
+
+  <LI>#define VCE_EFSEEK (-58) <p>
+	  Cannot fseek a file. </p></li>
+
+  <LI>#define VCE_EFWRITE (-59) <p>
+	  Cannot write data to a file.</p></li>
+
+  <LI>#define VCE_EFREAD (-60)<p>
+	  Cannot read data from a file. </p></li>
+
+  <LI>#define VCE_EMKDIR (-61)<p>
+	  Could not create a directory.  </p></li>
+
+  <LI>#define VCE_EALREADY (-62)<p>
+	  Cannot operate the same process twice.  It is redundant. </p></li>
+	  
+  <LI>#define VCE_EFINALIZE (-63)<p>
+	  This is an error caused in releasing VCE.  Because VCE was not 
+          properly released, memory may have leaked (could be VCE's bug or 
+          improper usage). </p></li>
+
+  <LI>#define VCE_ECLOSED (-64)<p>
+	  Access was attempted when connection and so on had already closed.  </p></li>
+
+  <LI>#define VCE_EGENCOMMAND (-65)<p>
+
+  <LI>#define VCE_ENOCRYPTO (-66)<p>
+	  Specified block key encryption algorithm does not exist.  </p></li>
+ 
+  <LI>#define VCE_ETOOLONGNAME (-67)<p>
+	  Specified name is too long. </p></li>
+ 
+  <LI>#define VCE_ESIZE (-68)<p>
+	  Specified size is abnormal. </p></li>
+
+  <LI>#define VCE_ETASK (-69)<p>
+	  Cannot initialize a task used internally. </p></li>
+
+  <LI>#define VCE_ETASKG (-70)<p>
+      Cannot initialize a task group used internally. </p></li>
+
+  <LI>#define VCE_ESWNOTREADY (-71)<p>
+      switchcontext is not ready yet.  </p></li>
+
+  <LI>#define VCE_ESERVERDOWN (-72)<p>
+      Back-end server is down (swp). </p></li>
+
+  <LI>#define VCE_ESWTRANSIENT (-73)<p>
+      Cannot write data to circ_t since it is currently switching.  </p></li>
+
+  <LI>#define VCE_EODDBUFSIZE (-74)<p>
+      Cannot perform encryption because the data buffer size to be encrypted can       not be divisible by neither even numbers, four, or eight.  
+      </p></li>
+  <LI>#define VCE_EODDKEYSIZE (-75)<p>
+      Length of key used for encryption is invalid. 
+       For instance, the length must be 16, 24, and 32 byte for rijndael. </p></li>
+
+  <LI>#define VCE_EKEYEX (-76)<p>
+      Cannot properly start an encryption key exchange routine.
+      This is mostly caused by insufficient memory.  </p></li>
+
+  <LI>#define VCE_EMORESENDBUF (-77)<p>
+      Program needs more amount of send data.
+      This error can occur when using circ_t, and
+      send buffer to SWP is running short.</p></li>
+
+  <LI>#define VCE_EINIT (-78)<p>
+      This error indicates that VCE is not initialized by
+      vce_initialize(), but VCE API function is called.</p></li>
+
+  <LI>#define VCE_EARRAY (-79)<p>
+      VCE needs more arrays internally.
+      You can avoid this error by setting max_array when
+      vce_initialize_limited.</p></li>
+      
+</ul>
+
+
+<h2>VCE's Error Log Message </h2>
+<p>
+There are four kinds of message stored in a log by VCE: Fatal, Warning, Bug, and Note.  All messages are numbered; Fatal error messages start from 1000, Warning message starts from 4000, Bug message starts from 7000, and Note message starts from 10000.  Numbers would be increased in future version of VCE, but existing messages will not be deleted nor modified (detailed description may be changed).  The following messages are for VCEgg 0.2.  These are defined as macro by vce.h.  <BR>
+Because descriptions of these messages may be changed in the future, always use the error number such as "Fatal: 1101" rather than the English description as a clue to analyze a log with backup tools and administration tools.
+</p>
+
+<h2>Fatal Error Messages </h2>
+<p>
+Fatal error messages are generally caused with the wrong usage of VCE by application or with insufficient configuration of the operating system (problem with port, free memory, permission problem, etc.)  An error can be solved by carefully tracking down the cause.
+</p>
+
+<UL id="lib">
+  <LI>"Fatal:1000 cannot initialize winsock\n"<p>
+	   Cannot initialize Winsock.  </p></li>
+	  
+	    <LI>"Fatal:1003 array table scarcity (init_array)\n"<p>
+	  The number of remaining tables of array is insufficient. 
+          Too many vce_init_array.  
+          Check if array leak is occurred.  </p></li>
+          	  
+  <LI>"Fatal:1010 MALLOC fail (index=%d)\n"<p>
+	  MALLOC (wrapper of malloc) failed.   Mostly due to insufficient memory. </p></li>
+	  
+  <LI>"Fatal:1011 MALLOC fail (index=%d)\n"<p>
+	  MALLOC (wrapper of malloc) failed.   Mostly due to insufficient memory.  </p></li>
+	  
+  <LI>"Fatal:1012 MALLOC fail (index=%d)\n"<p>
+	  MALLOC (wrapper of malloc) failed.   Mostly due to insufficient memory.
+      </p></li>
+	  
+  <LI>"Fatal:1020 array full in %s\n"<p>
+	  Free element of array does not exist.  
+          When you receive this error unexpectedly, check if 
+          vce_free_array_object was called.
+      </p></li>
+	  
+  <LI>"Fatal:1050 odd buffer size: %d\n"<p>
+	  Buffer size is not divisible.  </p></li>
+	  
+  <LI>"Fatal:1080 please set buffer with length of n*256 bytes.\n"<p>
+	  Buffer length is not a multiple of 256.  </p></li>
+	  
+  <LI>"Fatal:1090 int-search: MALLOC fail\n"<p>
+	  Initialization error of init key's search engine.  MALLOC (wrapper of           malloc) failed.   Mostly due to insufficient memory.  </p></li>
+	  
+  <LI>"Fatal:1091 int-search: init_array fail (index=%d)\n"<p>
+	  With init key's search engine, initialization failed due to 
+          insufficient array.  </p></li>
+
+  <LI>"Fatal:1092 int-search: entry full! index=%d\n"<p>
+	  With init key's search engine, cannot memorize values any longer. </p></li>
+	  
+  <LI>"Fatal:1093 int-search: entry full! index=%d\n"<p>
+	  With init key's search engine, cannot memorize values any longer. </p></li>
+	  
+  <LI>"Fatal:1094 str-search: MALLOC fail\n"<p>
+	  Initialization error of string key's search engine.  
+          MALLOC (wrapper of malloc) failed.   Mostly due to insufficient memory.
+      </p></li>
+	  
+  <LI>"Fatal:1095 str-search: init_array fail (index=%d)\n"<p>
+	  With string key's search engine, initialization failed due to 
+          insufficient array.  </p></li>
+	  
+  <LI>"Fatal:1097 str-search entry full! index=%d\n"<p>
+	  With string key's search engine, cannot memorize values any longer. </p></li>
+         	  
+  <LI>"Fatal:1098 str-search entry full! index=%d\n"<p>
+	  With string key's search engine, cannot memorize values any longer. </p></li>
+	  
+  <LI>"Fatal:1100 int2-search: MALLOC fail\n"<p>
+	  Initialization error of 2 integer key's search engine.  
+          MALLOC (wrapper of malloc) failed. Mostly due to insufficient memory.
+      </p></li>
+      
+  <LI>"Fatal:1101 int2-search: init_array fail index=%d\n"<p>
+	  With 2 integer key's search engine, initialization failed due to 
+          insufficient array. </p></li>
+	  
+  <LI>"Fatal:1102 int2-search: entry full! index=%d\n"<p>
+	  With 2 integer key's search engine, cannot memorize values any longer.
+      </p></li>
+      
+  <LI>"Fatal:1103 int2-search: entry full! index=%d\n"<p>
+	  With 2 integer key's search engine, cannot memorize values any longer.
+      </p></li>
+      
+  <LI>"Fatal:1200 tcp: no more connections are availabe\n"<p>
+	 TCP connection exceeds the maximum number of connection restricted by 
+         VCE, so it cannot increase any longer.  </p></li>
+
+  <LI>"Fatal:1201 tcp: bad secret key length: %d\n"<p>
+	   Length of shared secret-key is abnormal.  With Blowfish, it must be             either 4 or 56. </p></li>
+	  
+  <LI>"Fatal:1202 tcp: bad encryption type specified:%d\n"<p>
+	   Value of crypt argument of vce_tcpcontext_create must be either 0 or
+ 1. </p></li>
+	  
+  <LI>"Fatal:1203 need a parser when creating tcpcontext\n"<p>
+	   To use vce_tcpcontext_create, at least parser function must be 
+           specified.  Otherwise it is left out without defining how to process
+            the input from socket. </p></li>
+	  
+  <LI>"Fatal:1204 socket() fail addr:%s port:%d os_errno:%s\n"<p>
+	   socket() system call failed and its status is returned as an error 
+          number of C library.  </p></li>
+	  
+  <LI>"Fatal:1205 gethostbyname() error: %s\n"<p>
+	   gethostbyname function failed.  Also displays error output of C 
+           library. </p></li>
+	  
+  <LI>"Fatal:1206 gethostbyname() error: %s\n"<p>
+	  gethostbyname function failed.  Also displays error output of C 
+           library.</p></li>
+	  
+  <LI>"Fatal:1207 bind() error. os_errno:%s addr:%s port:%d\n"<p>
+	  bind function failed.  </p></li>
+	  
+  <LI>"Fatal:1208 listen() error. os_errno:%s addr:%s port:%d\n"<p>
+	  listen function failed. </p></li>
+	  
+  <LI>"Fatal:1209 setsockopt() fail. os_errno:%s\n"<p>
+	   setsockopt function failed. </p></li>
+
+  <LI>"Fatal:1210 gethostbyname() error: %s\n"<p>
+	  gethostbyname function failed.  Also displays error output of C 
+          library.  </p></li>
+
+  <LI>"Fatal:1212 fcntl fail: %s\n"<p>
+	  fcntl function failed. </p></li>
+	  
+  <LI>"Fatal:1213 setsockopt() fail: %s\n"<p>
+	  setsockopt function failed.  </p></li>
+	  
+  <LI>"Fatal:1214 keyex_start_client fail on fd:%d\n"<p>
+	  Cannot start the client side negotiation routine of public key 
+          exchange method.  </p></li>
+	  
+  <LI>"Fatal:1230 cannot write data in %s\n"<p>
+	  Cannot output to a file.  </p></li>
+	  
+  <LI>"Fatal:1231 cannot write data in %s\n"<p>
+	  Cannot output to a file.  </p></li>
+	  
+  <LI>"Fatal:1250 cannot init vpaddr search engine\n"<p>
+	  Cannot initialize the search engine called "vpaddr", which is the 
+          master database for packet vectorizer. </p></li>
+	  
+  <LI>"Fatal:1251 cannot MALLOC master rb.\n"<p>
+	  Cannot initialize a read buffer for each virtual circuit of packet 
+          vectorizer.  </p></li>
+	  
+  <LI>"Fatal:1252 cannot allocate circuit array\n"<p>
+	  Cannot initialize an array (VCE array) used to store virtual circuits.
+      </p></li>
+      
+  <LI>"Fatal:1253 cannot initialize int2 search engine:%s\n"<p>
+	  Cannot initialize a search engine that searches an address and a 
+          virtual circuit of packet vectorizer. </p></li>
+	  
+  <LI>"Fatal:1256 pointer to tcpcontext is null\n"<p>
+	  A pointer that redirects tcpcontext is NULL.  It has not passed the 
+          Sanity check. </p></li>
+
+  <LI>"Fatal:1260 win32 fatal: gethostbyname() error:%s\n"<p>
+	   At Winsock, gethostbyname failed. </p></li>
+
+  <LI>"Fatal:1265 Memory shortage when creating tcpcontext state buffer\n"<p>
+	  Could not save status management memory for status attached to 
+          protocol due to insufficient memory in vce_tcpcontext_create.
+      </p></li>
+
+  <LI>"Fatal:1268 Cannot reallocate vec's state buffer array. (%s)"<p>
+	  Packet vectorizer could not reassign status buffer for status 
+          attached protocol management (insufficient memory).
+      </p></li>
+
+  <LI>"Fatal:1270 vce_scandir is not supported on this operating system\n"<p>
+	 vce_scandir function 
+         is not supported with this operating system.
+      </p></li>
+
+  <LI>"Fatal:1277 setsockopt(SO_REUSEADDR) fail:%s\n"<p>
+	  Failed to configure SO_REUSEADDR. </p></li>
+
+  <LI>"Fatal:1280 cannot add ipv4 filter for conn: serious bug? net:%s mask:%s flags:%d\n"<p>
+	  Could not configure IPv4 filter for conn_t.  
+          Possibly because of VCE's internal bug.
+      </p></li>
+
+  <LI>"Fatal:1281 cannot add ipv4 filter for circ: serious bug? net:%s mask:%s flags:%d\n"	  <p>
+	   Could not configure IPv4 filter for circ_t.  
+           Possibly because of VCE's internal bug. </p></li>
+	  
+</UL>
+
+<h3>Warning Messages </h3>
+<p>
+Warning messages indicate that the exhaustion of resource or the deterioration of performance may be experienced in the future even though VCE continues working.  It is recommended to avoid warning messages as much as possible by tuning VCE's configuration.
+</p>
+
+<UL id="lib">
+  <LI>"Warning:4000 freeing null pointer in %s\n"<p>
+	  Attempted to free a null pointer.  </p></li>
+	  
+  <LI>"Warning:4001 freeing an out-of-bound element in %s address:%p master-address:%p\n"<p>
+	  An element trying to release is placed outside of memory area of array.
+      </p></li>
+      
+	  
+  <LI>"Warning:4002 freeing an oddly-aligned element in %s address:%p master-address:%p sizeof:%u\n"<p>
+	  An element trying to release is a pointer to buffer which is not an 
+          element of array. </p></li>
+	  
+  <LI>"Warning:4003 freeing an out-of-bound element in %s address:%p master-address:%p sizeof:%u\n"<p>
+	  An element trying to release is placed outside of memory area of array.
+      </p></li>
+	  
+  <LI>"Warning:4010 server packet has bad length\n"<p>
+	   Length of packet sent from server is in a strange length. </p></li>
+	  
+  <LI>"Warning:4011 server: request queue is full\n"<p>
+	  Lock request queue of shared memory is full.  </p></li>
+	  
+  <LI>"Warning:4012 server: being shutting down\n"<p>
+	  Server of shared memory is currently shut down. </p></li>
+	  
+  <LI>"Warning:4013 server: invalid argument\n"<p>
+	  A parameter which is unknown to server of shared memory was sent from 
+          client.</p></li>
+	  
+  <LI>"Warning:4014 unknown server error: %d\n"<p>
+	  A parameter which is unknown to client was sent from server.  
+           It has been ignored.</p></li>
+	  
+  <LI>"Warning:4015 request timeout for ofs:%u len:%u\n"<p>
+	  Request from client has timed out. </p></li>
+	  
+  <LI>"Warning:4016 unknown reply from server:0x%x\n"<p>
+	  Can not understand a command from server.  </p></li>
+	  
+  <LI>"Warning:4017 sender() returns %d not %d\n"<p>
+	  Could not send records.  </p></li>
+	  
+  <LI>"Warning:4018 sender() returns %d not %d\n"<p>
+	  Could not send records. </p></li>
+	  
+  <LI>"Warning:4060 notify request timeout to client: ofs:%u len:%u\n"<p>
+	  Lock request was timed out and a notification was sent to client.
+      </p></li>
+	  
+  <LI>"Warning:4061 try_lock error: %s\n"<p>
+	  Could not acquire a lock for some reason. 
+          Other warning messages should be displayed at the same time.
+      </p></li>
+	  
+  <LI>"Warning:4062 lock expired ol[%d]\n"<p>
+	  Lock release command was not received so that the lock itself 
+          had timed out. </p></li>
+	  
+  <LI>"Warning:4080 bfenc: no space left on %d's ewb\n"<p>
+	  There was no space in write buffer to write data after encoding 
+          so that data could not be sent to socket.
+      </p></li>
+	  
+  <LI>"Warning:4100 tcp: only %d connections are usable\n"<p>
+	  Because it exceeds the maximum number of connection in VCE, 
+          only the number of connections displayed can be used.
+      </p></li>
+	  
+  <LI>"Warning:4101 tcp: accept() error. os_errno:%s port:%d\n"<p>
+	  accept() error </p></li>
+	  
+  <LI>"Warning:4102 tcp: conn_alloc fail no more accept. max:%d port:%d\n"<p>
+	  Because it reached the maximum number of connection that VCE can 
+          manage, no more TCP connections can be added (or accepted) .
+      </p></li>
+	  
+  <LI>"Warning:4103 tcp: acceptwatcher fail fd:%d\n"<p>
+	  Function specified as acceptwatcher returned an error. </p></li>
+	  
+  <LI>"Warning:4104 select() returns %d: %s\n"<p>
+	  select() returned an invalid value. </p></li>
+	  
+  <LI>"Warning:4105 connection timeout. fd:%d sec:%d\n"<p>
+	  Connection timed out because a client is not working well.  
+          The value of time out is specified when vce_tcpcontext_create function           is called.  </p></li>
+	  
+  <LI>"Warning:4200 vecp buffer full. closing client connection.\n"<p>
+	  Connection to client was terminated since the buffer is full.  
+          Generally, when the write buffer for client is full, it is perceived 
+          that a client is not working properly and the connection is terminated.
+      </p></li>
+	  
+  <LI>"Warning:4201 vecp buffer full. closing client connection.\n"<p>
+	  Since buffer is full, the connection with client was terminated. </p></li>
+	  
+  <LI>"Warning:4202 vecp cannot update search engine on fd:%d\n"<p>
+	  Cannot register a new client peer address with search engine. 
+          This is fatal for client, but it is just a warning for server since 
+          a search engine is full.</p></li>
+	  
+  <LI>"Warning:4203 vecp buffer full. closing client connection.\n"<p>
+	  Since buffer is full, the connection with client was terminated. </p></li>
+	  
+  <LI>"Warning:4204 vecp: bad protocol magic\n"<p>
+	  Magic number of protocol is invalid.  <BR>
+          There is a bug with client or there may be a crack. </p></li>
+	  
+  <LI>"Warning:4205 vecp: bad version number\n"<p>
+	   Version number of protocol is invalid.<BR>
+	  There is a bug with client or there may be a crack. 	  </p></li>
+	  
+  <LI>"Warning:4206 vecp: bad content length:%d\n"<p>
+	  Record length of protocol is invalid. <BR>
+	  There is a bug with client or there may be a crack. </p></li>
+	  
+  <LI>"Warning:4207 vecsv: bad protocol magic on vp connection\n"<p>
+	  At VP connection (a connection between a vectorizer and a server), 
+          a magic number of protocol is abnormal.  </p></li>
+	  
+  <LI>"Warning:4208 vecsv: bad version number on vp connection\n"<p>
+	  At VP connection (a connection between a vectorizer and a server), 
+          the version number of protocol do not match.  </p></li>
+	  
+  <LI>"Warning:4209 vecsv: bad content length:%d\n"<p>
+	  At VP connection (a connection between a vectorizer and a server), 
+          a record length is invalid.  Could be a crack.  </p></li>
+	  
+  <LI>"Warning:4210 vecsv: cannot write data into vp connection\n"<p>
+	  Cannot transmit since the write buffer for VP connection is full or 
+          there is something wrong with connection.  </p></li>
+	  
+  <LI>"Warning:4211 vecsv: cannot write to circuit buffer.ret:%d start:%d end:%d len:%d\n"<p>
+	  Cannot write since the write buffer for virtual circuits is full or 
+          something is wrong. </p></li>
+
+  <LI>"Warning:4215 winsock select() returns SOCKET_ERROR, and WSAGetLastError:%d\n"<p>
+	  With Winsock, select returned an error.  </p></li>
+	  
+  <LI>"Warning:4214 re-freeing an element in %s address:%p\n"<p>
+	  Trying to release the same element twice.   
+          Possibly the application called free_array_object twice.  </p></li>
+	  
+  <LI>"Warning:4220 SHA-1 keygen output buffer is smaller than 40byte. It usually needs 40 byte. len:%d\n"<p>
+	  SHA-1 hash is trying to create a hash for key but the given buffer is 
+          less than 40 byte.  The buffer must be greater than 40, otherwise 
+          outcomes may be different for UNIX and Windows since it would be 
+          caught by a bug with Windows _snprintf.  64 is recommended.
+      </p></li>
+  <LI>"Warning:4223 bin16: unparser cannot write full record. try:%d actual:%d\n"	  <p>
+	  With a transmission function of bin16 protocol, unable to use a 
+          transmission buffer that is sufficient to send a complete record.  
+          Therefore, it returned VCE_EWBFULL.
+      </p></li>
+
+  <LI>"Warning:4225 vce_tcpcontext_create: reached max connection num %d\n"	  <p>
+	  It reached the maximum number of connection specified with tcp context.
+      </p></li>
+
+  <LI>"Warning:4300 vce_conn_io: conn does not have parser function. use vce_tcpcontext_set_conn_parser\n"<p>
+	  TCP connection "conn" does not have a parser.  
+          Configure a parser by using vce_tcpcontext_set_conn_parser to 
+          process data input.  </p></li>
+
+  <LI>"Warning:4301 vce_protocol_parser_vecmain_server: circ does not have parser function. use vce_tcpcontext_set_circ_parser\n"	  <p>
+	  Virtual circuit "circ" does not have a parser. 
+          Configure a parser by using vce_tcpcontext_set_circ_parser to process 
+          data input.
+      </p></li>
+      
+  <LI>"Warning:4310 tcpcontext_try_accept: IP source address filter denies this address: %s\n"	 <p>
+	  The connection of conn_t was denied by IP source address filter.  
+          This is always displayed with verbose mode regardless of 
+          FILTER_POLICY_LOG setting. 
+          If FILTER_POLICY_LOG is set, it is displayed regardless of verbose 
+          mode.
+      </p></li>
+      
+  <LI>"Warning:4311 vectorizer server: IP source address filter denies this address: %s\n"	  <p>
+	  The connection of circ_t was denied by IP source address filter.  
+          Action is the same with conn_t.  </p></li>
+</UL>
+
+<h3>Bug Messages </h3>
+<p>
+Most of Bug Messages indicate errors that can not be solved with application.  
+CommunityEngine Inc. will start debugging right away when we receive a bug message report.
+</p>
+
+<UL id="lib">
+  <LI>"Bug:7000 blank-list stack overflow: %s\n"<p>
+	  Management of a free list of array is abnormal.</p></li>
+
+  <LI>"Bug:7002 use flag is 0! in %s address:%p\n"<p>
+	  Sanity check error for the array of vce_show_array_usage function.
+      </p></li>
+	  
+  <LI>"Bug:7003 usenum doesn't match in %s stack:%d link_inuse:%d\n"<p>
+	  The number of count in use is different from the length of stack 
+          actually increased. </p></li>
+	  
+  <LI>"Bug:7010 tcp: nobuf?\n"<p>
+	  The free buffer for TCP that should have been free is insufficient.
+      </p></li>
+	  
+  <LI>"Bug:7011 tcp: nomem?\n"<p>
+	  The free memory for TCP that should have been reserved is insufficient.
+      </p></li>
+      
+  <LI>"Bug:7100 vecp: cannot delete search entry\n"<p>
+	  Not registered with search engine that should have been registered.  
+          Therefore it could not be deleted from search engine. </p></li>
+	  
+  <LI>"Bug:7101 vecp: cannot find client connection\n"<p>
+	  Could not find a connection with client in search engine.  </p></li>
+	  
+  <LI>"Bug:7102 vecp: cannot find client connection\n"<p>
+	  Could not find a connection with client in search engine.  </p></li>
+	  
+  <LI>"Bug:7103 vecsv: cannot delete search entry\n"<p>
+	  Not registered with search engine that should have been registered. 
+          Therefore it could not be deleted from search engine.  </p></li>
+	  
+  <LI>"Bug:7104 vecsv: cannot find client connection\n"<p>
+	  Could not find a connection with client in search engine. </p></li>
+	  
+  <LI>"Bug:7105 vecsv: cannot delete client circuit from search engine.\n"<p>
+	  Not registered with search engine that should have been registered. 
+          Therefore it could not be deleted from search engine.  </p></li>
+
+  <LI>"Bug:7106 vecsv: vce_circ_close fail\n"<p>
+	  Could not find a virtual circuit that should be closed inside 
+          vce_circ_close function.  This error could happen when application 
+          attempts to close more than twice for the same virtual circuit.  
+          Otherwise, it is due to VCE's bug.  </p></li>
+
+  <LI>"Bug:7109 state buffer is full.(accept)\n"	  <p>
+	  Status management buffer is full even though connection is not full.  
+          Obviously it is VCE's bug. </p></li>
+
+  <LI>"Bug:7112 connect: statebuf shortage\n"	  <p>
+	  Only status management buffer is full when vce_tcpcontext_connect was 
+          called.  It is VCE's bug.  </p></li>
+</UL>
+
+<h2>Note Messages </h2>
+<p>
+Note Messages are displayed only when VCE is set to verbose mode.  If you want 
+to debug or to record detailed actions of VCE into a log while fatal messages 
+or warning messages are displayed by VCE, set to verbose mode and output Note 
+messages.  
+</p>
+<UL id="lib">
+	  
+  <LI>"Note:10001 NOOP PROTOCOL: %d bytes from conn_t. serial:%d\n"<p>
+	  Received data with NOOP protocol. </p></li>
+	  
+  <LI>"Note:10002 DUMP PROTOCOL: %d bytes from conn_t. serial:%d\n"<p>
+	  Received data with DUMP protocol. </p></li>
+	  
+  <LI>"Note:10010 init blowfish on fd:%d\n"<p>
+	  Successfully initialized Blowfish routine. </p></li>
+	  
+  <LI>"Note:10011 init blowfish encoder on fd:%d\n"<p>
+	  Successfully initialized Blowfish encoder. </p></li>
+	  
+  <LI>"Note:10100 init int-search OK name:%s htsize:%d entnum:%d\n"<p>
+	  Successfully initialized the search engine for integer key.
+      </p></li>
+	  
+  <LI>"Note:10101 init str-search OK name:%s htsize:%d entnum:%d\n"<p>
+	  Successfully initialized the search engine for string key. </p></li>
+	  
+  <LI>"Note:10102 init int2-search OK name:%s htsize:%d entnum:%d\n"<p>
+	  Successfully initialized the search engine for 2 integer keys.  </p></li>
+	  
+  <LI>"Note:10103 cleaned up search engine %s\n"<p>
+	  Released a search engine. </p></li>
+	  
+  <LI>"Note:10200 new connection fd:%d I:%d sbuflen:%d\n"<p>
+	  Accepted a new connection. </p></li>
+	  
+  <LI>"Note:10201 non blocking connect().\n"<p>
+	  Connection has been set as non blocking. </p></li>
+	  
+  <LI>"Note:10202 connect ok on %d\n"<p>
+	  connect() was successful.  </p></li>
+	  
+  <LI>"Note:10220 malloc(%u) returns %p\n"<p>
+	  malloc returned value.  </p></li>
+	  
+  <LI>"Note:10221 free(%p)\n"<p>
+	  Freed. </p></li>
+	  
+  <LI>"Note:10300 vec REGISTERED remoteport:%d\n"<p>
+	  Packet vectorizer registered a remote host.  </p></li>
+	  
+  <LI>"Note:10301 vec UNREGISTERED remoteaddr:%x:%p\n"<p>
+	  Packet vectorizer deleted a remote host.  </p></li>
+	  
+  <LI>"Note:10302 vec CLOSE command from server\n"<p>
+	  Actively terminated the client's connection since CLOSE command was 
+          received from server.  </p></li>
+
+  <LI>"Note:10303 vec ACCEPT OK on %x:%d\n"<p>
+	  Packet vectorizer successfully accepted. </p></li>
+	  
+  <LI>"Note:10304 vec CLOSE OK on %x:%d\n"<p>
+	  Packet vectorizer successfully closed. </p></li>
+	  
+  <LI>"Note:10310 init_array OK index:%d bufmaster:%p size:%u num:%d name:%s\n"<p>
+	  Initialized an array. </p></li>
+
+  <LI>"Note:10320 conn_t detected EOF on fd %d\n"<p>
+	  read returned 0 on TCP. </p></li>
+
+  <LI>"Note:10321 conn_t detected read error on fd %d\n"<p>
+	  read returned -1 on TCP. </p></li>
+
+  <LI>"Note:10322 conn_t detected write error on fd %d (%s)\n"<p>
+	  write returned -1 on TCP.  Display the value of errno.</p></li>
+
+  <LI>"Note:10323 conn_t detected encryption negotiation error on fd %d error code:%d\n"<p>
+	  Initialization negotiation of encryption session failed.  
+          The session was not established. </p></li>
+
+  <LI>"Note:10324 conn_t detected decoding error on fd %d error code: %d\n"<p>
+	  Failed decoding encryption stream.  </p></li>
+
+  <LI>"Note:10325 conn_t detected encoding error on fd %d error code: %d\n"<p>
+	  Failed encoding encryption stream.  </p></li>
+
+  <LI>"Note:10326 conn_t detected protocol error on fd %d error code: %d\n"<p>
+	  Protocol function (such as vce_protocol_parser_bin16) returned an 
+          error code (negative). </p></li>
+
+  <LI>"Note:10330 key exchange: bad client public key length: %d\n"<p>
+	  With encryption key exchange, the length of open key sent from client 
+          is abnormal. It is most likely a crack.  </p></li>
+	  
+  <LI>"Note:10331 key exchange: encryption negotiation is done on fd %d\n"<p>
+	  The negotiation of encryption session completed successfully and 
+          the session was established.  </p></li>
+
+  <LI>"Note:10332 key exchange: encryption negotiation is done on fd %d\n"<p>
+	  The negotiation of encryption session completed successfully and 
+          the session was established.  </p></li>
+
+  <LI>"Note:10333 key exchange: bad encryption version %d\n"<p>
+	  Unable to negotiate since the encryption version of client is different.
+      </p></li>
+
+  <LI>"Note:10334 key exchange: bad secret key length: %d\n"	  <p>
+	  Length of private key specified by the other party is invalid.  </p></li>
+
+  <LI>"Note:10338 vce_circ_close successful:%x %d\n"<p>
+	  vce_circ_close function succeeded.  </p></li>
+
+  <LI>"Note:10340 vec: reallocated state buffer size:%d\n"<p>
+	  Packet vectorizer server successfully reassigned a status management 
+          buffer. </p></li>
+
+  <LI>"Note:10342 allocated state buffer for conn.\n"	  <p>
+	  Status management buffer was assigned to connection (not virtual 
+          circuit). </p></li>
+
+  <LI>"Note:10345 vce_tcpcontext_create could allocate state buffer.\n"	  <p>
+	  vce_tcpcontext_create function successfully assigned status management
+           buffer. </p></li>
+
+  <LI>"Note:10347 freed state buffer for conn\n"<p>
+	  Successfully released the status management.  </p></li>
+
+  <LI>"Note:10348 vec: statebuf allocate ok\n"	  <p>
+	  On vectorizer server, status management buffer was assigned to virtual
+           circuit.  </p></li>
+
+  <LI>"Note:10349: vec: freed state buffer for a circ\n"<p>
+	  Successfully released the status management buffer for virtual circuit.
+      </p></li>
+
+  <LI>"Note:10400: vce: finalized\n"<p>
+	  VCE was successfully ended.  This is displayed if vce_finalize 
+          function has succeeded.  </p></li>
+	  
+</UL>
+
+
+<p>
+<br><br>
+&quot;PlayStation&quot; is registered trademark and is trademark of Sony Computer Entertainment Inc.<br>
+  <a href="index.html">return to index</a>
+</p>
+
+<div id="footer">
+Copyright 2000-2005 Community Engine Inc. All rights reserved.</div>
+</body> </html>

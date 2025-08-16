@@ -1,0 +1,133 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html> <head>
+<title>mm-suite official document (English)</title>
+<style type="text/css">
+P {
+  TEXT-INDENT: 1em
+}
+</style>
+
+</head>
+
+<body>
+<h1>mm-suite clustering architecture</h1>
+<p>
+  You can get more server processing power by using many inexpensive and
+ordinary PC server machines.
+In tipical cases, the machines are connected to each other
+as shown below:
+</p>
+<img src="images/mmsuite_dia.gif">
+
+<p>
+  You see a letter "n" in this diagram, that means
+you can put more machines together in addition to this case.
+Note that when you have N machines in group X and M machines
+in group Y, you will have N * M connections between group X and Y
+because the machines are connected to each other in matrix way.
+In case below, because you have 3 machines in group X,
+and 4 machines in group Y, so you will see 3 * 4 = 12 connections.
+</p>
+<BR>
+<img src="images/mmsuite_matrix.gif">
+
+<p>
+  Each servers are processing different tasks.
+What kind of tasks are processed in each component will be
+listed here:
+</p>
+
+<ul>
+  <LI><B>GMSV</B><BR>
+      All game rules and logics are processed by this component.
+      We can say the rules and logics are the content of the game,
+      so some say GMSV as "content server" in other words.
+      If you want to change the content, you have to modify GMSV
+      source code or configuration information read by GMSV.
+      So far as our experience, the GMSV component is the only
+      component that crashes or stopped by men often,
+      because they have a new code fragments in each content update
+      without precise debugging.
+
+  <LI><B>SWP(SwitchingProxy)</B><BR>
+      Connection switching proxy server. This component is
+      included in VCE package. So this is not originally made
+      in mm-suite. SWP is responsible for controlling data stream,
+      and session management, and SSL decoding.
+      You can maximize GMSV performance by using SWP.
+      One SWP can process 20Mbit/sec in P3 800MHz machines.
+
+  <LI><B>AUTHSV</B><BR>
+      User authorization server.
+      Only thing done by this component is to check the
+      online player can log in to the GMSV or not.
+      We provide this component separated from other ones
+      because in almost all cases you have to use
+      your own user-database which is already made and maintained.
+      If you want to out-source the authorization task,
+      you will put a authorization module provided by other company
+      to AUTHSV code.
+
+  <LI><B>DBSV</B><BR>
+      Store character data and other game information.
+      We're using MySQL for the task, not NFS because of the performance.
+      DBSV assumes that authorization is done by AUTHSV before
+      accessing DBSV.
+
+  <LI><B>MSGSV</B><BR>
+      Instant messaging server.
+      This server can also store off-line messages, which will be
+      sent to the destination user when the destination user
+      got online.
+      
+      
+</ul>
+
+<h3>Startup sequence</h3>
+<p>
+  Here is a senario to start-up all mm-suite components
+from the beggining of the world.
+In this case we assume you have all machines switched on and
+proper OSs are installed, and working.
+</p>
+
+<oL>
+  <LI>Initialize AUTHSV. If AUTHSV uses other subsystems,
+      you have to start them.
+  <LI>Check MySQL is running. MySQL is used by DBSV.
+  <LI>Start LOCKSV, DBSV.
+  <LI>Start GMSV, MSGSV.
+  <LI>Start all SWPs.
+</ol>
+
+<h3>If the server crashes</h3>
+<p>
+  Basically, when the mm-suite component(server) detects back-end service
+got down, it automatically shut down or start re-connecting with some interval.
+DBSV will get shut down if MySQL is down.
+GMSV will also get shut down when DBSV and LOCKSV got down.
+MSGSV will also get shut down when DBSV got down.
+In other cases, the servers will start re-connection to backends.
+</p>
+
+<h3>State file and remote monitoring</h3>
+<p>
+  All mm-suite components prints out current statistics in a file.
+You can configure where to save the file in config files of each components.
+You can know what's happening on the server by retrieving status file
+through network.
+Format of each status files are uni-formed, and that is described in
+<a href="procfile-en.html">procfile-en.html</a>.
+</p>
+
+<BR><BR>
+<a href="index-en.html">Return to INDEX</a>
+
+
+
+<br>
+<hr>
+<font size=-1>
+Copyright 2000-2005 CommunityEngine Inc. All rights reserved.<BR>
+
+</body> </html>

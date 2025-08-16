@@ -1,0 +1,159 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html> <head>
+<link rel="stylesheet" href="../vce.css" type="text/css">
+<title>VCE 1.1.4 official document (English) </title>
+</head>
+
+<body>
+<h1>Description of Tuning Tools for Server</h1>
+ 
+<p>
+  To achieve a desired performance of a game server, in addition to writing an optimum code, you need to resolve external obstacles such as server settings and network configuration.  Even an optimum code cannot provide its performance, unless it is running under the optimum environment.  This section provides instructions for a suite of tools used to tune server performance under Linux.  
+</p>
+
+
+<h2>Memory Check </h2>
+<p>
+Insufficient memory results in the deterioration of performance due to frequent swapping.  Always check the sufficiency of memory.  
+</p>
+
+
+
+<h3>"free" Command</h3>
+<pre>
+% free
+           total       used       free     shared    buffers     cached
+Mem:       1036176    1033184       2992      27144      66244      86308
+-/+ buffers/cache:     880632     155544
+Swap:      1052216     294136     758080
+</pre>
+
+<p>
+This examines the amount of free memory.  
+The above example illustrates a machine with frequent swapping due to 
+insufficient memory. 
+The "Mem" row shows the physical memory and the "Swap" row shows the amount of 
+swap in KB.  The "free" column of "Mem" is 2992KB, which is too small for the 
+"used" column of "Swap" 294136KB.  
+Therefore it is obvious the kernel needs swapping.  The next example illustrates a machine with sufficient memory.  
+</p>
+<pre>
+             total       used       free     shared    buffers     cached
+Mem:        384312     382136       2176          0      23336      62856
+-/+ buffers/cache:     295944      88368
+Swap:        72252         80      72172
+</pre>
+<p>
+ The "used" column of "Swap" 80KB is fairly small 
+so kernel does not require swapping.  
+</p>
+
+
+<h3>File "/proc/interrupts"</h3>
+<p>
+  To examine the details of access to swap file system, 
+refer to the contents of /proc/interrupts.  
+See the following example.  
+</p>
+<pre>
+              CPU0       CPU1       
+       0:  193087070          0          XT-PIC  timer
+       1:         16          2    IO-APIC-edge  keyboard
+       2:          0          0          XT-PIC  cascade
+       8:          1          0    IO-APIC-edge  rtc
+      13:          1          0          XT-PIC  fpu
+      14:          4          3    IO-APIC-edge  ide0
+      18:   39802902   45878220   IO-APIC-level  eth0
+      30:         17         28   IO-APIC-level  aic7xxx
+      31:   23232546   25673945   IO-APIC-level  aacraid
+      NMI:          0
+      ERR:          0
+</pre>
+<p>
+  This file shows how many times a CPU received interruptions from I/O devices. This machine has three kinds of device; ide0, aic7xxx, and aacraid. 
+Only a RAID driver called aacraid is used.  
+When you examine this file once every second, you will notice the interruption 
+of aacraid is increased by a few dozen to a few hundred times.  
+The larger the increase is, the more the disk access is done.  
+On a machine with sufficient physical memory, if disk access is not particularly required, the interruption increases only by a few times. 
+</p>
+
+<h2>Network</h2>
+<h3>"netstat" Command</h3>
+<p>
+  Use "netstat" command to examine the stagnation of input/output from network.  "netstat -tn" command is faster since it does not perform DNS reverse look up.  The following example shows the output of netstat performed on a server machine of online game.  
+</p>
+<pre>
+Active Internet connections (w/o servers)
+Proto Recv-Q Send-Q Local Address           Foreign Address         State      
+tcp        0      0 172.17.10.20:15000      211.130.240.238:1030    ESTABLISHED 
+tcp        0     40 172.17.10.20:15000      61.118.199.190:1153     ESTABLISHED 
+tcp        0  17997 172.17.10.20:15000      210.229.12.84:1043      FIN_WAIT1   
+tcp        0      0 172.17.10.20:22         172.17.10.21:1783       ESTABLISHED 
+tcp        0  40289 172.17.10.20:15000      63.51.15.43:1032        FIN_WAIT1   
+tcp        0  37609 172.17.10.20:15000      61.207.85.80:12353      FIN_WAIT1   
+tcp        0      0 172.17.10.20:1559       172.17.10.52:22         ESTABLISHED 
+tcp        0      0 172.17.10.20:22         61.206.158.202:62257    ESTABLISHED 
+tcp    23830      0 172.17.10.20:1539       172.17.10.50:22         ESTABLISHED 
+tcp        0      0 172.17.10.20:22         61.206.158.202:61451    ESTABLISHED 
+tcp        0  32041 172.17.10.20:15000      210.228.251.110:1067    FIN_WAIT1   
+tcp        0  32017 172.17.10.20:15000      210.153.179.57:1033     FIN_WAIT1   
+tcp        0  37857 172.17.10.20:15000      43.224.42.88:4309       FIN_WAIT1   
+tcp        0  36297 172.17.10.20:15000      61.207.124.64:3047      FIN_WAIT1   
+tcp        1   4161 172.17.10.20:15000      210.253.84.62:1060      CLOSING     
+tcp        0  32065 172.17.10.20:15000      61.201.236.60:1149      FIN_WAIT1   
+tcp        0  37961 172.17.10.20:15000      211.13.107.123:1034     FIN_WAIT1   
+tcp        0  38153 172.17.10.20:15000      61.210.191.109:65087    FIN_WAIT1   
+tcp        0  37857 172.17.10.20:15000      43.237.216.61:1304      FIN_WAIT1   
+tcp        0  37985 172.17.10.20:15000      61.200.42.190:63652     FIN_WAIT1   
+tcp        0  32197 172.17.10.20:15000
+</pre>
+
+<p>
+   The "Recv-Q" column indicates stagnation of receive buffer and the "Send-Q" 
+column indicates stagnation of send buffer.  When a send buffer exceeds 30KB, 
+the receiving party is possibly not able to receive data. 
+ When a receiving buffer is in the same situation, the capacity of the server 
+process is usually over its limit.
+</p>
+
+
+<h2>Process</h2>
+<h3>"top" Command</h3>
+<p>
+  The "top" command is a simple tool to check the machine usage under Linux.  
+The following is a brief explanation of output items that are difficult to 
+understand.  
+</p>
+<ul>
+  <LI>"load average"<p>
+      Three numbers indicate 
+      "the average number processes waiting for execution" for past 1 minute, 
+      5 minutes, and 15 minutes respectively.  
+      "Processes waiting for execution" are the processes in a queue for each 
+      CPU.  The processes in sleep at system call are not in this waiting queue.       Therefore, the load average will increase by approximately 1.0 
+      if there is a process that requires CPU all the time.  
+      If several CPUs are on SMP machine, 
+      the same number of waiting queue is the same with the number of CPUs.  
+      It displays the total number of processes in all of the queues; 
+      if the load average is less than 2.0, 
+      then CPUs are given to each process as requested.</p></li>
+      
+
+  <LI>Status of Process <p>
+      In "STAT", "S" indicates sleep, 
+      "R" indicates CPU in use, 
+      "D" indicates processing I/O (mainly disk access), 
+      "W" indicates a process is in swap page out, 
+      "N" indicates low priority. </p></li>
+</ul>
+
+
+<p><br>
+
+  <br>
+&quot;PlayStation&quot; is registered trademark and is trademark of Sony Computer Entertainment Inc.<br>
+  <a href="index.html">return to index</a></p>
+<div id="footer">
+Copyright 2000-2005 Community Engine Inc. All rights reserved.</div>
+</body> </html>

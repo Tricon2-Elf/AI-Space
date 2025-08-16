@@ -1,0 +1,158 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html> <head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>mm-suite official document (Japanese)</title>
+<style type="text/css">
+P {
+  TEXT-INDENT: 1em
+}
+</style>
+</head>
+
+<body>
+<h1>tester</h1>
+
+
+<h3>テスト時の接続図</h3>
+<p>
+mm-suite に附属するテストプログラムは以下のようなサーバー接続を前提とする。
+
+</p><BR>
+<img src="images/mm_test_diagram.gif">
+<BR>
+<p>
+番号は、各サーバの待ちうけポート番号を示している。
+</p>
+
+<h3>テスタの基本動作</h3>
+<p>
+  1個のテストプログラムは、
+複数個の GMSV に対して複数のTCPセッションを張ることがあり、
+テストメニューにしたがったプロトコルコマンドを発行する。
+テストプログラムは通常のゲームクライアントと同じ層からテストを実行する。
+複数のテスタを同時に実行することで、より強力にテストできる。
+</p>
+
+<h3>テストメニュー</h3>
+<p>
+  mm-suite においてテストプログラムは tester ディレクトリに格納されている。
+各テストプログラムは、独自のパターンで各サーバに接続し、
+テストを実施するようになっている。
+各プログラムは、連続的にクエリーを発行し、
+秒間何回の処理ができたかなどを標準出力に吐きだす。
+</p>
+<p>
+  各テストプログラムを使ってテストをする際には，
+tester ディレクトリに含まれているMakefile に
+擬似ターゲットとして記述されている
+テストメニューを make コマンドを使って起動すると便利である．
+以下は，例である．
+</p>
+<pre>
+shell% make do_ping_test
+</pre>
+<p>
+make は， Makefile の記述にしたがって，自動的にテストを実行していく．
+テストを実行する前に，
+GMSV など必要なサービスがすべて起動されていることを確認する事．
+以下は，"tester"ディレクトリに含まれている，
+テストに使えるプログラムの一覧である．
+</p>
+
+<UL>
+
+  <LI><B>ping_test</B> : GMSV の応答時間計測<BR>
+      クライアントから GMSV までの応答時間/Query per secondを計測する。
+      <pre>
+      ping_test CONN_NUM PING_PER_CONN SWP_ADDR
+      ping_test 10 1000 localhost:9001
+      </pre>
+      <UL>
+        <LI><B>CONN_NUM</B> は接続数で、最初にこれだけの本数のコネクションを
+            確立してからテストを開始する。
+        <LI><B>PING_PER_CONN</B> は、1個のコネクションあたりどれだけの数の
+            ping コマンドを発行するかで、
+            全部の ping が返ってきてはじめてテスト成功を認定する。
+        <LI><B>SWP_ADDR</B> は SWP のアドレスとポートをコロンで結んだ組である。
+            たとえば "192.168.1.200:9001" のようになる．
+            複数の SWP を同時にテストしたい場合は、別のプロセスを起動する。
+      </ul>
+      ping_test を使って、純粋な GMSV のレスポンス時間を計測できる。
+
+  <LI><B>auth_test</B> : AUTHSV試験<BR>
+	  AUTHSV の機能を試験する。ユーザー作成、削除、認証
+      の所要時間を計測する。
+      <pre>
+      auth_test CONN_NUM CREATE_PER_CONN SWP_ADDR
+      auth_test 10 100 localhost:9001
+      </pre>
+      <UL>
+        <LI><B>CONN_NUM</B> は接続数で、最初にこれだけの本数のコネクションを
+            確立してからテストを開始する。
+        <LI><B>CREATE_PER_CONN</B> は1コネクションあたり何個のユーザーを
+            新規作成するか
+        <LI><B>SWP_ADDR</B>  SWP のアドレスとポートをコロンで結んだ組である。
+            複数の SWP を同時にテストしたい場合は、別のプロセスを起動する。
+      </UL>
+
+  <LI><B>storage_test</B> : DBSV試験<BR>
+	  DBSV の機能を試験する。
+	  架空のユーザーIDを使って新規キャラクターを生成、保存、
+	  取りだしを指定回数行なう。
+      <pre>
+      storage_test TEST_COUNT SWP_ADDR
+      storage_test 40 localhost:9001
+      </pre>
+      <ul>
+        <LI><B>TEST_COUNT</B> テスト回数。
+            1個のユーザーに対してこの数に応じたキャラクターを作成するため、
+            TEST_COUNTは1ユーザーあたりの
+            最大のスロット数以下である必要がある。
+        <LI><B>SWP_ADDR</B> は SWP のアドレスとポートをコロンで結んだ組である。
+      </ul>
+      storage_test は、 authsv, locksv, dbsvの3種類のサーバに負荷を発生する。
+
+	  
+  <LI><B>lock_test</B> : LOCKSV の動作試験<BR>
+	  LOCKSV がもつ、ユーザーID単位のロック機能を検証する。
+      <pre>
+      lock_test SWP_ADDR USER_ID expect_ok|expect_ng
+      lock_test localhost:9001 P389559 expect_ok
+      lock_test localhost:9001 P389559 expect_ng
+      </pre>
+      <UL>
+        <LI><B>SWP_ADDR</B>  SWP のアドレスとポートをコロンで結んだ組。
+        <LI><B>USER_ID</B> テストに使うユーザーID.
+            同じユーザー ID が2回ロックを取得できないようにするのが LOCKSV
+            の仕事である。
+        <LI><B>expect_ok|expect_ng</B><BR>
+            これは、expect_ok という文字列または expect_ng という文字列を
+            指定することを意味する。
+      </UL>
+      このテストは他のテストにくらべると独特である。
+      以下のように2回コマンドを別の端末で実行し、
+      ロックが働いているかを調べる。
+
+      <pre>
+      端末1: lock_test localhost:9001 P123456 expect_ok
+      端末2: lock_test localhost:9001 P123456 expect_ng
+      </prE>
+      localhost_9001 は、おなじ LOCKSV に接続している GMSV/SWP に対して
+      であれば異なっていてもよい。重要なのは P123456 というユーザー ID
+      のロック取得が、1回目は OKで 2回目が NGであることをこのコマンドで
+      テストしている事である。
+      lock_test は expect_ng が指定されたときに「ロック取得OK」となると、
+      エラーになる。
+
+</UL>
+
+
+
+<BR><BR>
+<a href="index-ja.html">index に戻る</a>
+<br>
+<hr>
+<font size=-1>
+Copyright 2000-2005 CommunityEngine Inc. All rights reserved.<BR>
+
+</body> </html>

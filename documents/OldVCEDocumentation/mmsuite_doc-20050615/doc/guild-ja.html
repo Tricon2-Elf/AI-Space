@@ -1,0 +1,154 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html> <head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>mm-suite official document (Japanese)</title>
+<style type="text/css">
+P {
+  TEXT-INDENT: 1em
+}
+</style>
+
+</head>
+
+<body>
+<h1>ギルドについて</h1>
+
+<p>
+  mm-suite には、ユーザコミュニティ促進のため、プレイヤーギルドの
+結成と運営の機能が用意されている。ギルドの主な役割としては、
+参加メンバー共通のチャットライン提供と、各種オフラインメッセージの
+管理がある。ギルドを実現するために、専用のサーバ (GUILDSV) が用意されている。
+</p>
+
+<h3>ギルド</h3>
+
+<p>
+  ギルドとは、キャラクタ単位で加入するゲーム内グループである。
+ギルド作成時に ID, NICK 配列の先頭に位置するキャラクタが、ギルドマスターと
+呼ばれるギルドのリーダーとなる。ギルドマスターはギルド運営のための権限を
+もつが、mm-suite のデモでは権限のチェックを行っていない。実装する
+アプリケーションの仕様に合わせて、GMSV や MSGSV といったフロントエンド、
+または GUILDSV 自体に権限の機能を追加する必要がある。
+</p>
+
+<h3>ユニオン</h3>
+
+<p>
+  ユニオンとは、ギルド単位で加入するゲーム内グループである。
+ユニオン作成時に GUILDID 配列の先頭に位置するギルドのギルドマスターが、
+ユニオンマスターと呼ばれるユニオンのリーダーとなる。ユニオンマスターは
+ユニオン運営のための権限をもつが、ギルド同様、mm-suite のデモでは権限の
+チェックを行っていない。アプリケーション作成者は適宜、権限機能の追加を
+行う必要がある。
+</p>
+
+<h3>メッセージの種類</h3>
+
+<p>
+  ギルド内メッセージには以下の種類のものがある。
+</p>
+        <table width="600" border="1">
+          <tr bgcolor="#99CCFF">
+            <td><div align="center">メッセージの種類</div>
+            </td>
+            <td><div align="center">Offline User<br>
+            に対して</div></td>
+            <td><div align="center">特定 User<br>
+              に送る</div>
+            </td>
+            <td><div align="center">備考</div>
+            </td>
+          </tr>
+          <tr>
+            <td nowrap bgcolor="#CCFFCC"><div align="center">ギルドチャット</div>
+            </td>
+            <td bgcolor="#FFFFCC"><div align="center">非対応</div>
+            </td>
+            <td bgcolor="#FFFFCC"><div align="center">非対応</div>
+            </td>
+            <td bgcolor="#FFFFCC"><div align="center">ギルド参加メンバー全員に届く</div>
+            </td>
+          </tr>
+          <tr>
+            <td nowrap bgcolor="#CCFFCC"><div align="center">ユニオンチャット</div>
+            </td>
+            <td bgcolor="#FFFFCC"><div align="center">非対応</div>
+            </td>
+            <td bgcolor="#FFFFCC"><div align="center">非対応</div>
+            </td>
+            <td bgcolor="#FFFFCC"><div align="center">デフォルトでは、各ギルドマスターにのみ届く</div>
+            </td>
+          </tr>
+          <tr>
+            <td nowrap bgcolor="#CCFFCC"><div align="center">ギルドメッセージ</div>
+            </td>
+            <td bgcolor="#FFFFCC"><div align="center">サーバに保存</td>
+            <td bgcolor="#FFFFCC"><div align="center">非対応</div>
+            </td>
+            <td bgcolor="#FFFFCC"><div align="center">メンバーごとに1つ保存。<br>
+              年/月/日/時/分も同時に記録。<br>
+              変更すると、前のものは見ることができない。
+                  <br>
+                  PULL 型メッセージ</div>
+            </td>
+          </tr>
+          <tr>
+            <td nowrap bgcolor="#CCFFCC"><div align="center">ユニオンメッセージ</div>
+            </td>
+            <td bgcolor="#FFFFCC"><div align="center">サーバに保存</td>
+            <td bgcolor="#FFFFCC"><div align="center">非対応</div>
+            </td>
+            <td bgcolor="#FFFFCC"><div align="center">ユニオンごとに1つ保存。<br>
+              年/月/日/時/分も同時に記録。<br>
+              変更すると、前のものは見ることができない。
+                  <br>
+                  PULL 型メッセージ</div>
+            </td>
+          </tr>
+          <tr>
+            <td nowrap bgcolor="#CCFFCC"><div align="center">ギルドシステム<br>
+      メッセージ</div>
+            </td>
+            <td bgcolor="#FFFFCC"><div align="center">サーバに保存</div>
+            </td>
+            <td bgcolor="#FFFFCC"><div align="center">○</div>
+            </td>
+            <td bgcolor="#FFFFCC"><div align="center">サーバ側が送るメッセージ。<br>
+              GM 譲渡をメンバーに報告時や<br>
+              メンバー脱退時、
+              <br>
+              ギルドネームが変更されたときなど、
+              <br>
+              アプリケーションが適宜用いる
+</div>
+            </td>
+          </tr>
+        </table>
+
+<h3>チャットの基本動作</h3>
+
+<p>
+  各ギルド・ユニオンは専用のチャットチャンネルをもつ。
+デフォルトでは、ギルドチャットはメンバー全員、
+ユニオンチャットは各ギルドマスターのみ参加可能である。
+</p>
+
+<ol>
+  <LI>user0 が guild/union A にメッセージを送信。
+  <LI>GUILDSV は、各ユーザがオンラインかどうかをみて、
+	  必要なだけ送信する。
+  <LI>フロントエンドはそれを受けて、
+	  ユーザクライアントに送信する。
+</ol>
+
+
+
+<BR><BR>
+<a href="index-ja.html">index に戻る</a>
+<br>
+<hr>
+<font size=-1>
+Copyright 2000-2005 CommunityEngine Inc. All rights reserved.<BR>
+
+</body> </html>
+

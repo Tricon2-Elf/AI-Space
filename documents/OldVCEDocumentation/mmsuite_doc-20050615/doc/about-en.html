@@ -1,0 +1,423 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html> <head>
+<style type="text/css">
+P {
+  TEXT-INDENT: 1em
+}
+</style>
+<title>mm-suite about</title>
+</head>
+
+<body>
+<h1>mm-suie outline</h1>
+
+<div align=right><img src="images/momonga_one.gif"></div>
+<h3>what is mm-suite?</h3>
+<p>
+  "mm-suite" is a set of skeleton program for making
+client-server massive access realtime online games
+( in other word MMO games ) which is built on VCE library.
+You can easily create a powerful game server system
+using VCE's clustering function and load balancing.
+</p>
+
+<p>
+  In addition to server skeleton code, Win32 DirectX sample
+client program is also included in "mm-suite". This client code
+also helps you understand what VCE is like. Of course,
+you can make use of all source code included in "mm-suite" package.
+You can redistribute modified program derived from "mm-suite" skeleton code.
+The programs are ready to run on Win32(client) and Linux(server).
+</p>
+
+
+<h3>Design policy of "mm-suite"</h3>
+<p>
+ Final goal of "mm-suite" is enhancing efficiency of network-game
+development by a totally good cost performance, and less server down-time.
+
+To meet this, we choosed these design policies below:
+</p>
+<ul>
+  <LI>Single threaded server<BR>
+      "mm-suite" server uses single threaded, multi processed
+      programming model same as VCE itself.
+      Some developers say that we have to use multi-threaded programming
+      model to get a good performance, but when it comes to online games,
+      multi-thread are not the best solution because of some reasons.
+      Firstly, we don't use a great SMP mathines, we only use 1 or 2 CPU
+      Intel IA32 machines for the sake of reducing total cost of ownership.
+      Secondly, single thread gives us a great ease of debugging.
+      Online game server program is modified all the time,
+      so debugging and modifying server code must be easy.
+
+  <LI>client-server 3 layer architecture<BR>
+      <p>
+      "mm-suite" supports 3 layered server architecture.
+      As shown in a figure below, "mm-suite" applications are
+      built separated in 3 parts.
+      </p>
+      <BR>
+      <img src="images/3layer.gif">
+      <BR>
+      <p>
+      Game logic and rules are implemented mostly on the middle
+      "gamesv" part, and presentations like user interfaces are
+      implemented in client-side. Data storage and user exclusion(locking)
+      are implemented as a backend service.
+      </P>
+      <p>
+      Separating applications in these parts can lead total cost-down
+      because of some reasons:
+      </p>
+      <ul>
+        <LI>easy changing/ease of debugging<BR>
+            After you start online game service, you have to change
+            game logic and rules oftener than once a months, and every
+            time new code fragments are implemented in the gamesv.
+            So the changes should be limited in smaller code base.
+            By rigidly separating game server and other backend services,
+            you can find your new bugs in short time, otherwise you have to
+            explore vast amount of the whole program.
+        <LI>performance advantage<BR>
+            By dividing each functions into many parts,
+            you can put each functions in each machine.
+            When you find something in your service is a bottle neck of
+            overall performance, you can divide the service into 2 parts
+            and you put each of them on different machines.
+
+        <LI>Security of the contents : thin client<BR>
+            You had better not to put a lot of functions/rights
+            in client-side program. You should assume that client-side
+            program is always under control of players who have evil
+            intension. So, in "mm-suite" sample skeleton code,
+            we had focused on reducing client functions.
+            You can find this in a protocol definition in
+            sample protocol included in "mm-suite" package.
+
+        <LI>Unified, simple maintainance API<BR>
+            To reduce cost of online game maintainance,
+            we suggest an unified and simple interface.
+            For example, all "mm-suite" server processes always save
+            "status file" in common file format. You can retrieve these
+            files to know what's happening on the server, and
+            what's the server performance is like.
+            <BR>
+            In addition to this, you can use DBSV, LOCKSV, AUTHSV,
+            and all servers but GMSV in any games/titles.
+            All these components are the same in every games.
+            So you don't have to make a new maintainance tools
+            when you want to make a brand-new game.
+            <BR>
+            Finally, you can connect to mm-suite services through
+            TCP/IP sessions driven by VCE library from remote host.
+
+        <LI>simple and common database<BR>
+            There is one thing that we're always keeping in mind:
+            "mm-suite" backend database have to be simple and
+            commonly used. By keeping simple and single design,
+            maintainance work gets easier.
+            
+      </p>
+</ul>
+
+<h3>contents of mm-suite directory </h3>
+<p>
+  When you expand mm-suite archive file, you will see
+these files in it:
+</P>
+
+<ul>
+  <LI>authsv<BR>
+      Source code of mm-suite backend authentication server.
+
+  <LI>dbcommon<BR>
+      Source code of library that connect with mm-suite backend database server(dbsv).
+
+  <LI>dbsv<BR>
+      Source code of mm-suite backend database server.
+      The player and message information will be saved by this server.
+
+  <LI>doc<BR>
+      A set of mm-suite documentation including this page.
+
+  <LI>gmsv<BR>
+      Source code of mm-suite game logic server.
+
+  <LI>locksv<BR>
+      Source code of mm-suite backend locking server.
+      This program provides a exclusive user-login, that means,
+      a player cannot log in twice at the same time.
+
+  <LI>msgsv<BR>
+      Source code of mm-sutie backend instant-messaging server.
+      mm-suite has built-in instant messating server,
+      which can server more than 50K concurrent players within a single
+      server group.
+
+  <LI>proto<BR>
+      Protocol definition files. These files are processed by
+      VCE's "gen.rb" protocol stub file generator.
+
+  <LI>swp<BR>
+      "swp" is originally included in "VCE" package,
+      also used in mm-suite. "swp" is placed between game server
+      and client-side. Connection switching are used in mm-suite demo
+      game server.
+
+  <LI>tester<BR>
+      Source code of testing game server and backend services.
+
+  <LI>wincli<BR>
+      Source code and project files of win32 demo client.
+      This project is built by Microsoft Visual C++ (6.0 or later)
+
+  <LI>Makefile<BR>
+      Short cut for starting/stopping/building mm-suite servers.
+      
+</ul>
+
+<h3>Installing mm-suite into your Linux Box </h3>
+<p>
+  You have to have at least one linux box to test mm-suite
+servers. Without memory tuning, you will need more than 512M bytes
+of memory if you want to start all servers in one machine.
+</p>
+
+<p>
+ mm-suite package is tested on Linux RedHat 6.2 or later,
+which has glibc 2.1.3 or later, and gcc 2.91.
+You can compile/run/test on such environment.
+</p>
+
+<p>
+  Win32 demo programs included in wincli directory will be
+compiled by Microsoft Visual Studio 6.0 or later.
+You can find some documents about win32 demo client
+<a href="wincli-en.html">wincli document</a>
+</p>
+
+
+
+<h3>Compiling server programs</h3>
+<p>
+ To compile mm-suite servers,
+you first change directory to mmsuite top directory, and
+should just type on shell command line::
+</p>
+
+<pre>
+shell% make
+</pre>
+<p>
+  Please note that before doing this,
+you have to install the newest VCE files in mmsuite/vce directory.
+At least these files are needed:
+</p>
+<pre>
+libvce???.a
+gen.rb
+vce.h
+swp
+</pre>
+<p>
+  All these files are necessary for building/testing mm-suite
+server suite. You can find the newest VCE package from
+<a href="http://vce.ce-lab.net/">vce.ce-lab.net</a>
+</p>
+
+
+<h3>Before starting server</h3>
+<p>
+  Before starting servers, you have to set up MySQL server.
+mm-suite backend services are dependent on MySQL system.
+You may want to look at <a href="mysql-en.html">MySQL setup guide</a>
+included in mm-suite.
+</p>
+<p>
+  When MySQL is set up, you have to initialize mm-suite
+default databases. mm-suite backend servers use these default
+databses.
+To initialize default database, you will type on your shell:
+</p>
+<pre>
+mysql&gt; drop database storage2;
+mysql&gt; create database storage2;
+mysql&gt; drop database storage3;
+mysql&gt; create database storage3;
+</pre>
+<p>
+  Now you have made "storage" database in MySQL data directory.
+After that, you have to create data table in "storage" database.
+</p>
+<pre>
+shell % mysql -u storage storage2 &lt; dbsv/init_table.sql
+shell % mysql -u storage storage3 &lt; dbsv/init_table.sql
+</pre>
+<p>
+  You you have four tables necessary for mm-suite backend services.
+All these steps are script in mmsuite/sqllib/Makefile.
+If you want to short-cut the steps, you can use the Makefile:
+</p>
+<pre>
+shell % cd mmsuite/dbsv
+shell % make install_tables
+</pre>
+<p>
+  I think you should look at each steps at least once.
+That helps you to understand what is happening in MySQL and mm-suite
+backends.
+</p>
+
+<p>
+  If you have an error here, the mm-suite backend services fail to start.
+contact_tbl,mailbox_tbl,bbs_tbl is used by MSGSV, and
+char_tbl is used by DBSV.
+</p>
+
+<H3>How to compile</h3>
+<p>
+  You have a compiled binary in "mm-suite". When you want to re-compile
+everything, you will type "make" in each subdirectories in "mmsuite"
+top directory. For example,
+</p>
+<pre>
+shell% cd mmsuite
+shell% cd gmsv
+shell% make depend
+shell% make
+shell% cd ../msgsv
+shell% make depend
+shell% make
+...
+</pre>
+<p>
+  This is the "each step" approach.
+If you want to short-cut these all steps, you can use single "make"
+in mmsuite top directory.
+</p>
+<pre>
+shell% cd mmsuite
+shell% make depend
+shell% make clean
+shell% make
+</pre>
+<p>
+  But this short-cut makes you kind of confused,
+because the compile log will grow too much.
+</p>
+
+
+<h3>How to execute</h3>
+<p>
+  There are also two ways to start up servers.
+First approach is a short-cut, and next is each-steps.
+Firstly, you can start all mm-suite backend servers and game logic
+servers in one command:
+</p>
+<pre>
+shell% cd mmsuite
+shell% make start
+</pre>
+<p>
+  In this case, all output of all servers are printed out
+in one terminal, so you cannot find problems looking at the
+mixed, complex log. To avoid this, you can follow "each-steps" approach.
+To do this, you will do:
+</p>
+<pre>
+shell% cd dbsv
+shell% make start
+shell% cd ../authsv
+shell% make start
+shell% cd ../gmsv
+shell% make start
+</pre>
+<p>
+  In this approach, you can start each servers in each UNIX terminals,
+so you don't be lost searching problems in each server.
+I recommend you follow this in the first time.
+</p>
+
+<p>
+  Most likely, you will encounter "bind error".
+"bind error" means that you have started the server already,
+and the server process cannot initialize TCP/IP network resource(port)
+any more. If you find this problem, you will "make stop" in
+the server directory you want to stop.
+For example, if you want to stop msgsv, you will do:
+</p>
+<pre>
+shell% cd mmsuite/msgsv
+shell% make stop
+</pre>
+<p>
+  I know you often want to stop all backends, or all front-ends,
+but not both. To do so, we provide you a short-cut:
+</p>
+<pre>
+shell% cd mmsuite
+shell% make start_be
+</pre>
+<p>
+  This command line stops all backend services.
+And, next,
+</p>
+<pre>
+shell% cd mmsuite
+shell% make start_fe
+</pre>
+<p>
+  This stops all frontend(game server) in one shell line.
+Maybe these short cuts help your debugging.
+</p>
+
+
+<h3>Testing through UNIX terminal</h3>
+<p>
+  Althogh you can test all functions of GMSV and backend services
+using Wincli demo program, but some simple functions are
+easily tested from UNIX terminal automatically.
+You can start test program in mmsuite/tester directory as follows:
+</p>
+<pre>
+shell% ping_test 1 100 localhost:9001
+shell% auth_test 1 100 localhost:9001
+</pre>
+<p>
+Each test programs prints out a query-roundtrip time, and
+total elapsed time, Q/s and some statistics information.
+You can also make use of these programs for performance tuing.
+More precise information will be got <a href="tester-en.html">here</a>.
+</p>
+
+
+<h3>If successful</h3>
+<p>
+  If successful, the servers are connected to each other,
+in such form:
+</p>
+<img src="images/mm_test_diagram.gif">
+<p>
+  Orange colored numbers attached with each servers
+are TCP port numbers. Each server process are responsible
+each backend services. For more information about server processes,
+please look at <a href="cluster-en.html">cluster-en.html</a>.
+
+</p>
+
+<h3>Conclusion</h3>
+<p>
+  Now you can expand/re-build/run/test mm-suite servers included
+in package, and start development cycle at once by changing
+source code.
+</P>
+
+
+
+<br>
+<hr>
+<font size=-1>
+Copyright 2000-2005 CommunityEngine Inc. All rights reserved.<BR>
+
+</body> </html>

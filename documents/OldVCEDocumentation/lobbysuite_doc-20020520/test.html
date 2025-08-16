@@ -1,0 +1,44 @@
+<?xml version="1.0" ?>
+<!DOCTYPE html 
+  PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>footer.rd</title>
+<link href="stylesheet.css" type="text/css" rel="stylesheet" />
+</head>
+<body>
+<h1><a name="label-0" id="label-0">テストプログラム群</a></h1><!-- RDLabel: "テストプログラム群" -->
+<p>lobby-suiteには，ロビーサーバーをテストする為のツールが附属しています。
+このテストプログラムはrubyでプログラミングされており，クライアントがする動作をシミュレートしています。
+rubyとgen.rb, tesgen.rbを使用する事により，楽に，簡単に詳細なテストプログラムを作る事が出来ます。</p>
+<h2><a name="label-1" id="label-1">テストプログラム</a></h2><!-- RDLabel: "テストプログラム" -->
+<p>lobbysuite/tester ディレクトリに存在する，test_main.rb test_multi_user.rbがテストプログラムです。
+test_main.rbは単体機能テスト，test_multi_user.rbは複数人クライアントでのテストです。
+残りのファイルは，そのテストプログラムの1つ1つの動きを関数化したものです。</p>
+<h2><a name="label-2" id="label-2">テストプログラムの準備</a></h2><!-- RDLabel: "テストプログラムの準備" -->
+<p>lobbysuite/tester ディレクトリにて，</p>
+<pre>% make</pre>
+<p>とするとテストプログラムに必要なファイルが生成されます。</p>
+<p>また，テスト用データとして，lobbysuite/lobbysv ディレクトリで</p>
+<pre>% ruby maketestchannel channel</pre>
+<p>として，テスト用チャンネルを作成しておかなければなりません。</p>
+<h2><a name="label-3" id="label-3">テストプログラムの実行</a></h2><!-- RDLabel: "テストプログラムの実行" -->
+<p>あらかじめサーバーを起動しておいた後，</p>
+<p>lobbysuite/tester ディレクトリにて，</p>
+<pre>% make test</pre>
+<p>とするとテストが開始されます。</p>
+<h2><a name="label-4" id="label-4">注意</a></h2><!-- RDLabel: "注意" -->
+<p>テストに失敗した場合，まれにDBやchannelディレクトリにゴミ(データ)が残る場合があります。
+DBにデータが残ると，次回テスト時，失敗したりするので，データのクリアを忘れないようにしてください。
+例えば全てのキャラクターデータを消す方法は，</p>
+<pre>% mysql -u root
+mysql&gt; delete from charinfo;</pre>
+<p>とすれば消えます。しかし全てのデータが消えるので注意してください。</p>
+<pre>written by Masahiro Kawata(河田 正広)
+mas@vce-lab.net
+CommunityEngine Inc.
+2001</pre>
+
+</body>
+</html>

@@ -1,0 +1,86 @@
+<!doctype html public "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<title>Host window</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<link rel="stylesheet" href="../../default.css" type="text/css">
+</head>
+
+<body>
+<p>
+<a href="../../ja/index.html">[TOP(ja)]</a> <a href="../../ja/changes.html">[ChangeLog(ja)]</a> 
+  <a href="../../ja/map.html">[Index(ja)]</a> <a href="../../ja/words.html">[Words(ja)]</a> | <a href="index.html">[AdmCli]</a> 
+  <a href="../../ja/admin_server.html">[ADMSV(ja)]</a> <a href="../../ja/remote_server.html">[RSV(ja)]</a> 
+  | <a href="../../ja/vcelog.html">[VCE-Log(ja)]</a> <a href="../../ja/monitor_command.html">[VCE-Monitor(ja)]</a> 
+</p>
+
+<h1>Host window</h1>
+<h2>Description of host window</h2>
+<p> This window visualizes current state of RSV running on target machine. You 
+  can sort entries by clicking headline of each column. You can select multiple 
+  lines at the same time, and it can be useful when you want to perform the same 
+  commands against multiple hosts at once. </p>
+<h3>Description of each items</h3>
+<dl> 
+  <dt>Alert</dt>
+  <dd>It turns to "!" when pre-set condition is satisfied.</dd>
+  <dt>Id</dt>
+  <dd>ID number of each host that is given by admsv.</dd>
+  <dt>Addr</dt>
+  <dd>IP address of each host.</dd>
+  <dt>Name</dt>
+  <dd>Name of the host.</dd>
+  <dt>Tag</dt>
+  <dd>Tag string for your own use. You can set this entry by admsv configuration 
+    file or admcli.</dd>
+  <dt>State</dt>
+  <dd>state of the host. There can be 3 states : DEAD,INIT,ALIVE<br>
+    It'll be shown red if DEAD or INIT.<BR>
+    This indicates some problem is happening on that host. <br>
+    <li>DEAD : RSV is not running on target host</li>
+    <li>INIT : RSV is on the way booting</li>
+    <li>ALIVE : RSV is healthy.</li>
+  </dd>
+  <dt>LoadAvr</dt>
+  <dd>Load average of the host. if 1000, LoadAverage is 1.0.</dd>
+  <dt>LoadAvr graph</dt>
+  <dd>Graph of load average. You can customize through [Tool]-[Configuration]-[Graph]</dd>
+  <dt>Ping</dt>
+  <dd>Round-trip time between admsv and host.</dd>
+  <dt>Ping graph</dt>
+  <dd>Graph of Ping. You can customize this by [Tool]-[Configuration]-[Graph]</dd>
+</dl>
+<br>
+<h2>Controlling host window</h2>
+<p> You can manipulate host window in these ways: </p>
+<ul>
+  <li><a href="#autoupdate">On/Off Auto update of host window</a></li>
+  <li><a href="#update">Update host-window once</a></li>
+  <li><a href="#exec">Execute command against the host</a></li>
+  <li><a href="#edit">Edit tag of the host</a></li>
+  <li><a href="#create">Create a new host</a></li>
+  <li><a href="#delete">Delete an existing host</a></li>
+</ul>
+<br>
+<dl> 
+  <dt><a name="autoupdate">On/Off Auto update of host window</a> 
+  <dd>You can on/off auto update of host window.</dd>
+  <dt><a name="update">Update host-window once</a> 
+  <dd>You can force admcli to update host window.</dd>
+  <dt><a name="exec">Execute command against the host</a></dt>
+  <dd>Execute UNIX command on that host. RSV running on target machine will receive 
+    the input command, and exec(). Result will shown in result window. </dd>
+  <dt><a name="edit">Edit tag of the host</a></dt>
+  <dd>Eidt host TAG.</dd>
+  <dt><a name="create">Create a new host</a></dt>
+  <dd>Add a new host to be monitored. You put new IP address, and Tag string.</dd>
+  <dt><a name="delete">Delete a host</a></dt>
+  <dd>Delete an existing host.</dd>
+</dl>
+
+<hr>
+Copyright 2000-2005 CommunityEngine Inc. All rights reserved.<br>
+
+</div>
+</body>
+</html>

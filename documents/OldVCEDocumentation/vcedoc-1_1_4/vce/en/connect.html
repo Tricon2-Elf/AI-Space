@@ -1,0 +1,116 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html> <head>
+<link rel="stylesheet" href="../vce.css" type="text/css">
+<title>VCE 1.1.4 official document (English) </title>
+</head>
+
+
+<BODY>
+<H1>Connection from VCE client 
+</H1>
+<P>
+Judging method of success and error  
+when client using VCE connecting with server 
+also using the VCE is explained in the following. 
+</P>
+<H2>Connection method recommended</H2>
+<P>It is recommended that
+connection success test using only vce_conn_writable function 
+and connection of non-blocking encryption in applications using VCE. 
+</P>
+<PRE>tcpcontext_t t = vce_tcpontext_create( 0, ... );
+conn_t new_con = vce_tcpcontext_connect( t, "localhost" , 80 ); /* A */
+while (1 ){
+  vce_heartbeat();
+  if( vce_conn_writable( new_con ) &gt;= 4 ){
+    vce_conn_write( new_con, "test" , 4 ); /* write process */
+  } else {
+    /*  Error will be notified if fixed time passes from A. */
+  }
+}      
+</PRE>
+<P>
+In case of this way, 
+when vce_conn_writable does not return a positive value within fixed time 
+by using some kind of timer, 
+add the process to display an error on client terminal 
+to notify users of unconnectable state. 
+Moreover, the above method is also effective even when not using the encryption.</P>
+<P>
+By using "blocking connection" of VCE, some pesky procedures 
+such as test programs and server monitoring programs can be omitted, 
+and so you can make it easily.
+When you use the "blocking connection", 
+it is possible to check the connection success 
+without looping, as below;
+<br>
+However, omitting procedures such as test programs and 
+server monitoring programs is often needed to make it easily.
+"Blocking connection" of VCE can be used for such a purpose.
+</P>
+<PRE>tcpcontext_t t = vce_tcpontext_create( 0, ... );
+conn_t new_con = vce_tcpcontext_connect( t, "localhost" , 80 );
+if( vce_conn_is_valid( new_con ) == 0 ){
+  /* Error! Convenient, since it can judge here. */
+}
+while (1 ){
+  vce_heartbeat();
+  if( vce_conn_writable(new_con)&gt;0 ){
+    /* write process */
+  }
+}
+</PRE>
+<P>
+However, when you use this way, it does not work as expected, 
+only when the server has reached the number of the absolute maximum connection.
+Thus, the vce_conn_is_valid function returned success in the above example 
+though, once it starts looping, the vce_conn_writable returns an error.
+Since the server reached the maximum connection in fact, it is natural that the vce_conn_writable returns the error finally, 
+but the problem is why the first vce_conn_is_valid returns success. 
+</P>
+<P>
+This cause is operation when reaching the maximum number of the connections 
+in the VCE server, since connection is once accepted and then closed 
+when the number of connection from client reaches to preset maximum number.
+VCE and other UNIX tools (apache etc.) have become such a spec 
+because there is limitation on the function of socket libraries as follows;
+</P>
+<UL>
+  <LI>The socket libraries of UNIX do not have any way to return "connection 
+  refused" by the function of TCP/IP not having the concept of the maximum 
+  connection, when some server has reached the maximum number of the connection.
+  <LI>Do not repeat binding/listening or releasing the same port near 
+      the maximum number of the connections. 
+      Although the operation above-mentioned can execute by repeating binding, 
+      listening, or releasing again and again whenever it reaches the maximum 
+      connection, it will be a problem on performance besides being a security 
+      hole so it is not recommended. 
+ </LI></UL>
+<P>
+Therefore, the server applications which currently operate on UNIX, the operations once accept and then close the connection, as a default. 
+</P>
+<H2>How to use the maximum number of connections.</H2>
+<P>
+The above-explained operation is the default of connection beyond 
+the maximum number of the connections in the VCE. 
+However user who accesses when a server is crowded cannot know 
+with this operation whether the server is crowded or is in trouble. 
+</P>
+<P>
+Thereat, the VCE sets up "temporary" number of the maximum connection 
+besides the number of the absolute maximum connection and it has the function to call other connection monitoring functions when connection beyond the temporary number of the maximum connections is accepted.
+The other functions are vce_tcpcontext_set_circ_hiwater_acceptwatcher and 
+vce_tcpcontext_set_conn_hiwater_acceptwatcher.  For details, refer to 
+the vce_tcpcontext_set_conn_hiwater_acceptwatcher function. 
+</P>
+
+<p><br>
+
+  <br>
+&quot;PlayStation&quot; is registered trademark and is trademark of Sony Computer Entertainment Inc.<br>
+  <a href="index.html">return to index</a></p>
+<div id="footer">
+Copyright 2000-2005 Community Engine Inc. All rights reserved.</div>
+
+ 
+</BODY></HTML>

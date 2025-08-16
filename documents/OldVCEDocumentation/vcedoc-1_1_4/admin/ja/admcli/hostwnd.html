@@ -1,0 +1,82 @@
+<!doctype html public "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<title>ホストウィンドウ</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<link rel="stylesheet" href="../../default.css" type="text/css">
+</head>
+
+<body>
+<p><a href="../index.html">[トップ]</a> <a href="../changes.html">[変更履歴]</a> 
+  <a href="../map.html">[目次]</a> <a href="../words.html">[用語]</a> | <a href="index.html">[AdmCli]</a> 
+  <a href="../admin_server.html">[ADMSV]</a> <a href="../remote_server.html">[RSV]</a> 
+  | <a href="../vcelog.html">[VCE-Log]</a> <a href="../monitor_command.html">[VCEモニター]</a> 
+</p>
+<h1>ホストウィンドウ</h1>
+<img src="host_window.png" width="679" height="159">
+<h2>ウィンドウの説明</h2>
+このウィンドウは、ホストで起動している RSVの状態を表示します。<br>
+各項目の見出し列をクリックする事で、その項目でソートする事が出来ます。<br>
+また、各行は複数選択が可能で、一部コマンド以外は複数行を同時に選択して実行する事が出来ます。<br>
+<h3>各項目の説明</h3>
+<dl> 
+  <dt>Alert</dt>
+  <dd>設定した条件を満たした時に「！」マークが出現し、注意を促します。</dd>
+  <dt>Id</dt>
+  <dd>admsv がホスト毎に与えた一意のID番号です。</dd>
+  <dt>Addr</dt>
+  <dd>ホストのIPアドレスです。</dd>
+  <dt>Name</dt>
+  <dd>ホストの名前です。</dd>
+  <dt>Tag</dt>
+  <dd>管理用Tag。admsv 設定ファイル又はクライアントから自由に設定出来ます。管理しやすいように、それぞれ指定して下さい。</dd>
+  <dt>State</dt>
+  <dd>ホストの状態を表します。DEAD,INIT,ALIVE の３つの状態があります。<br>
+    DEAD,INIT の場合は行が赤く表示されます。<br>
+    <br>
+    <li>DEAD : rsvへのコネクションが張れない(rsvが動いていないか、ネットワークが切断している) </li>
+    <li>INIT : rsvへのコネクションは張れているが、pingが帰って来ない(rsvが起動しているが、止まっている)</li>
+    <li>ALIVE : rsvが正常に稼働している。</li>
+  </dd>
+  <dt>LoadAvr</dt>
+  <dd>ホストのロードアベレージです。1000 倍した値が表示されています。</dd>
+  <dt>LoadAvr グラフ</dt>
+  <dd>ロードアベレージのグラフです。[ツール]-[設定]-[グラフ] で カスタマイズ可能です。</dd>
+  <dt>Ping</dt>
+  <dd>ホストとのping値です。単位は、ミリ秒です。</dd>
+  <dt>Ping グラフ</dt>
+  <dd>Pingのグラフです。[ツール]-[設定]-[グラフ] で カスタマイズ可能です。</dd>
+</dl>
+<br>
+<h2>ホストウィンドウの操作</h2>
+ホストウィンドウでは、以下の操作を行う事が出来ます。<br>
+ホストウィンドウの操作は、ウィンドウメニューの[ホスト]から、またはホストウィンドウ上で右クリックする事によって現れるメニューから行う事が出来ます。<br>
+<br>
+<ul>
+  <li><a href="#autoupdate">ウィンドウの自動更新切り替え</a></li>
+  <li><a href="#update">ウィンドウの更新</a></li>
+  <li><a href="#exec">コマンド実行</a></li>
+  <li><a href="#edit">タグの編集</a></li>
+  <li><a href="#create">ホストの作成</a></li>
+  <li><a href="#delete">ホストの削除</a></li>
+</ul>
+<br>
+<dl> 
+  <dt><a name="autoupdate">ウィンドウの自動更新の切り替え</a></dt>
+  <dd>ウィンドウ情報の自動更新のOn/Offを切り替えます。</dd>
+  <dt><a name="update">ウィンドウの更新</a></dt>
+  <dd>ウィンドウ情報を更新します。</dd>
+  <dt><a name="exec">コマンド実行</a></dt>
+  <dd>UNIXコマンドを実行します。ホストで実行されている rsv がコマンドを受取り、実行します。コマンド結果は結果ウィンドウに出力されます。</dd>
+  <dt><a name="edit">タグの編集</a></dt>
+  <dd>ホストのTAGの編集をします。権限制限があります。（未実装）</dd>
+  <dt><a name="create">ホストの作成</a></dt>
+  <dd>新しくホストを追加します。追加するホストのIPアドレス、Tagを指定します。権限制限があります。（未実装）</dd>
+  <dt><a name="delete">ホストの削除</a></dt>
+  <dd>ホストを削除します。権限制限があります。（未実装）</dd>
+</dl>
+<hr>
+Copyright 2000-2005 CommunityEngine Inc. All rights reserved.<br>
+
+</body>
+</html>

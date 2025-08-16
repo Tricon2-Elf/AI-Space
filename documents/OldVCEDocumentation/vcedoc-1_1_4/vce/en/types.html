@@ -1,0 +1,94 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html> <head>
+<link rel="stylesheet" href="../vce.css" type="text/css">
+<title>VCE 1.1.4 official document (English) </title>
+</head>
+
+<body>
+<h1>Types Defined by vce.h </h1>
+
+<p>Several structures which VCE applications directly refer to are defined in vce.h.  These types are explained in the following.  
+</p>
+<h2><code>conn_t</code></h2>
+	  <p>The structure corresponding to a single TCP connection.  
+          conn_t is mainly used by functions with a name like vce_protocol_XXXX.</p>
+      <table id="bb">
+		<tr><TD>Member Name</td><td>Description </td></tr>
+		<tr><TD>void *p</td><td>A pointer to the internal data of VCE</TD></tr>
+		<tr><TD>unsigned int serial</td><td>Serial number </td></tr>
+          </table>
+	  <p>In VCE, the internal serial number of conn_t type is included to 
+          handle an inconsistency between inside VCE and inside application.
+          This inconsistency is caused since application stores information of 
+          conn_t type inside.  If the serial number is out of date, it returns "
+          unable to access error" to indicate the connection no longer exists
+          inside the VCE.
+          </p>
+	  
+  <h2><code>circ_t</code></h2>
+	  <p>In VCE, several virtual circuits can be placed within a single TCP 
+          connection; circ_t corresponds to one of the virtual circuits.  
+          circ_t is mainly used by a vce_vecprotocol_XXX function.  Refer to 
+          vec_sv_main.c for a sample code.  </p>
+ 	  <table id="bb">
+                <tr><TD>Member Name</td><td>Description </td></tr>
+		<tr><TD>void *p</td><td>A pointer to the internal data of VCE</TD></tr>
+		<tr><TD>unsigned int serial</td><td>Serial number </td></tr>
+	</table>
+	<p>  The purpose of the serial number is the same with conn_t. </p>
+
+	  
+  <h2><code>tcpcontext_t</code></h2>
+	  <p>This is a structure to retrieve the configuration information for TCP           in VCE.  Its members cannot be accessed from an application since they          are all concealed inside VCE.  Only vce_tcpcontext_create function 
+          returns this value.  In reality, tcpcontext_t is void* and is used by 
+          casting inside VCE.  </p>
+
+	  
+  <h2><code>BINDATATYPE</code></h2>
+	  <p>A value assigned to member t when an array of struct bin_info is                initialized upon the call of vce_binary_pack function or                        vce_binary_unpack function.  It indicates the type of binary data.  </p>
+	  <pre>
+	  SINGLE_CHAR      Single char
+	  SINGLE_SHORT     Single short
+	  SINGLE_INT       Single int
+	  CHARARRAY_8      An array of char up to 256 elements 
+	  CHARARRAY_16     An array of char up to 65536 elements 
+	  CHARARRAY_32     An array of char up to 16M elements (note that it is not 4G) 
+	  SHORTARRAY_8     An array of short up to 256 elements 
+	  SHORTARRAY_16    An array of short up to 65536 elements
+	  SHORTARRAY_32    An array of short up to 16M elements 
+	  INTARRAY_8       An array of int up to 256 elements 
+	  INTARRAY_16      An array of int up to 65536 elements 
+	  INTARRAY_32      An array of int up to 16M elements 
+	  </pre>
+	  
+  <h2><code>struct bin_info</code></h2>
+	  <table id="bb">
+		<tr><TD>Membername</TD><TD>Description</td></tr>
+		<tr><TD>BINDATATYPE t</TD><TD>Type of Data </TD></tr>
+		<tr><TD>unsigned int maxu</TD><TD>Maximum Number of Elements (unpack) </TD></tr>
+		<tr><TD>unsigned int n</TD><TD>Number of Elements (pack,unpack) </TD></tr>
+		<tr><TD>void *p</TD><TD>A Pointer to Input/Output Data </TD></tr>
+      </table>
+	  <p><code>t</code> specifies a data type.  
+          <code>maxu</code> is used only with unpack and it specifies the 
+           maximum number of records for receiving buffer provided by an 
+           application. 
+          <code>n</code> specifies the number of elements written into output 
+           buffer when it is used with pack.  Also, n returns the number of 
+           unpacked elements when it is used with unpack.
+          <code>p</code> p specifies an array of output data when it is used 
+           with pack, and it returns the number of records actually loaded when             it is used with unpack.  </p>
+
+<p>
+        <br>
+        <br>
+        <a href="index.html">return to index</a>
+        <br>
+  
+</p>
+
+
+<div id="footer">
+Copyright 2000-2005 Community Engine Inc. All rights reserved.<BR>
+</div>
+</body> </html>

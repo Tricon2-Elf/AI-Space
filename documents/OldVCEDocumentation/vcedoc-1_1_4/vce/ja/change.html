@@ -1,0 +1,318 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel="stylesheet" href="../vce.css" type="text/css">
+<title>VCE 1.1.4 official document (Japanese)</title>
+</head>
+
+
+<body>
+		<h1>changelog 変更点</h1>
+<div class="chlog">
+<h3>VCE-1.1.4  </h3>
+<table>
+    <tr>
+    <th>1.1.4</th>
+    <td><ul>
+      <li>暗号化をしない場合の圧縮のバッファエラーを再度修正</li>
+    </ul></td>
+    </tr>
+    <tr>
+    <th>1.1.3</th>
+    <td><ul>
+      <li>gen.rb : =define で16進数や数字を含む文字列を正しく認識できるよう修正</li>
+    </ul></td>
+    </tr>
+    <tr>
+    <th>1.1.2</th>
+    <td><ul>
+      <li>swp : usageにバージョンを明記</li>
+    </ul></td>
+    </tr>
+    <tr>
+    <th>1.1.1</th>
+    <td><ul>
+      <li>暗号化をしない場合の圧縮バッファエラーを修正</li>
+    </ul></td>
+    </tr>
+    <tr>
+    <th id="borderbottom">1.0.13</th>
+    <td id="borderbottom"><ul>
+      <li>暗号化したときの圧縮バッファエラーを修正</li>
+    </ul></td>
+    </tr>
+</table> 
+<h3>VCE-1.0.12  </h3>
+<table>
+	<tr>
+	<th>1.0.12</th>
+	<td><ul>
+	  <li>圧縮速度の調整</li>
+      <li>暗号化・圧縮機能を使用した場合、大量のデータを頻繁に通信した場合に送受信バッファがたまってしまうのを修正</li>    
+	  <li>vce.h の SCHAR を WSCHAR に変更</li>          
+	  </ul></td>
+    </tr>
+	<tr>
+	<th>1.0.11</th>
+	<td><ul>
+	  <li>gen.rb : FUNCID に IDMAX を追加</li>
+	  </ul></td>
+    </tr>
+	<tr>
+	<th id="borderbottom">1.0.10</th>
+	<td id="borderbottom"><ul>
+	  <li>ライブラリ作成時に圧縮のオプション -DFASTEST 追加</li>
+	  </ul></td>
+    </tr>
+</table>
+
+<h3>VCE-1.0.9 </h3>
+<table>
+	<tr>
+	<th>1.0.9</th>
+	<td><ul>
+	  <li>vce_protocol_parser_bin32関数内のデータサイズのチェックを強化</li>
+	  </ul></td>
+    </tr>
+	<tr>
+	<th>1.0.8</th>
+	<td><ul>
+	  <li>gen.rb : floatを追加 (注意-環境によっては通信できない)</li>
+      <li>gen.rb : 指示行に =sh、=ch を追加</li>    
+	  </ul></td>
+    </tr>
+	<tr>
+	<th>1.0.6</th>
+	<td><ul>
+	  <li>gen.rb : 指示行に static を追加</li>
+	  </ul></td>
+    </tr>
+	<tr>
+	  <th>1.0.5</th>
+	  <td><ul><li>zlib を 1.2.3 に更新</li>
+      </ul></td>
+    </tr>
+	<tr>
+	  <th>1.0.4</th>
+	  <td><ul>
+	    <li>vce_get_int2_or_search関数、vce_get_int4_or_search関数追加</li>
+	    <li>vce_strerror_close_reason関数を追加</li>
+	    <li>vce_initialize関数 すでに初期化されている場合に再度この関数が呼ばれた時、VCE_EALREADY を返すように修正</li>
+      </ul></td>
+    </tr>
+	<tr>
+	  <th id="borderbottom">1.0.3</th>
+	  <td id="borderbottom"><ul>
+	    <li>gen.rb : PROTONAME_FUNCNAME_send_debugprint関数、PROTONAME_FUNCNAME_recv_debugprint関数を追加</li>
+	    <li>WIN32が定義されている時には、vce_htonll, GET_**BIT_INT, SET_**BIT_INT で関数を使うように修正</li>
+      </ul></td>
+    </tr>
+</table>
+
+        <H3>VCE-1.0.2</H3>
+        <table>
+          <tr>
+            <th>1.0.2</th>
+            <td><ul>
+                <li> winsock2.h の二重リンクによるエラーを修正<br>
+                    <b>winsock2.h を include する場合は、vce.hより先にする必要あり。 </b></li>
+            </ul></td>
+          </tr>
+          <tr>
+            <th id="borderbottom">1.0.1</th>
+            <td id="borderbottom"><ul><li> gen.rb : オプション--protocolname が機能していなかったのを修正</li>
+            </ul></td>
+          </tr>
+        </table>
+        <H3>VCE-1.0.0</H3>
+		<table>
+          <tr>
+            <th>1.0.0</th>
+            <td><ul>
+                <li> パッケージからドキュメントを削除、VCE-adminを追加</li>
+                <li> Windows版ライブラリの最適化</li>
+                <li> Windows版マルチスレッドデバッグ用DLLの配布を停止</li>
+                <li>パッケージに als を追加</li>
+            </ul></td>
+          </tr>
+          <tr>
+            <th id="borderbottom">0.6.8</th>
+            <td id="borderbottom"><ul>
+              <li> vce_udp_connect関数追加</li>
+            </ul></td>
+          </tr>
+        </table>
+		<H3>VCE-0.6.7</H3>
+		<table>
+          <tr>
+            <th id="borderbottom">0.6.7</th>
+            <td id="borderbottom"><ul>
+                <li>gen.rb : 同名プロトコルのときにenumの定義がだぶっていたのを修正</li>
+            </ul></td>
+          </tr>
+        </table>
+		<H3>VCE-0.6.6</H3>
+		<table>
+          <tr>
+            <th id="borderbottom">0.6.6</th>
+            <td id="borderbottom"><ul>
+                <li> zlib 1.2.2 バッファオーバーフローの脆弱性 に対する修正パッチの組み込み</li>
+            </ul></td>
+          </tr>
+        </table>
+		<H3>VCE-0.6.5</H3>
+		<table>
+          <tr>
+            <th id="borderbottom">0.6.5</th>
+            <td id="borderbottom"><ul>
+                <li> gen.rb : 送信用バッファサイズの自動計算を修正</li>
+                <li> gen.rb : プロトコルIDを自動生成でできるenumに変更</li>
+                <li>  experimental/genを廃止</li>
+              </ul></td>
+          </tr>
+        </table>
+		<H3>VCE-0.6.4</H3>
+		<table>
+          <tr>
+            <th>0.6.4</th>
+            <td><ul>
+                <li> swpへの圧縮機能組み込み
+		      <li>ハッシュアルゴリズムを変更
+	        </ul></td>
+          </tr>
+          <tr>
+            <th> 0.6.3</th>
+            <td><ul>
+              <li>  圧縮と暗号の処理を分離: vce_tcpcontext_set_compress関数, vce_tcpcontext_reset_compress関数 追加
+		      <li>vce_get_tcp_packet_read_size関数, vce_get_tcp_packet_write_size関数 追加
+            </ul></td>
+          </tr>
+          <tr>
+            <th id="borderbottom"> 0.6.2 </th>
+            <td id="borderbottom"><ul>
+              <li>docs内のドキュメントを各言語ごとに分類
+		      <li> gen.rb : プロトコル定義ファイルの define で文字列が設定可能
+		      <li> gen.rb : プロトコル定義ファイルの行の先頭がスペース、タブの場合はコメントとみなすよう変更
+            </ul></td>
+          </tr>
+        </table>
+		<H3>VCE-0.6.1</H3>
+		<table>
+          <tr>
+            <th id="borderbottom">0.6.1</th>
+            <td id="borderbottom"><ul>
+                <li> プロトコル定義ファイルで構造体の定義が可能
+		      <li> gen.rbの文字化けを修正
+		      <li> gen.rb uint,ushort,uchar,int64 使用時のエラー修正
+              </ul></td>
+          </tr>
+        </table>
+		<H3>VCE-0.6.0</H3>
+		<table>
+          <tr>
+            <th>0.6.0</th>
+            <td><ul>
+                <li>プロトコル定義ファイルで=ifdefが使用可能
+		      <li> プロトコル定義ファイルで関数の引数に文字列用string型が追加<br>
+                    <b>gen.rbの出力ファイルで strlen が使用される。環境にあったファイルをvce.hでインクルードする必要あり。</b>
+                <li> 圧縮対応<br>
+  暗号化設定時に、圧縮してから暗号化され送信される。
+            </ul></td>
+          </tr>
+          <tr>
+            <th>0.5.13</th>
+            <td><ul>
+              <li> vce_log_set_type_mask_by_nameに反転機能追加、              
+            </ul></td>
+          </tr>
+          <tr>
+            <th> 0.5.12 </th>
+            <td><ul><li>vce_conn_free周りのチェック強化
+            </ul></td>
+          </tr>
+          <tr>
+            <th>0.5.11</th>
+            <td><ul>
+              <li>  gen.rb:定義ファイルに= recvlimitを使いプロトコル毎のコール回数/時間が設定可能<br>
+                  <b>プロトコル名_newとプロトコル名_delをaccept/close時にコールする必要あり。<br>
+    プロトコル定義ファイルに、=define MAX_CONNECTION 接続数 を設定する必要あり。<br>
+    アプリ側にプロトコル名_toomany_recv_warning 警告関数の定義も必要</b>
+              <li>  gen.rb:送信用バッファサイズを限定<br>
+    プロトコル定義ファイルのワークバッファサイズに頼らず必要な分だけスタック確保
+		      <li>  vce_circ_get_remote_ipv4_addrのcircが有効かチェックするように
+            </ul></td>
+          </tr>
+          <tr>
+            <th>0.5.10</th>
+            <td><ul>
+              <li> gen.rb:サーバのみ最大受信プロトコルサイズをヘッダに定義<br>
+    プロトコル名_MAX_RECV_RECORD_LENGTHをアプリから設定することで受信するまえに切断可能
+		      <li>  gen.rb:サーバのみプロトコル毎に最大長をチェック、長すぎるレコードだったら切断するように<br>
+                  <b>アプリ側で警告を処理する関数、プロトコル名_toolong_recv_warningの定義が必要</b>
+              <li> バイナリ操作関連の関数がEXPORT指定されてなかったので外部からもダイナミックリンクできるように変更
+            </ul></td>
+          </tr>
+          <tr>
+            <th>0.5.9 </th>
+            <td><ul>
+              <li>  gen.rb:GEN_DEBUG_PRINTが指定されてるときはプロトコルレベルで送信エラー表示
+		      <li> vce_tcpcontext_protocol_set_maxlength関数追加。<br>
+    レコードに分割される前にブロック可能
+            </ul></td>
+          </tr>
+          <tr>
+            <th> 0.5.8</th>
+            <td><ul>
+              <li>  vce_tcpcontext_set_conn_kickip_array関数追加。<br>
+    IPアドレス配列から同じものをブロック可能、低負荷、アプリ側で制御必要              
+            </ul></td>
+          </tr>
+          <tr>
+            <th>0.5.7</th>
+            <td><ul><li>  vce_tcpcontext_set_accept_max関数追加。
+	        </ul></td>
+          </tr>
+          <tr>
+            <th>0.5.6</th>
+            <td><ul>
+              <li>  swproxyのshutdownバグ修正。<br>
+    shutdown命令によりプロセスがフリーズしてた問題を修正
+		      <li>  vce_conn_set_delay関数追加。<br>
+    送受信時の遅延時間を設定可能、クライアント側でラグのシミュレートが出来るように。              
+            </ul></td>
+          </tr>
+          <tr>
+            <th>0.5.5 </th>
+            <td><ul>
+              <li> vce_errout_set_another関数追加。<br>
+    errout関数による出力先の変更が可能              
+            </ul></td>
+          </tr>
+          <tr>
+            <th>0.5.4 </th>
+            <td><ul><li> vce_circ_get_state_bufferのパラメータチェック追加。vce_*_set_alarmwatcherに戻り値を追加
+            </ul></td>
+          </tr>
+          <tr>
+            <th>0.5.3 </th>
+            <td><ul>
+              <li> alarm呼び出しチェック頻度の調整              
+            </ul></td>
+          </tr>
+          <tr>
+            <th id="borderbottom"> 0.5.2</th>
+            <td id="borderbottom"><ul><li> taskに関する説明の修正
+            </ul></td>
+          </tr>
+        </table>
+		<br>
+  <br>
+  <a href="index.html">index に戻る</a>
+  <br>
+</div>
+<div id="footer">
+Copyright 2000-2005 Community Engine Inc. All rights reserved.</div>
+</body>
+</html>

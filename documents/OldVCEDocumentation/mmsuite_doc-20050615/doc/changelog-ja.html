@@ -1,0 +1,98 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html> <head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<style type="text/css">
+P {
+  TEXT-INDENT: 1em
+}
+</style>
+<title>mm-suite ChangeLog</title>
+</head>
+
+<body>
+
+<h1>ChangeLog</h1>
+<pre>
+2001/04/10 spec.html を作成
+2001/04/13 doc/ を作り、ドキュメントを移動してきた。
+2001/04/13 gmsv/ を作り、base_main.c 作成、Makefile 追加 vce/ も作った
+2001/04/13 ps2/ を作った(いらんかもしれんな、と作ってからおもふ)
+2001/04/13 GMSV のメインループをまず書いた
+2001/04/13 FES が GMSV に接続した。
+2001/04/27 doc/ を統合して、仕様 v3 とした。
+2001/06/06 FES を廃止、 swp とした。
+2001/06/11 gmsv:8001 swp:9001 を使うこととした
+2001/06/11 ping_test とおった。 connect_test も通った
+2001/06/12 ping_test 統計情報だすようになった。
+2001/06/12 create_user_test クライアント側できた
+2001/06/12 AUTHSV しない gmsv が、 create/delete/check できるようになった。
+2001/06/14 複数コネクションをつかった auth_test 通るようになった。
+2001/06/19 sqllib の storage ができた
+2001/06/20 gameproto にversion check機能が入った
+2001/06/20 storage 系、 GMSV - tester 間つながった
+2001/06/21 sqllib が getblankslotid に対応
+2001/06/21 storage_test 全部の項目完了
+2001/06/21 プロトコルのエラーコード(負のエラーコード)をすべて enum にした
+2001/06/21 lock 関係のプロトコルを、db から auth に移動した。
+2001/06/22 sqlcontext を sqlcontext_t に改名(統一性のため)
+2001/06/27 ユーザロックを LOCKSV に分離することにした。 lockproto.txt 追加
+2001/06/27 dbproto を bin32 に変更。
+2001/06/27 lockproto を追加、 LOCKSV だいたい実装(簡単)
+2001/06/28 LOCKSV 動作。lock_test 正常終了。
+2001/06/29 コンタクトリスト追加、保存、取りだし、削除 by storage_test
+2001/07/05 移動に関するアルゴリズム決定、実装(テスタは到達不可チェックのみ)
+2001/07/09 GMSV が MSGSV に接続、テーブルも定義(storageを流用)
+2001/07/09 talk するようになった。
+2001/07/10 イベントハンドラの構造定義。現在は talked,init のみ。
+2001/07/10 debug.c にデバッグコマンド追加。
+2001/07/11 action,dir,base_type を規定
+2001/07/11 charinfo_create_npc_by_template 追加
+2001/07/11 NPC がやっと歩いた。
+2001/07/16 MSGSV が動作。オフラインメッセージもできるようになった。
+2001/07/19 コネクションスイッチングによるサーバー間移動できるようになった。
+2001/07/20 タグリストを得るコマンド、wincli に追加
+2001/07/24 「攻撃」できるようになった。キャラが死ぬようになった。
+2001/07/24 NPC を殺す、 PC 同士で殺す
+2001/07/25 debug_print 化
+2001/07/25 同じ名前のキャラクターを2体作れない機能追加(dbproto)
+2001/07/26 コンタクトリスト動作するようになった。(online/offline 通知)
+2001/07/26 contactstatus OPTNUMBER コマンドを追加(wincli)
+2001/07/26 PANIC を追加
+2001/07/26 AUTHSV, MSGSV の落ちに対応するコード追加。(reconnecting)
+2001/07/27 notify_user_lock 実装(lockproto)
+2001/07/28 生態系(ecosys.c)実装。動作するようになった。
+2001/08/08 状態ファイルを出力するようになった。
+2001/08/08 exclusive が動かなかった(tag/strlenまわり) のを修正
+2001/08/09 mmsuite に移行
+2001/08/20 sqllibバグfix,dbsvプロトコル追加、設定ファイル複数読みこみ機能
+2001/09/04 sqllib deleteバグfix,lockproto 変更(CDKEY)、ドキュメント追加。
+2001/11/01 sqllib に multi_load を追加。掲示板に対応。
+2001/11/01 MSGSV,GMSV,wincli を掲示板に対応させた(bbswrite/get/del)
+2002/01/10 sqllib でデータの中身をファイルに保存するように変更
+2002/01/15 ChangeLog ファイルを分割
+2002/01/15 ChangeLog mysql-ja.html の間違いを訂正，拡充
+2002/01/17 msgsv の，状態通知のルーチンが当社比 1000 倍高速化
+2002/01/20 msgsv に，相互リンクを自動的に保つための機能を追加
+2002/02/20 sqllib バグ修正
+2002/03/22 ドキュメント英語化開始
+2002/03/29 sqllib.c : 空きスロットがないとき blank_slot 関数がNO_BLANK_SLOT を返さないバグを修正
+2002/03/29 gmsv: MAX_SLOT を 100から10にした．「最大キャラ数」のデバッグ用
+2002/04/17 Playstation2用クライアントを追加しました．
+2002/04/17 スクリプトエンジン LVM のアーカイブを追加しました．
+2003/06/05 sqllib.c : ファイル保存を有効にしていた際に、deleteでファイルが削除されなかったのを修正
+2004/11/16 クライアント側でのタイムアウト処理に変更。
+2005/01/24 sqllibの廃止、msgsvを前に、dbsv複数化、クライアント側で接続先gmsvの変更するように修正。
+2005/03/11 msgsvにauthとlockの機能を追加。
+2005/03/28 すべてのファイルの文字コードをUTF-8に統一。
+2005/04/28 VCE-admin対応コードを追加。
+2005/05/06 whisperチャット追加。
+2005/06/10 guildsv追加。
+</pre>
+
+
+<br>
+<hr>
+<font size=-1>
+Copyright 2000-2005 CommunityEngine Inc. All rights reserved.<BR>
+
+</body> </html>

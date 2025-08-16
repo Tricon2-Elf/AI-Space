@@ -1,0 +1,203 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel="stylesheet" href="../vce.css" type="text/css">
+<title>VCE 1.1.4 official document (Japanese)</title>
+</head>
+
+<body>
+<h1>VCEモニタリング 機能解説</h1>
+
+<h2>Index</h2>
+<ol>
+  <LI><a href="#about">VCEモニタリングとは</a>
+  <LI><a href="#system">VCEモニタリングのしくみ</a>
+  <LI><a href="#init">モニターサーバ、クライアント 処理の流れ</a>
+  <LI><a href="#command">モニターコマンド</a>      
+  <LI><a href="#log">ログ</a>
+</ol>
+
+<a name="about"></a>
+<h2>VCEモニタリングとは</h2>
+<p>
+  VCEモニタリングとは、VCEを使った常時起動のサーバの活動を、リモートから監視したり、操作したりするための統一的なAPIのことである。</p>
+<p>
+  VCEに付属の各種メンテナンスツールは今後、このモニタリング用APIを使用して構築されていく。本APIの使用例として、VCEパッケージに付属の swp , swpadm プログラムがある。</p>
+
+
+<a name="system"></a>
+<h2>VCEモニタリングのしくみ</h2>
+<P>
+  VCEモニタリングは、単純なサーバクライアントシステムである。つまり、監視される側のプロセスでは、tcpcontext を1個使用してリモートからの
+接続を受けいれ、監視する側から監視される側に対してTCPセッションを張ってコマンドを送信する。</p>
+<p>
+  コマンドはテキストの形で送信されるが、セキュリティを保つために内部で RIJNDAEL を鍵長16で使用する。また、すべてのコマンド送信には、機能にアクセスするための「キー」
+が必要となっている。</p>
+<P>
+  文字列で与えられるコマンドの一覧は、swpadm コマンドが発行できる
+コマンドと完全に一致している。(swpadmコマンドは、すべてのモニタリング
+用コマンドを発行できる。)
+したがって、<a href="switch.html#swpadm">switch.html</a>を参照するとよい。</p>
+
+
+<a name="init"></a>
+<h2>モニターサーバ、クライアント 処理の流れ</h2>
+<h3>サーバ側</h3>
+<p>
+  モニター機能が有効になるためには、  まずサーバ側でモニターサーバを起動する必要がある。それには、vce_monitor_server_enable 関数を使用する。</p>
+<pre>
+int main()
+{
+  vce_initialize();
+  if( vce_monitor_server_enable( PORT, MAXMON, "password" )&lt;0){
+    /* エラー処理 */
+  }
+  :
+  :
+}
+</pre>
+
+
+<h3>クライアント側</h3>
+<p>
+  モニター機能が有効になっているサーバに対して、監視用クライアント(たとえばswp)から接続するには、以下のような手順を踏む。</p>
+<ol>
+  <li>vce_monitor_client_enable 関数を呼びだす
+  <LI>vce_monitor_client_set_replywatcher 関数を適宜呼びだす
+  <LI>vce_monitor_client_add 関数で接続先を必要数登録する
+  <LI>vce_monitor_client_connect 関数で接続する
+  <LI>vce_monitor_client_callable 関数でコマンド送信が可能か調べる
+  <LI>vce_monitor_client_call 関数でコマンドを送信する
+  <LI>replywatcher を登録していた場合は、結果をその関数で受けとる。</ol>
+<P>
+  以上の流れを仮想コードにすると以下のようになる。</p>
+
+<pre>
+int main()
+{
+  vce_initialize();
+  if( vce_monitor_client_enable( MAXMON ) &lt; 0 ){ /* error */ }
+  vce_monitor_client_set_replywatcher( repwatcher );
+  monitor_ent_t ment;
+  vce_monitor_ent_init( &ment, MON_HOST_ID, host, port );
+  if( vce_monitor_client_add( &ment ) &lt; 0 ){ /* error */ }
+  if( vce_monitor_client_connect( MON_HOST_ID ) &lt; 0 ){ /* error */ }
+  while(1){
+    vce_heartbeat();
+    if( vce_monitor_client_callable(MON_HOST_ID) &gt; 0 ){
+      if( vce_monitor_client_call( MON_HOST_ID, send_string ) &gt; 0 ){
+        /* ok !! */
+        break;
+      }
+    }
+  }
+}
+</pre>
+
+
+<a name="command"></a>  
+<h2>モニターコマンド</h2>
+<P>
+クライアントからモニターコマンドを送信し、結果を得るには、上記、「クライアント側の処理の流れ」のように、vce_monitor_client_callable関数でコマンドの送信が可能かどうか調べ、vce_monitor_client_call関数で送信すればよい。
+</p>
+<p>
+サーバ側でのコマンドの登録は、VCE Monitor API を使用して、以下のように行う。
+</p>  
+  
+<h3>標準コマンド</h3>  
+<p>vce_monitor_server_add_standard_commands関数を呼ぶと、以下の標準的なコマンドが登録される。
+</p>
+<ul>
+  <li>netstat<p>
+    VCEで使っているnetworkのリソースを文字列で返す。</p></li>
+  <li>netinfo<p>
+    ネットワーク情報を返す。</p></li>
+  <li>ping [tick_int]<p>
+    pingを打つ。 "[tick_int]"という形で返答を返す。</p></li>
+  <li>suicide<p>
+    プロセスをその場で終了する。内部的には、exit(0)を呼んでいるだけである。</p></li>
+  <li>prof<p>
+    プロファイリング用のファイル(gmon.out)を出力する。(linuxのみ)</p></li>
+  <li>get_conn<p>
+    get_portで返したportの接続数を返す。</p></li>
+  <li>get_port<p>
+    使用しているポートを返す。<br>
+    最初にvce_tcpcontext_createしたサーバーコンテキストのポートを返すので、
+    主に監視したいポートは最初にcreateすること。</p></li>
+  <li>get_pid<p>
+      プロセスIDを返す。</p></li>
+</ul>
+<p>
+これらの標準コマンドには、各々、登録する関数(vce_monitor_command_netstat関数など)が準備されている。
+</p>
+
+<h3>ユーザコマンド</h3>
+<P>
+  アプリケーション依存のコマンドをサーバに登録することも可能である。以下のような手順で行う。
+</p>
+<ol>
+  <li>コールバック関数を作成する。<br>
+    <pre>
+int command_shutdown( conn_t c, int argc, char **argv ){
+  //アプリケーションのシャットダウンコードを書く    
+  return vce_monitor_server_replay( c, 0, "shutdown ok !!" );
+}</pre></li>      
+  <li>vce_monitor_add_command関数 でモニターコマンドを登録する。<br>
+  <pre>
+  vce_monitor_server_add_command( "shutdown",
+                                  1, /* 引数無し */
+                                  command_shutdown,
+                                  "shutdown server." );</pre></li>
+</ol>
+<p>登録されたコールバック関数は、VCE monitor を通して呼び出される。<br>
+VCE monitor API は、PULLモデルのため、vce_monitor_server_add_command関数で
+登録したコールバック関数内で、vce_monitor_server_replayを
+1回だけ返す必要がある。<br>
+現在の仕様では、monitor server側が自発的に情報を送ることはできない。
+</p>
+  
+<a name="log"></a>
+<h2>ログ</h2>
+<h3>VCE ログフォーマット</h3>
+<p>VCEログフォーマットは、ネットワークゲームに特殊化されたログの解析を するためのフォーマットであり、以下のような特徴を持つ。
+<ul>
+  <li>高速である 
+  <li>２次元位置データ、IPアドレス、ユーザーIDなどゲームに特殊化された検索 
+  <li>人間にそのまま読めるフォーマットである(テキスト形式で、不用意に長くなったりしない) 
+  <li>アプリケーション側のプログラム負担が少ない 
+</ul>
+<p>
+形式は、
+</p>
+<pre><b>[day],[time],[type],[id],[name],[text]\n</b></pre>
+<ul>
+  <li>time: 時間を示す'YYYY/MM/DD hh:mm:ss.sss'という形式の文字列 
+  <li>type: INFO, WARN などの種別を表す文字列(使える文字は[A-Za-z0-9_]) 
+  <li>id: IDを表す文字列(使える文字はスペース,",",改行以外の文字) 
+  <li>name: キャラクター名前など表す文字列(使える文字はスペース,",",改行以外の文字) 
+  <li>text: 自由な文字列 
+</ul>
+<p>各項目は","で区切られ、0x1F以下のコード、および0x80以上のコードは、 \x** でエスケープされる。 </p>
+
+
+<!--
+<h3>ログの転送</h3>  
+<P>
+</p>
+<p>
+</p>
+<P>
+</p>
+-->
+
+
+<p>
+<br><br><a href="index.html">index に戻る</a>
+</p>
+<div id="footer">
+Copyright 2000-2005 Community Engine Inc. All rights reserved.</div>
+
+</body> 
+</html>

@@ -1,0 +1,78 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html> <head>
+<meta http-equiv="Content-Type" content="text/html; charset=EUC-JP">
+<title>mm-suite official document (English)</title>
+<style type="text/css">
+P {
+  TEXT-INDENT: 1em
+}
+</style>
+</head>
+
+<body>
+<h1>mm-suite Evaluation Pack</h1>
+
+<p>
+  mm-suite Evaluation Pack contains GMSV, SWP, and client for Windows.<br>
+You can try mm-suite with this package and backend, MSGSV which starts in www.ce-lab.net.
+</p>
+
+<h3>Compile the source (GMSV)</h3>
+<pre>
+cd mmsuite_eval_xxxx_xx_xx/gmsv
+make
+</pre>
+  
+<h3>Setting of GMSV</h3>
+<p>
+  Please change the IP_ADDRESS in gmsv/data/fieldtab.txt to the address where you intend to start SWP.<br>
+  For example, 192.168.1.203, you should change it as follows.
+</p>
+
+<pre>
+8001 192.168.1.203 9001 land_0 dungeon_0
+8003 192.168.1.203 9003 island_0
+</pre>
+
+
+<h3>How to start GMSV</h3>
+<pre>
+cd mmsuite_eval_xxxx_xx_xx/gmsv
+make start_eval
+</pre>
+<p>
+  The command above makes start two GMSV.<br>
+Please check like this.<br><br>
+porsche:/opt/chiaki/src % ps auxw|grep gmsv<br>                         
+96:chiaki   32534  5.6  3.2 69640 68060 pts/7   SN   19:11   0:00 ./gmsv gmsv_template.conf 8001.conf<br>
+98:chiaki   32537  5.3  3.2 70316 68068 pts/7   SN   19:11   0:00 ./gmsv gmsv_template.conf 8003.conf
+</p>
+
+<h3>How to start SWP</h3>
+<pre>
+cd mmsuite_eval_xxxx_xx_xx/swp
+make start
+</pre>
+<p>
+  Two SWP start.<br><br>
+porsche:/opt/chiaki/src % ps auxw|grep swp<br>
+92:chiaki   32425  0.0  0.8 19696 16940 pts/5   SN   17:43   0:01 ../vce/swp 9001.conf swtable.9001.conf<br>
+94:chiaki   32428  0.0  0.8 18696 16936 pts/5   SN   17:43   0:00 ../vce/swp 9003.conf swtable.9003.conf
+</p>
+
+
+
+<h3>How to connect from client to GMSV</h3>
+<p>
+  Please refer to wincli-en.html.<br>
+  [ATTENTION!!] When you try the command, "msgconnect", please set [HOST] www.ce-lab.net.
+</p>
+<br><br>
+
+
+<br>
+<hr>
+<font size=-1>
+Copyright 2000-2005 CommunityEngine Inc. All rights reserved.<BR>
+
+</body> </html>

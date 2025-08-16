@@ -1,0 +1,51 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html>
+<head>
+<title>FAQ</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<link rel="stylesheet" href="../default.css" type="text/css">
+</head>
+
+<body>
+<p><a href="index.html">[トップ]</a> <a href="changes.html">[変更履歴]</a> 
+  <a href="map.html">[目次]</a> <a href="words.html">[用語]</a> <a href="faq.html">[FAQ]</a> | <a href="admcli/index.html">[AdmCli]</a> 
+  <a href="admin_server.html">[ADMSV]</a> <a href="remote_server.html">[RSV]</a> 
+  | <a href="vcelog.html">[VCE-Log]</a> <a href="monitor_command.html">[VCEモニター]</a> 
+</p>
+<h1>よくある質問（ＦＡＱ）</h1>
+
+<OL>
+  <LI>アプリケーションサーバで、以下のエラーがでました。<br>
+        monitor: not authorized error.<br>
+      アプリケーションサーバの vce_monitor_server_enable で指定したkeyと、admsv/admsv.conf の vcemonitor_key を同じものにしてください。
+
+  <LI>admcliで、ファイル→ログイン してもホストウィンドウに何も表示されない。<br>
+      システムログは、<br>
+      hh:mm:ss connecting...<br>
+      hh:mm:ss trying 192.168.1.58...<br>
+      となっている。<br>
+      admcliの ツール→設定→ネットワーク の Admsvサーバアドレスが正しいか確認してください。<br>
+      また、Admsvサーバアドレスで指定したマシンで、admsvが起動しているかどうか確認してください。
+
+
+  <LI>admcli プロセスウィンドウに表示される Port と AdmPort の値が同じになる。<br>
+      vce_tcpcontext_create の後に、vce_monitor_server_enable でモニタをセットしてください。
+
+  <LI>admcliのホストウィンドウ、プロセスウィンドウにNameが表示されません。<br>
+      アプリケーションサーバで、get_nameコマンドを実装してください。<br>
+      詳しくは、<a href="monitor_command.html">こちら</a>をご覧ください。
+
+      
+  <LI>admcli の プロセスウィンドウでlogin数が表示されません。<br>
+      アプリケーションサーバで、get_loginコマンドを実装してください。<br>
+      詳しくは、<a href="monitor_command.html">こちら</a>をご覧ください。
+
+      
+</OL>
+
+<br><br>
+<hr>
+Copyright 2000-2005 CommunityEngine Inc. All rights reserved.<br>
+
+</body>
+</html>

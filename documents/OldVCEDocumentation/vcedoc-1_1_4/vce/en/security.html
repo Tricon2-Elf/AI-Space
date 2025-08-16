@@ -1,0 +1,121 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html> <head>
+<link rel="stylesheet" href="../vce.css" type="text/css">
+<title>VCE 1.1.4 official document (English) </title>
+
+</head>
+
+<body>
+<h1>VCE and Security</h1>
+
+
+<p>
+This document explains what kind of crackings over application
+can be prevented using VCE in this document.
+</p>
+
+<H2>Packet Sniffing </h2>
+<p>
+By putting sniffering programs in routers or some devices between
+client and server, you can do "packet sniffering" like these:
+<ol>
+  <li> Sucking out passwords or some information by analyzing 
+       content of transferred packets.
+  <li> Do reverse engineering by looking at precise transferred data.
+</ol>
+  You can find a lot of such sniffering tools by searching "sniffing 
+tools" in Google.
+</p>
+
+<H2>Spoofing</h2>
+<p>
+ Spoofing is that another user is trying to reproduce the state
+where the regular user has accessed the server, using another tool.
+
+It is the even higher way using sniffing tool.
+
+When the spoofing is possible, you can spoof the client
+or freely alter transferred data are possible.
+</p>
+
+<h2>man-in-the-middle</h2>
+<p>
+  "man-in-the-middle attack" is 
+that a third party people invades between client and  server 
+to sniff and spoof.
+</p>
+<pre>
+  Cient-------- Third party ----------- Internet ------ Server
+</pre>
+<p>
+In this situation, if the third party has malice thoughts
+, various kinds of attacks will be attained easily.
+
+ In order to prevent this fundamentally,
+an encryption key must be exchanged without using this network.
+It is because the spoofing will become possible by sniffing
+a packet completely,
+when the encryption key is exchanged on the same network. 
+</p>
+
+<H2>man-in-the-middle for the VCE appication</h2>
+<p>
+In conclusion, spoofing is possible,
+when the conditions below are fulfilled. 
+</p>
+<ul>
+  <LI>A third party is possible to operate routers or network devices 
+      between client and server. 
+  <LI>The third party knows key exchange algorithm of the VCE.
+  <LI>They can sniff all packets from the starting of session.
+</ul>  
+<p>
+   In fact, such situations can be made from slight time and effort, 
+and when reverse engineering (cheating in case of games) is the purpose, 
+it is also considered that a third party is a user oneself. 
+Although the encryption of the VCE can prevent "innocent" crackers,
+it cannot prevent "professional" crackers. 
+  However, most of actual crackings are caused by the "innocent" crackers,
+and under 10% of the whole crackers is by the "professional" crackers
+who prepare tools and environment.
+</p>
+<p>
+  Now, if the encryption of the VCE is used in applications,
+it will typically　consume about 10% of server CPU.
+ Therefore, it is necessary to decide whether use encryption or not
+by comparing the merit of security improvement by VCE encryption
+with the demerit in the server CPU usage.
+</P>
+<p>
+ Since there is not much economical merit of cracking especially in games, 
+almost all the crackings can be headed off only by preventing a
+"innocent" crackers. 
+Therefore, VCE encryption is more beneficial,
+except in a case that the 10% of server CPU load must be
+reduced as the top priority.
+</p>
+
+<h2>Attack on a server </h2>
+<p>
+It is also possible to perform a DoS attack to the VCE. 
+The SYN flood attack, or attacks to the layer of TCP/IP and lower.
+But such a lower level attacks must be coped
+by Linux kernel or network devices.
+<BR>
+The attack considered about the layer above them can be: 
+<BR>
+consuming a memory by opening a huge number of sessions and 
+stopping packet transferring in the middle of key exchange.
+<BR>
+Although there is no report about this attack so far, 
+we will cope with as soon as we get one.
+</p>
+
+<p><br>
+
+  <br>
+&quot;PlayStation&quot; is registered trademark and is trademark of Sony Computer Entertainment Inc.<br>
+  <a href="index.html">return to index</a></p>
+<div id="footer">
+Copyright 2000-2005 Community Engine Inc. All rights reserved.</div>
+</body> </html>

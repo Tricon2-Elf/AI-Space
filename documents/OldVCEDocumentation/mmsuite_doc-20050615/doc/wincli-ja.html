@@ -1,0 +1,365 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html> <head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>mm-suite official document (Japanese)</title>
+<style type="text/css">
+P {
+  TEXT-INDENT: 1em
+}
+</style>
+</head>
+
+<body>
+<h1>win32用デモプログラム解説</h1>
+
+<h3>win32用デモプログラム(wincli)の内容</h3>
+
+<p>
+  wincli とは，DirectX を使って Windowsにおいて動作する，
+mm-suite のテスタである．簡単なスプライト表示を使ってキャラクターを表示する．
+以下はスクリーンショットである．
+</p>
+<img src="images/wincli_screen.gif">
+<p>
+  画面に表示されているキャラクターは，真中の1体がプレイヤーキャラクターで，
+それ以外がNPCである．NPCは1秒に1回移動するように設定されていて，
+名前などが表示されている．
+右上の欄はコンタクトリストである．
+画面の一番下にはコマンドラインの入力行があって，
+ここから CUI を通して，コマンドを入力できるのが通常のゲームとは異なる．
+また，画面にあるひし形の図形は当たり判定ポリゴンの様子である．
+mm-suite ではサーバとクライアントの両方でポリゴンによる当たり判定を
+実装しているが，その様子が示されている．
+画面右下の特殊な場所はワープゾーンで，別のフィールドへの
+ハイパーリンクとなっている．
+</p>
+
+<p>
+  wincli を使って，
+mm-suite の初期状態でサポートしている機能をすべて試すことができる。
+ただしすべての機能に GUI 的にアクセスできるわけではなく、
+画面に表示されている擬似コマンドラインを通してしかできない事もある。
+</p>
+
+
+<h3>仮想コマンドラインによる接続、ログイン</h3>
+<p>
+  デモプログラムでは、すべての操作を仮想コマンドラインから実行できる
+ようになっている。もちろん移動や攻撃などの基本動作は、
+マウスでもできる。
+ここでは仮想コマンドラインを使ってサーバに接続、
+ログインする所までを説明する。例を示す。
+
+<!--
+<pre>
+command&gt;connect HOSTNAME PORTNUM
+command&gt;ping
+command&gt;user test_user password(何でもよい)
+command&gt;newchar NAME HP_HINT
+command&gt;login 0
+</pre>
+-->
+
+<pre>
+command&gt;connect HOSTNAME PORTNUM
+command&gt;msgconnect HOSTNAME PORTNUM
+command&gt;user test_user password
+command&gt;newchar NAME HP_HINT
+command&gt;login 0
+</pre>
+
+<p>
+たとえば、次のように入力する。
+</p>
+
+<pre>
+command&gt;connect 192.168.1.203 9001
+command&gt;msgconnect 192.168.1.203 5001
+command&gt;user test_user password
+command&gt;newchar NAME 10
+command&gt;login 0
+</pre>
+
+<p>
+とすると接続、ログインできる。
+connectをおこなった後に
+msgconnectでメッセージサーバに対しても接続をおこなう。
+接続後、まず user をした後、
+キャラを作らないとログインできない(エラー4)
+になることに注意。これらの段階は飛ばすことはできない。
+newcharでは新しいキャラクタを作っている。
+2回目以降は、あたらしいキャラクタを作る必要はない。
+</p>
+
+<h3>各種コマンド</h3>
+<p>
+ 現在デモプログラムでは以下のコマンドをサポートしている。
+</p>
+<ul>
+  <LI><B>connect [HOST] [PORT]</B><BR>
+	  サーバに接続する。
+	  <pre>
+	  connect extdev.vce-lab.net 9001
+	  connect 192.168.0.103 12345
+	  </pre>
+	  など。ホスト、ポート番号は SWP が動作しているホスト、ポートを指定
+	  すること。
+  <LI><B>msgconnect [HOST] [PORT]</B><BR>
+	  メッセージサーバに接続する。
+	  <pre>
+	  msgconnect extdev.vce-lab.net 5001
+	  msgconnect 192.168.0.103 12347
+	  </pre>
+	  など。
+
+  <LI><B>clear</B><BR>
+	  画面に表示されている文字をクリアする。
+  <LI><B>ping</B><BR>
+	  サーバに ping を撃つ。
+  <LI><B>logout</B><BR>
+	  キャラクタをログアウトさせ、DBSV に保存する。
+  <LI><B>close</B><BR>
+	  コネクションを閉じ、サーバから抜ける。この後ふたたび
+	  connect することができる。
+
+  <LI><B>netstat</B><BR>
+	  現在、ネットワークが利用可能かを見る。
+  <LI><B>exit</B><BR>
+	  デモプログラムを終了する。
+  <LI><B>help</B><BR>
+	  ヘルプメッセージを画面に出す。
+  <LI><B>guildhelp</B><BR>
+	  ギルド関連のヘルプメッセージを画面に出す。
+  <LI><B>user UID PASS</B><BR>
+	  ユーザー名とパスワードを指定して GMSV、MSGSV に接続する。
+	  <pre>
+	  user ringo hogehoge_password
+	  </pre>
+  <LI><B>newchar NICKNAME HP</B><BR>
+	  新しいキャラクタを作成する。 HP は作成されるキャラクターの HP をあらわす。
+	  <pre>
+	  newchar testChar 123
+	  </pre>
+	  GMSV から、何番目のキャラクタースロットにキャラクタを作成
+	  したかが返ってくるので、この後の login 時にその番号を指定する。
+	  
+  <LI><B>delchar SLOTNO</B><BR>
+	  キャラクタを削除する。キャラクターを作成したときのスロット番号で
+	  指定する。
+	  
+  <LI><B>login SLOTNO</B><BR>
+	  キャラクターを指定してログインする。
+	  GMSV はキャラクター構造体を1個新規に確保して世界の中に
+	  キャラクターを存在させる。
+	  
+  <LI><B>talk TEXT TEXT ...</B><BR>
+	  チャットメッセージを送信する。
+	  画面内の、近距離にいるキャカラクターに対して、
+	  メッセージを同報送信する。 NPC でチャットに反応する設定をもっている
+	  のがいる場合は、talked 関数が反応する。
+
+  <LI><B>whisper UID NICK TEXT TEXT ...</B><BR>
+	  チャットメッセージを送信する。
+	  UIDとNICKで指定したキャラクターに対してのみメッセージを送信する。
+      
+  <LI><B>guild GUILD_ID TEXT TEXT ...</B><BR>
+	  チャットメッセージを送信する。
+	  GUILD_IDで指定したギルドに所属するキャラクターに対してのみメッセージを送信する。
+      
+  <LI><B>union UNION_ID TEXT TEXT ...</B><BR>
+	  チャットメッセージを送信する。
+	  UNION_IDで指定したユニオンに所属するギルドマスターに対してのみメッセージを送信する。
+      
+  <LI><B>mail UID NICK TEXT</B><BR>
+	  ユーザーIDとキャラクターのニックネームを指定してメールを送信する。
+	  MSGSV はメールを受信するとそのユーザーのメールボックスに保存する。
+	  自分を指定すると自分に届く。(pollmail関数で受信要求すると来る)
+	  
+  <LI><B>delmail MESSAGE_ID</B><BR>
+	  自分のメールボックスにあるメールを消す。
+	  
+  <LI><B>pollmail NUM</B><BR>
+	  自分のメールボックスに保存されているメールを取りだす。
+	  最大何個取りだすかを指定する。
+  <LI><B>addlist UID NICK</B><BR>
+	  自分のコンタクトリストにユーザー名とニックネームををつけて追加する。
+	  
+  <LI><B>dellist UID NICK</B><BR>
+	  自分のコンタクトリストからキャラクターを削除する。
+
+<!--
+  <LI><B>loadlist</B><BR>
+	  MSGSV にあるコンタクトリストをロードする。
+	  ロードするとオンラインと見なされ、
+	  今後「ワンタイムプッシュ」が有効になる。
+	  
+  <LI><B>savelist</B><BR>
+	  コンタクトリストをセーブする。
+-->
+	  
+  <LI><B>runlevel RUNLEVEL</B><BR>
+	  クライアントプログラムの実行状態を変更する。
+
+  <LI><B>coll map|char on|off</B><BR>
+	  マップやほかのキャラクタとのローカルにおける衝突判定を on/off
+	  する。 現在はマップとの衝突判定だけがサポートされている。例：
+	  <pre>
+	  coll map on      
+	  </pre>
+
+  <LI><B>contactstatus NUMBER</B><BR>
+	  コンタクトリストのオプションフラグを変更する。
+	  変更はほかのクライアントに伝わる。
+
+  <LI><B>gettags</B><BR>
+      所有しているキャラクターのタグリストを取得する。
+      どんなキャラを持っているのかを画面に表示して選択させたいゲームの場合は、
+      このコマンドに相当する処理を行なう。
+      
+  <LI><B>newguild GUILDNAME</B><BR>
+	  新しいギルドを作成する。
+	  <pre>
+	  newguild testGuild
+	  </pre>
+	  MSGSV から、作成したギルドのギルドIDが返ってくる。
+      ギルド作成者はギルドマスターとなる。
+	  
+  <LI><B>renguild GUILD_ID GUILDNAME</B><BR>
+	  ギルドの名前を変更する。
+	  <pre>
+	  renguild 1 hogeGuild
+	  </pre>
+	  
+  <LI><B>delguild GUILD_ID</B><BR>
+	  ギルドを削除する。ギルドを作成したときのギルドIDで
+	  指定する。デモプログラムでは、削除するギルドがユニオンに所属しているか
+      どうかのチェックは行っていない。
+	  
+  <LI><B>getguildlist</B><BR>
+      キャラクターが所属しているギルドのリストを取得する。
+      1キャラクターが複数ギルドに所属可能なゲームの場合は、
+      このコマンドに相当する処理を行なう。
+      
+  <LI><B>getguildinfo GUILD_ID</B><BR>
+	  ギルドの情報を取得する。
+	  
+  <LI><B>getguildmember GUILD_ID UID NICK</B><BR>
+	  ギルドに所属するキャラクターの情報を取得する。
+	  <pre>
+	  getguildmember 1 ringo testChar
+	  </pre>
+      指定したキャラクターがギルドに所属していれば、
+      MSGSV から0が返ってくる。
+	  
+  <LI><B>addguildmember GUILD_ID UID NICK</B><BR>
+	  ギルドにキャラクターを追加する。
+	  
+  <LI><B>delguildmember GUILD_ID UID NICK</B><BR>
+	  UIDとNICKで指定したキャラクターをギルドから削除する。
+	  
+  <LI><B>newguildmaster GUILD_ID UID NICK</B><BR>
+	  ギルドマスターを変更する。
+      UIDとNICKで指定したキャラクターが新しいギルドマスターとなる。
+      ただし、コマンドを実行するキャラクターがギルドマスターであることが前提。
+      デモプログラムでは、権限の確認を行っていない。
+	  
+  <LI><B>newunion UNIONNAME GUILD_ID</B><BR>
+	  新しいユニオンを作成する。
+	  <pre>
+	  newunion testUnion 1
+	  </pre>
+	  MSGSV から、作成したユニオンのユニオンIDが返ってくる。
+      GUILD_IDで指定したギルドのギルドマスターがユニオンマスターとなる。
+	  
+  <LI><B>renunion UNION_ID UNIONNAME</B><BR>
+	  ユニオンの名前を変更する。
+	  <pre>
+	  renunion 1 hogeUnion
+	  </pre>
+	  
+  <LI><B>delunion UNION_ID</B><BR>
+	  ユニオンを削除する。ユニオンを作成したときのユニオンIDで
+	  指定する。
+	  
+  <LI><B>getunionlist GUILD_ID</B><BR>
+      GUILD_IDで指定したギルドが所属しているユニオンのリストを取得する。
+      1ギルドが複数ユニオンに所属可能なゲームの場合は、
+      このコマンドに相当する処理を行なう。
+      
+  <LI><B>getunioninfo UNION_ID</B><BR>
+	  ユニオンの情報を取得する。
+	  
+  <LI><B>addunionmember UNION_ID GUILD_ID</B><BR>
+	  ユニオンにギルドを追加する。
+	  
+  <LI><B>delunionmember UNION_ID GUILD_ID</B><BR>
+	  GUILD_IDで指定したギルドをユニオンから削除する。
+	  
+  <LI><B>newunionmaster UNION_ID GUILD_ID</B><BR>
+	  ユニオンマスターを変更する。
+      GUILD_IDで指定したギルドのギルドマスターが新しいユニオンマスターとなる。
+      デモプログラムでは、権限の確認を行っていない。
+      
+  <LI><B>guildmes 1 GUILD_ID TEXT</B><BR>
+	  自分のギルドメッセージを更新する。
+      ギルドメッセージは所属しているキャラクタごとに1つ保存される。
+	  
+  <LI><B>guildmes 0 UNION_ID TEXT</B><BR>
+	  ユニオンメッセージを更新する。
+      ユニオンメッセージは1ユニオンにつき1つ保存される。
+	  
+  <LI><B>getguildmes GUILD_ID UID NICK</B><BR>
+	  UIDとNICKで指定したキャラクターのギルドメッセージを取得する。
+	  
+  <LI><B>getunionmes UNION_ID</B><BR>
+	  UNION_IDで指定したユニオンのユニオンメッセージを取得する。
+	  
+  <LI><B>gsmes UID NICK TEXT</B><BR>
+	  ユーザーIDとキャラクターのニックネームを指定してギルドシステムメッセージを送信する。
+	  MSGSV はメッセージを受信するとそのユーザーのメッセージボックスに保存する。
+	  自分を指定すると自分に届く。(pollgsmes関数で受信要求すると来る)
+	  
+  <LI><B>pollgsmes</B><BR>
+	  自分のメッセージボックスに保存されているギルドシステムメッセージを取りだす。
+	  最古のメッセージ1件のみを取得する。
+	  
+  <LI><B>delgsmes MESSAGE_ID</B><BR>
+	  自分のメッセージボックスにあるギルドシステムメッセージを消す。
+	  
+</ul>
+
+
+
+<h3>攻撃アクション</h3>
+<p>
+  wincli プログラムでは、右クリックを使って「攻撃」ができる。
+画面上では、小さい攻撃オブジェクトが飛んでいるように見えるが
+サーバでは攻撃オブジェクトは飛ばさず、 線分と矩形の当たり判定をしている。
+攻撃がヒットして HP が変化したら、変化したキャラクターを震えさせている。
+</p>
+
+<h3>GMSVチートコマンド</h3>
+<p>
+  GMSV にはチート用コマンドも実装されている．
+</p>
+<pre>
+command&gt;talk @@ hoge put-npc-near monster0
+</pre>
+<p>
+という感じで、デバッグ用チートコマンドを送れば、GMSV の
+debug.c のコマンド処理プログラムで処理されて何でもテストできる。
+この機構は開発に便利である。(hogeはパスワード)
+実際にゲームの運用を開始する場合は、この機能をサーバ側で削除するか、
+パスワード管理をキッチリやる必要がある。
+</p>
+
+
+
+<BR><BR>
+<a href="index-ja.html">index に戻る</a>
+<br>
+<hr>
+<font size=-1>
+Copyright 2000-2005 CommunityEngine Inc. All rights reserved.<BR>
+
+</body> </html>

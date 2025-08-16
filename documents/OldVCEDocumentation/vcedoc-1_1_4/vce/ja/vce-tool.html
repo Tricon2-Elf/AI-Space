@@ -1,0 +1,114 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<link rel="stylesheet" href="../vce.css" type="text/css">
+<title> VCE-SDK ツールマニュアル </title>
+</head>
+<body>
+<h1> VCE-SDK ツールマニュアル </h1>
+<h2>各ツールの名前順目次</h2>
+<!-- make_tool_nameindex -->
+<ol>
+<li><a href="#als">als</a></li>
+<li><a href="#bf">bf</a></li>
+<li><a href="#hextext">hextext</a></li>
+<li><a href="#stderrback.rb">stderrback.rb</a></li>
+</ol>
+<h2>各ツールの説明</h2>
+<!-- make_tooldef -->
+<a name="als"></a>
+<table id="tooldef">
+<tr><th colspan="2" id="tooldef_title">
+<B>als</B></th></tr>
+<tr><th>概要</th><td>攻撃者の情報を共有するための簡易DBサーバ</td></tr>
+<tr><th>対応OS</th><td>linux</td></tr>
+<tr><th>使用法</th><td>als [ポート番号]
+</td></tr>
+<tr><th>詳細説明</th><td>ブロックするためのIPアドレスを保存し、クライアントがデータを参照するためのサーバ。
+単純なテキストプロトコルなのでTelnetでも操作可能だが、クライアントはIPアドレスを管理
+するためのコーディングが必要。詳しくはVCEセキュリティの項目へ。
+</td></tr>
+<tr><th>使用例</th><td><pre>als 12345</pre>
+</td></tr>
+<tr><th>知られているバグやTODO</th><td>大量のレコードを扱うのは不得意。その場合は汎用DBを使い各サーバでデータを共有したほうが良いと思われる。
+</td></tr>
+</table><br><br>
+<a name="bf"></a>
+<table id="tooldef">
+<tr><th colspan="2" id="tooldef_title">
+<B>bf</B></th></tr>
+<tr><th>概要</th><td>複数のファイルを一度にパスワードを用いて暗号化する。</td></tr>
+<tr><th>対応OS</th><td>linux</td></tr>
+<tr><th>使用法</th><td>bf [-d] [-p パスワード] ファイル名 ファイル名 ...
+</td></tr>
+<tr><th>詳細説明</th><td>入力ファイルをパスワードを用いて暗号化する。
+暗号化にはBlowfishアルゴリズムを使用する。
+8バイト単位のブロック暗号である。
+<B>-d</B>オプションをつけるとデコードする。<BR>
+<B>-p</B>オプションがない場合は端末からパスワードの入力を求める
+(getpasswd).<BR>
+ファイルを暗号化しても元のファイルは消さない。
+暗号化すると、入力ファイル名の後ろに ".bf"をつけて別ファイルとして保存する。
+復号化の際は、暗号化時と同じパスワードを入力する必要がある。
+</td></tr>
+<tr><th>使用例</th><td><pre>
+bf somefile.txt somefile2.txt
+   ( enter password from terminal and do encryption )
+bf -d somefile.txt.bf somefile2.txt.bf
+   ( enter password from terminal and do decryption )
+</pre>
+</td></tr>
+<tr><th>知られているバグやTODO</th><td>TODO 現在は、ファイルの内容を一旦メモリに展開してから暗号化するため、
+メモリに入りきらな大きなファイルを暗号化することはできない。
+</td></tr>
+</table><br><br>
+<a name="hextext"></a>
+<table id="tooldef">
+<tr><th colspan="2" id="tooldef_title">
+<B>hextext</B></th></tr>
+<tr><th>概要</th><td>バイナリファイルを、VCE形式の16進数テキストファイルに変換する。</td></tr>
+<tr><th>対応OS</th><td>linux</td></tr>
+<tr><th>使用法</th><td>hextext [-d] [-v] ファイル名 ファイル名 ...
+</td></tr>
+<tr><th>詳細説明</th><td>本来は関数 vce_make_hex_text_from_buffer のテスト目的で作成された。<BR>
+<B>-d</B> オプションをつけるとデコードし、つけないとエンコードする。
+ファイルはいくつでも一度に変換することができる。<BR>
+変換が成功すると、INFILE.hextext という風に、入力ファイル名の後ろに
+<code>.hextext </code>をつけたファイルが新しくできる。
+元のファイルは削除されない。
+また、<code>hoge.hextext</code>
+というhextext形式のファイルをデコードして成功した場合は
+<code>hoge</code>という名前のファイルが上書き出力されるので注意。<BR>
+また、 <B>-v </B>オプションを指定するとバージョン情報を表示して
+正常終了する。
+</td></tr>
+<tr><th>使用例</th><td><pre>hextext a.txt b.txt</pre>
+</td></tr>
+<tr><th>知られているバグやTODO</th><td>hextextは一旦オンメモリにファイルの中身を展開してからエンコードするため、
+メモリに載りきらない大きさのファイルを一度に変換することはできない。
+そのサイズはマシンの塔載メモリ量によるが、約数十メガから数百バイトである。
+</td></tr>
+</table><br><br>
+<a name="stderrback.rb"></a>
+<table id="tooldef">
+<tr><th colspan="2" id="tooldef_title">
+<B>stderrback.rb</B></th></tr>
+<tr><th>概要</th><td>VCEのログ出力ファイルを自動的に圧縮</td></tr>
+<tr><th>対応OS</th><td>linux</td></tr>
+<tr><th>使用法</th><td>ruby stderrback.rb ディレクトリ名
+</td></tr>
+<tr><th>詳細説明</th><td>指定したディレクトリの中のログファイル(stderr.N形式)で最新でないものを
+自動的に圧縮する。圧縮までしかしないので、
+圧縮されたものを取りだすのは手作業で取りだす。
+cron を使って一定時間ごとにチェックするようにしておけば便利である。
+gzip プログラムに依存している。
+</td></tr>
+</table><br><br>
+<!-- make_tooldef end -->
+<BR><BR>
+<p><a href="index.html">indexに戻る</a><br></p>
+<div id="footer">
+Copyright 2000-2005 Community Engine Inc. All rights reserved.
+</div>
+</body>
+</html>

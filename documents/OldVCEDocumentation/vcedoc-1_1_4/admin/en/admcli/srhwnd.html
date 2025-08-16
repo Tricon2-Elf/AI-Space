@@ -1,0 +1,55 @@
+<!doctype html public "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<title>Log search window</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<link rel="stylesheet" href="../../default.css" type="text/css">
+</head>
+
+<body>
+<p>
+<a href="../../ja/index.html">[TOP(ja)]</a> <a href="../../ja/changes.html">[ChangeLog(ja)]</a> 
+  <a href="../../ja/map.html">[Index(ja)]</a> <a href="../../ja/words.html">[Words(ja)]</a> | <a href="index.html">[AdmCli]</a> 
+  <a href="../../ja/admin_server.html">[ADMSV(ja)]</a> <a href="../../ja/remote_server.html">[RSV(ja)]</a> 
+  | <a href="../../ja/vcelog.html">[VCE-Log(ja)]</a> <a href="../../ja/monitor_command.html">[VCE-Monitor(ja)]</a> 
+</p>
+
+<h1>Log search window</h1>
+<p> You can search through log file grep-like. This search can only support log 
+  file formatted as defined by <a href="terms.html#standardlogformat">Admcli 
+  Standard Log Format</a>. </p>
+<h2>Description of Log search window</h2>
+<dl> 
+  <dt>Search user NAME</dt>
+  <dd>Find NAME of user. Requires full match. (for example "rin" doesn't match 
+    "ringo" )</dd>
+  <dt>Search user ID</dt>
+  <dd>Find ID of user. Requires full match</dd>
+  <dt>Search any string</dt>
+  <dd>Find any string in log file. This looks at "free text" in standard log format 
+    .</dd>
+  <dt>Target process(required)</dt>
+  <dd>Determine target process.</dd>
+  <dt>Type(required)</dt>
+  <dd>Select type from dropdown list in combo-box.</dd>
+  <dt>Time</dt>
+  <dd>You can specify From and To. By omitting From, it starts from the beginning. 
+    By omitting To, it ends at the last line.</dd>
+  <dt>Transfer log using ZIP compression</dt>
+  <dd>Compress log file by ZIP and save it in local file.</dd>
+  <dt>Realtime search</dt>
+  <dd>This behaves like "tail -f". When new log is comming in, it will be searched 
+    and shown in this window. </dd>
+  <dt>Start Search</dt>
+  <dd>By clicking this button, it starts searching and result will be shown in 
+    this window.</dd>
+  <dt>Merge</dt>
+  <dd>Sort multiple search result by time, and show it in new window.</dd>
+</dl>
+<br>
+
+<hr>
+Copyright 2000-2005 CommunityEngine Inc. All rights reserved.<br>
+
+</body>
+</html>

@@ -1,0 +1,425 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html> <head>
+<title>mm-suite official document (English)</title>
+<style type="text/css">
+P {
+  TEXT-INDENT: 1em
+}
+</style>
+</head>
+
+<body>
+<h1>About sqllib</h1>
+<p>
+  sqllib is a library for easy save/load through MySQL.
+Even a C programmer who don't know SQL, can drive and customise
+MySQL access, by an easy wrapper API of sqllib.
+Now that sqllib is assuming use of MySQL.
+If you want
+</p>
+<p>
+ Because all mm-suite's servers are using sqllib for DBMS access,
+you can switch all of them to another DBMS only by modifying sqllib.
+</p>
+<p>
+ In sqllib, these four information are important:
+</p>
+<ul>
+  <LI>game type
+  <LI>user ID
+  <LI>slot ID
+  <LI>tag
+</ul>
+<p>
+ sqllib saves and loads user data according to these four information.
+Please look at the figure:
+</p>
+<img src="images/sqllib_data.gif">
+<p>
+  In this figure, from bigger to smaller, data containers are
+three types: "gameTYPE", "userID" and "slot".
+gametype will be used for saving more than one game title's data.
+By using "gameTYPE", sqllib can handle more than one game.
+</p>
+<p>
+ Next, for each game users, multiple(max slot number per user)
+data slot is prepared. You can save a set of data in each slot.
+For example, in ordinary Role Playing Game,
+a character data will be saved in a data slot, and a game user
+has some characters at the same time.
+</p>
+<p>
+  You can handle a set of data saved in each slot like a file.
+Also, "tag" information is included in each slot.
+You can also get "tag" strings in a listed form.
+You may use this function to display a list of characters
+of the user when the user want to choose what character to play
+when starting game play.
+</p>
+
+<h3>Saving data into UNIX file</h3>
+<p>
+ By configuring sqllib, it can save user data into UNIX file
+system directly, not into MySQL datafile. In this case,
+content of user data is saved in UNIX file, and INDEX/tag strings
+and pathname of UNIX file are saved in MySQL.
+</p>
+<p>
+ By using this function, there are some good points:
+</p>
+<uL>
+  <LI>You can avoid
+      <a href="#mb">"medium blob fragment performance problem"</a>.
+      
+  <LI>Sometimes the maximum throughput of data saving is improved
+      when the saving data is big.
+  <LI>Ease of maintainance.
+</ul>
+
+<p>
+ You will configure sqllib to use UNIX files to save data
+when calling sql_storage_create_context function.
+Basically, sqllib tries to save a set of data in each UNIX files,
+but because Linux filesystem has a terrible performance problem.
+So sqllib firstly creates a lot of(100-1000) subdirectories in a
+top data directory, and saves each files in each directory
+evenly distributed by a hash function.
+</p>
+
+<p>
+  There is not only good points, but a weakness.
+The biggest weakness is that you cannot access to the
+content of each set of data.
+In other words, you can not use SQL's "like" or "where"
+to find a data. In our experience, in most games,
+this weakness won't be fatal, so you can use this function.
+</p>
+
+<p>
+As a conclusion, in almost all cases, you should use this function
+when using sqllib.
+</p>
+
+<h3>API: Data structure of sqllib</h3>
+<ul>
+  <LI>sqlcontext_t<BR>
+      sqllib's basic data structure containing
+      host information, and DBMS user information, password,
+      and every information to access MySQL server.
+  <LI>SQL_RETURN<BR>
+      C type of sqllib's return values.
+</ul>
+
+<h3>API: sqllib functions</h3>
+
+<ul>
+  <LI>
+      <font color=blue><pre>
+      sqlcontext_t * sql_storage_create_context( char *host, char *user,
+      char *pass, char *database, char *table,
+      char *datafile_topdir, int divdirnum );
+      </pre></font>
+      <p>
+      Initialize sqlcontext_t.
+      This function tests MySQL accessibility when initializing.
+      If the test failed, or failed to initialize any information,
+      returns NULL pointer.
+      </p>
+      <p>
+      To configure sqllib to use UNIX data file not MySQL,
+      you have to make <B>datafile_topdir</B> argument have proper directory,
+      for example, "/var/foodir".
+      If no subdirectories are not resistant in the top directory,
+      sqllib will make all required subdirectories in it.
+      sqllib makes <B>dirdivnum</B>  of subdirectories.
+      You specify this argument usualy 100 or 1000. 10000 should be too much.
+      </p>
+      <BR><BR>
+  <LI>
+      <font color=blue><pre>
+      void sql_storage_cleanup_context( sqlcontext_t *s );
+      </pre></font>
+      <p>
+      Release a sqlcontext_t which is previously created
+      by sql_storage_create_context function.
+      </p>
+      <BR><BR>      
+  <LI>
+      <font color=blue><pre>
+      int sql_storage_save( sqlcontext_t *s, char *uid, 
+      int type, int slotid, int version, char *tag, int taglen,
+      char *data, int datalen );
+      </pre></font>
+      <p>
+      save a combination of "version,tag,data" by specifying slot
+      by <B>slotid</B> argument.
+      <B>data</B> is binary data, and you can include "\0" in it.
+      </p>
+      <BR><BR>
+  <LI>
+      <font color=blue><pre>
+      int sql_storage_insert( sqlcontext_t *s,
+      char *uid, int gametype, int slotid, int dataversion,
+      char *tag, int taglen,
+      char *data, int datalen );
+      </pre></font>
+      Insert data into database.
+      It does not check the entry exists or not.
+      This function won't be used for saving character data,
+      but used for Mail service or BBS.
+      <BR><BR>      
+  <LI>
+      <font color=blue><pre>
+      int sql_storage_load( sqlcontext_t *s, char *uid,
+      int gametype,
+      int slotid, int *dataversion, char *tag, int *taglen,
+      char *data, int *datalen );
+      </pre></font>
+      Load data from database. tag information is also loaded
+      at the same time.
+      <BR><BR>      
+  <LI>
+      <font color=blue><pre>
+      int sql_storage_load_by_tag( sqlcontext_t *s,
+      char *uid,
+      int gametype,
+      int *dataversion,
+      char *tag, int taglen,
+      char *data, int *datalen );
+      </pre></font>
+      Load data from database, without specifying slotid.
+      You specify <B>tag</B> to find the required data.
+      <BR><BR>
+  <LI>
+      <font color=blue><pre>
+      int sql_storage_tag_exists( sqlcontext_t *s, char *tag, int taglen );
+      </pre></font>
+      Check if a set of data exists or not.
+      Search data by specified <B>tag</B>.
+      You can use this function when you want to find
+      character data by character name, not slotid.
+      <BR><BR>
+  <LI>
+      <font color=blue><pre>
+      int sql_storage_delete( sqlcontext_t *s,
+      char *uid, int gametype, int slotid );
+      </pre></font>
+      Delete a set of data from a data slot.
+      As an example, this function is used by mm-suite default DBSV
+      when the user is deleting a character.
+      <BR><BR>      
+  <LI>
+      <font color=blue><pre>
+      int sql_storage_delete_by_tag( sqlcontext_t *s,
+      char *uid, int version, char *tag, int taglen );
+      </pre></font>
+      Delete a set of data from data slot, by specifying
+      tag information by <B>tag</B> argument.
+      As an example, mm-suite's default MSGSV uses this function
+      to delete a message from user's mail box.
+      <BR><BR>
+  <LI>
+      <font color=blue><pre>
+      int sql_storage_get_blank_slot( sqlcontext_t *s, char *uid, int gametype,
+      int maxslot, int *blankslotid );
+      </pre></font>
+      Find a blank data slot in a user's slots, by userID.
+      As an example, mm-suite's default DBSV is using this function
+      to find a blank character slot when creating a new character.
+      <BR><BR>
+  <LI>
+      <font color=blue><pre>
+      int sql_storage_get_tag_list( sqlcontext_t *s, char *uid, int gametype,
+      char **tags, int *slots, int *versions, int *num );
+      </pre></font>
+      Get all tag information within a user slots in listed form.
+      For example, mm-suite's default DBSV is using this function
+      to show a user the character list.
+      <BR><BR>
+  <LI>
+      <font color=blue><pre>
+      int sql_storage_load_multiple_by_uid( sqlcontext_t *s,
+      char *uid, int gametype,
+      int dataversion,
+      int ofs, int *num,
+      char **tag, int *taglen,
+      char **data, int *datalen )
+      </pre></font>
+      Get limited number(<B>num</B>) of newest data entries
+      from a user's slots.
+      This function is specially designed for implementing
+      web like BBS system. Of course, mm-suite's default MSGSV
+      is using this function to maintain BBS system.
+      <BR><BR>
+  <li>
+      <font color=blue><pre>
+      int sql_storage_count_uid( sqlcontext_t *s, int gametype, int slotid,
+      int version, int *count );      
+      </pre></font>
+      Count how many data is saved in the "game, version, slotid",
+      without specifying userID.
+      This function is used by mm-suite's default MSGSV
+      to re-build user's contact list. MSGSV uses both this and
+      get_all_uid function below.
+      <BR><BR>
+  <li>
+      <font color=blue><pre>
+      int sql_storage_get_all_uid( sqlcontext_t *s, int gametype, int slotid,
+      int version,
+      char **uid, int uid_max, int uid_max_each );
+      </pre></font>
+      Get all user IDs from database specifying "gameTYPE,version,slotid".
+      This function is also used by MSGSV, to re-build user's
+      contactlist. To know how many number of users are existent,
+      MSGSV calles sql_storage_count_uid first, and after allocating
+      working memory for it, calls sql_storage_get_all_uid.
+      <BR><BR>
+  <LI>
+      <font color=blue><pre>
+      int sql_storage_count_entries( sqlcontext_t *s, int *count );
+      </pre></font>
+      Count how many entries are in a whole database.
+      This can be used to make a statistics, and debugging.
+      <BR><BR>      
+  <LI>
+      <font color=blue><pre>
+      int sql_storage_count_entries_by_uid( sqlcontext_t *s,
+      char *uid, int *count );      
+      </pre></font>
+      Count how many characters are owned by a user.
+      <BR><BR>      
+  <LI>
+      <font color=blue><pre>
+      int sql_storage_load_by_order_id( sqlcontext_t *s, int ord,
+      char *uid, int *uidlen,
+      int *gametype,
+      int *slotid, int *dataversion,
+      char *tag, int *taglen,
+      char *data, int *datalen );
+      </pre></font>
+      Load many sets of data sorted by insertion order.
+      This function is usually used with sql_storage_get_order_id_range
+      function described below.
+      A sample code is included in sqllibtest.c.
+      <BR><BR>
+  <LI>
+      <font color=blue><pre>
+      int sql_storage_get_order_id_range( sqlcontext_t *s,
+      int *min, int *max );
+      </pre></font>
+      Get max number and minimum number of "ord" field.
+      <BR><BR>
+  <LI>
+      <font color=blue><pre>
+      int sql_storage_discard_old_entries( sqlcontext_t  *s, int remain_num );
+      </pre></font>
+      Delete oldest entries based on "ord" field information.
+      This function leaves <B>remain_num</B> entries remaining.
+      You can make a BBS-like system, in which only top N entries are
+      always remaining.
+      Usually, you will call sql_storage_discard_old_entries
+      function after saving(inserting) new entry.
+      <BR><BR>
+
+  <LI>
+      <font color=blue><pre>
+      int sql_storage_delete_all_entries( sqlcontext_t *s );
+      </pre></font>
+      Delete all entries in a table (danger!).
+      <BR><BR>      
+</ul>
+
+
+<a name="mb"><h3>medium blob fragment performance problem</h3></a>
+
+<p>
+  This problem is related all DBMS, and we have to solve this
+if we want to use DBMS in our applications.
+"Medium blob fragment problem" occurs when we are using
+variable length data record in MySQL table. 
+In fact, when we expand variable length data record with some sequence,
+the data is widely distributed in data file, and
+extra disk access is required to get the whole data record.
+Let's explain this mechanizm in pictures:
+</p>
+
+<ol>
+  <LI>Save the first data record (A)<BR>
+      <pre>
+      [AAAAAAA]
+      </pre>
+  <LI>Save the second data record (B)<BR>
+      <pre>
+      [AAAAAAA][BBBB]
+      </pre>
+
+  <LI>Expand the first data record<BR>
+      <p>
+      Now let's expand first data after saving second data.
+      Then, simply thought, it will be:
+      </p>
+      <pre>
+      [AAAAAAA][aaaa][BBBB]
+      </pre>
+      <p>
+      But, to achieve this, we have to shift all data
+      saved in this file, and current file system doesn't have
+      this function. So, MySQL saves extended data
+      in the last part of the data file:
+      </p>
+      <pre>
+      [AAAAAAA][BBBB][aaaa]
+      </pre>
+      <p>
+      As you know, to get the first data record,
+      it has to access the first part of the file and the last
+      part of file. So finally two disk random access are required.
+      This simply leads performance problem.
+      </p>
+  <LI>After repeating...<BR>
+      <p>
+      Let's repeat processes shown above.
+      Then, content of data file is like that:
+      </p>
+      <pre>
+      [AAAAAAA][BBBB][aaaa][bbbbb][CCCCCC][aaaaa][bbb][aa][bbbb][ccccc][aaa]
+      </pre>
+      <p>
+      This is called "data fragment problem".
+      </p>
+</ol>
+
+<P>
+  To solve this problem, there are two ways available:
+</p>
+<ul>
+  <LI>Don't use variable length data records
+  <LI>Use "optimize table" SQL command
+</ul>
+<p>
+  But, we don't recommend using "optimize table" command
+because "optimize table" needs a lot time (from minutes to hours),
+and also because it will get fragmented soon after doing optimization
+after all.
+So, sqllib has a function that it saves variable data in
+UNIX file, and save only pathname of UNIX file in MySQL table.
+</p>
+<p>
+  Some people say UNIX files are also get fragmented,
+but fragment unit of UNIX files are far larger than MySQL's,
+so in most cases we can avoid fragment problem by using UNIX files.
+</p>
+
+
+<BR><BR>
+<a href="index-en.html">Return to INDEX</a>
+
+
+
+<br>
+<hr>
+<font size=-1>
+Copyright 2000-2005 CommunityEngine Inc. All rights reserved.<BR>
+
+</body> </html>
+

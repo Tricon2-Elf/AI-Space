@@ -1,0 +1,274 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html> <head>
+<title>mm-suite official document (English)</title>
+<style type="text/css">
+P {
+  TEXT-INDENT: 1em
+}
+</style>
+</head>
+
+<body>
+<h1>About win32 demo program</h1>
+
+<h3>Content of Win32 Demo programs (wincli)</h3>
+
+<p>
+  Wincli is a tester program of mm-suite. It's implemented on
+Microsoft DirectX technology, and Win32 API.
+That can show online characters and status using simple sprites.
+Here is a screen shot:
+</p>
+<img src="images/wincli_screen.gif">
+<p>
+  You notice some characters are displayed in this screen.
+A character in the middle of the screen is a player character,
+and the others are NPCs. NPCs are configured so that they
+randomly walk once a second. NPC name and HP and number of graphics
+are also displayed.
+A table on the top right of the screen is an instant message contact list.
+On the bottom of the screen, it has command line input. You can input
+any commands through CUI, which is different from ordinary
+commercial games.
+</p>
+<p>
+ Some will notice that many pologons are shown in the screen.
+They are collision-poligon. Characters cannot walk through the
+collision poligon. In mm-suite, map collision is implemented
+in both server and client.
+You can also see a special warp point placed on bottom right of
+the screen. The character can warp to another field through the hyper-link.
+</p>
+
+<p>
+  You can test all functions implemented in mm-suite
+server components by using wincli demo program through GUI or CUI.
+Some functions are accessed only by character user interface
+implemented on wincli.
+
+</p>
+
+
+<h3>Using virtual command line on wincli</h3>
+<p>
+  You can do all controll through CUI interface.
+But of course, you can move and attack on other NPCs using mouse-click.
+Here I will show command line example to log in to GMSV through CUI.
+</p>
+
+<pre>
+command&gt;connect HOSTNAME PORTNUM
+command&gt;msgconnect HOSTNAME PORTNUM
+command&gt;user test_user password
+command&gt;newchar NAME HP_HINT
+command&gt;login 0
+</pre>
+
+<p>
+For example:
+</p>
+
+<pre>
+command&gt;connect 192.168.1.203 9001
+command&gt;msgconnect 192.168.1.203 5001
+command&gt;user test_user password
+command&gt;newchar NAME 10
+command&gt;login 0
+</pre>
+
+<p>
+  The point is that you have to create a new character
+before log in to GMSV. You don't have to create a character
+when you try to log in again.
+Don't skip every steps.
+</p>
+
+<h3>Commands reference</h3>
+<p>
+ Wincli demo program supports following commands:
+</p>
+
+<ul>
+  <LI><B>connect [HOST] [PORT]</B><BR>
+	  connect to GMSV.
+	  <pre>
+	  connect test.ce-lab.net 9001
+	  connect 192.168.0.103 12345
+	  </pre>
+      HOST, PORT have to be collect. By default, it's set 9001, or 9003.
+
+  <LI><B>msgconnect [HOST] [PORT]</B><BR>
+	  connect to MSGSV.
+      <pre>
+      msgconnect test.ce-lab.net 5001
+	  msgconnect 192.168.0.103 12347
+      </pre>
+      HOST, PORT have to be collect. By default, it's set 5001, or 5003.
+
+  <LI><B>clear</B><BR>
+      clear everything shown in screen terminal.
+
+  <LI><B>ping</B><BR>
+      send "ping" protocol command to GMSV.
+      <!-- You have to execute this command after "connect". -->
+
+  <LI><B>logout</B><BR>
+      log out from GMSV.
+      GMSV will save your character into DBSV.
+
+  <LI><B>close</B><BR>
+      close the TCP/IP connection.
+      You can re-connect to server after this.
+
+  <LI><B>netstat</B><BR>
+      Know network is available or not.
+
+  <LI><B>exit</B><BR>
+      exit the demo program.
+
+  <LI><B>help</B><BR>
+      Show help message in screen terminal.
+
+  <LI><B>user UID PASS</B><BR>
+      Specify user ID and password needed to log in to GMSV.
+      This command starts check-password to GMSV and MSGSV.
+	  <pre>
+	  user ringo hogehoge_password
+	  </pre>
+      
+  <LI><B>newchar NICKNAME HP</B><BR>
+      Create a new character.
+      NICKNAME is nickname of the character, and HP is
+      hit-point of the character.
+	  <pre>
+	  newchar testChar 123
+	  </pre>
+      When GMSV receives this command, it creates new character
+      and saves the information in DBSV. Then, GMSV sends
+      a newly allocated slot ID to wincli.
+      You have to specify the slot ID to load character from DBSV to GMSV.
+
+	  
+  <LI><B>delchar SLOTNO</B><BR>
+	  Delete a character.
+      SLOTNO is slot ID which is got when you created the character
+      by "newchar" command.
+	  
+  <LI><B>login SLOTNO</B><BR>
+      Load a character in GMSV from DBSV.
+      SLOTNO is slot ID which is got when you created the character
+      by "newchar" command.
+      Before doing this command, you have to execute "user" and
+      set userID and password.
+	  
+  <LI><B>talk TEXT TEXT ...</B><BR>
+      Send chat message to server.
+      Some NPCs responds to your talk messages through "talked" NPC funcs.
+
+  <LI><B>whisper UID NICK TEXT TEXT ...</B><BR>
+      Send chat message to the character specified by UID and NICK.
+      
+  <LI><B>mail UID TEXT</B><BR>
+      Send an instant message to specific user.
+      When MSGSV receives the message, it saves the message
+      in the mailbox of destination user.
+      You can also send a message to yourself.
+      To retrieve new message, you have to execute "pollmail" command.
+
+	  
+  <LI><B>delmail MESSAGE_ID</B><BR>
+      Delete a message from your mail box.
+	  
+  <LI><B>pollmail NUM</B><BR>
+      Poll new message through GMSV.
+      NUM is the max number of messages retrieved.
+
+  <LI><B>addlist UID NICK</B><BR>
+      Add a new character to your contactlist.
+	  
+  <LI><B>dellist UID NICK</B><BR>
+      Delete a character from your contactlist.
+      
+<!--
+  <LI><B>loadlist</B><BR>
+      Load contactlist from MSGSV through GMSV.
+      By executing this command, you will be seen "online" by other
+      users. After this, "one-time push" message is enabled.
+
+	  
+  <LI><B>savelist</B><BR>
+      Save your contactlist.
+      If you don't execute this, the contact list will not saved
+      even if you log out from GMSV.
+-->
+
+	  
+  <LI><B>runlevel RUNLEVEL</B><BR>
+      Change runlevel of the wincli demo program.
+      Please look at wincli source code.
+
+  <LI><B>coll map|char on|off</B><BR>
+      Enable/Disable collision processing by client side.
+      if "on", client side collision is enabled.
+      <BR>
+      For example:
+	  <pre>
+	  coll map on      
+	  </pre>
+
+  <LI><B>contactstatus NUMBER</B><BR>
+      Change option flags of contactlist.
+      This change will be sent to your friends.
+      You can use this options to implement original
+      function of your game.
+
+
+  <LI><B>gettags</B><BR>
+      Get all character tag information from GMSV.
+      This command will be used in such games that
+      one user can have many characters.
+
+</ul>
+
+<h3>Attacking against NPCs</h3>
+
+<p>
+  You can "attack" other NPCs displayed in the screen.
+Althogh you can see small "flying sprites" on your screen,
+but in the server the sprite is not flying,
+just processed as "line-rectangle" collision.
+When your attack hits a NPC, wincli vibrates the NPC whose
+HP got changed.
+</p>
+
+<h3>GMSV cheat commands</h3>
+<p>
+  Cheating commands are also implemented in GMSV.
+You can access the function through "talk" commands in CUI.
+</p>
+<pre>
+command&gt;talk @@ hoge put-npc-near monster0
+</pre>
+<p>
+  If you put "@@" and "hoge" in the beggining of "talk" command,
+you can activate server-side cheating commands.
+Here, "@@" is the magic character, and "hoge" is the password,
+which can be configured through configuration file for GMSV.
+This function is very useful when developing GMSV.
+Please note that you have to block this function
+when you put this GMSV in service.
+</p>
+
+<BR><BR>
+<a href="index-en.html">Return to INDEX</a>
+
+
+
+
+<br>
+<hr>
+<font size=-1>
+Copyright 2000-2005 CommunityEngine Inc. All rights reserved.<BR>
+
+</body> </html>
+

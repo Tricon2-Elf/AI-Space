@@ -1,0 +1,208 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel="stylesheet" href="../vce.css" type="text/css">
+<title>VCE 1.1.4 official document (Japanese)</title>
+</head>
+
+<body>
+<h1>Linux Tune</h1>
+  <p>VCE を用いたプログラムを Linux 2.4より前のカーネル上で動作させる場合、
+  サービスの規模や内容に応じて Linux カーネルをチューンする必要が生じる。
+このページでは Linux の TCP/IP をチューニングする方法について、解説する。</p>
+  <ul>
+  <li><a href="#reason">Linux 2.2 と 2.4 で異なっている理由</a></li>
+  <li><a href="#session">セッション数を1000より多くする方法</a></li>
+  <li><a href="#keepalive">クライアントのコネクション断を検出する方法</a></li>
+
+</ul>
+
+
+<h2><a name="reason"></a>Linux 2.2 と 2.4 で異なっている理由</h2>
+<p>
+Linux 2.4 以降では、ファイルやソケットなど、未使用のfdを新たに割りあてる場合に既存のカーネル内の fd_set
+のサイズを越えることがわかった場合、自動的に fd_set のサイズを expand する
+機能がある。したがって、カーネル内部の fd_set の値をチューンする必要がない。ライブラリレベルのチューンだけでよいことになる。ところが 2.2 とそれより前のカーネルでは、カーネル内において
+FD_SETSIZE が固定であるため、最大 fd 番号がそれによって規定されてしまうのである。この文書では 2.4 より前のカーネルを使う場合のカーネルチューン法を説明する。</p>
+
+<h2><a name="session"></a>セッション数を1000より多くする方法</h2>
+
+<p>
+   VCE を用いたプログラムのうち、1000 よりも多くのコネクションを使う
+ようなプログラムのほとんどは linux 上で動作させる場合でも、
+VCE 以外の調整が必要である。
+このドキュメントでは、 linux において、多いファイルディスクリプタを
+使う方法を説明する。<BR>
+VCE は最初から65536接続が可能なようにコンパイルされているため、
+VCE を使ってアプリケーションを開発する場合は、
+glibc 自体には手をいれず、カーネルの調整だけで多コネクションが可能である。
+</p>
+
+
+<h3>VCE を使う人向け</h3>
+<p>
+  linux 2.4 系のカーネルは最初から多数コネクションに対応しているが、
+別な制限があるためそのままでは多コネクションを使えない。
+そこで csh や tcsh など csh 系のシェルを使い(bash/zsh はダメ)、
+さらにスーパーユーザになって
+
+<pre>
+shell # limit descriptors 10000
+shell # limit openfiles 10000
+</pre>
+
+<p>という様に限界を大きくするとよい。
+  しかしサーバを root 権限で動作させるのは普通は嫌なので、
+  linuxカーネルの include/linux/fs.h の INR_OPEN を 10000 とかに変更する。
+  すると通常のユーザでもその数のコネクションが使える。
+  (limit 外しの必要は多くの場合ない。
+  シェルによってはちゃんと limit 外しをする必要あり。)
+  カーネルチューンをするか、root でサーバを動かすか、
+  どちらかの選択肢しかない。
+  </p>
+</p>
+<p>
+  上記の対処をした後、さらに OS 内に存在できる、
+開いたままのファイルの数の上限を更新する必要がある。
+それには以下のコマンドラインを使う。
+</p>
+<pre>
+shell # echo 65536 > /proc/sys/fs/file-max
+</pre>
+
+<BR>
+<B>*注意*</B><BR>
+
+<ul>
+  <li>straceの問題(linux 2.4.x)
+	  <p>include/linux/fs.h のサイズを変更したあと、 strace プログラムを使って
+	  アプリケーションプログラムをトレースすると、 select() 関数の呼びだしが
+	  正常に表示されない。 strace プログラムをコンパイルしなおさないと、
+	  この問題は解消されない。</p></li>
+  <li>メモリ量
+	  <p>また、多コネクションは多くのメモリを必要とするので、
+	  できるだけ多くの物理メモリを塔載すること。
+	  数万コネクションで運用したい場合は 768M 以上のメモリを載せること。</p>
+  <li>ローカルポート番号
+	  <p>3万コネクションを越えようとすると、ローカルポート範囲が不足するので、</p>
+	  <pre>
+	  shell # echo 10000 65500 > /proc/sys/net/ipv4/ip_local_port_range
+	  </pre>
+	  <p>というコマンドラインで範囲を拡大すること(linux 2.4.x)。
+	  下限(上の例では10000)をあまりにも下げると他のアプリケーションに
+	  支障を来たすことがあるので、
+	  IPシングルホームでは5万コネクションあたりが本当の限界となる。<p></li>
+
+  <li>他のアプリケーション
+	  <p>select() 関数を使うような他のアプリケーション(シェルなども)では、
+	  アプリケーションを再コンパイルしないと多コネクションを活用できない。
+	  ほとんどのアプリケーションは、1024本までのコネクションを前提として
+	  コンパイルされているからである。</p></li>
+</ul>
+
+
+
+<h3>VCE の開発者向け</h3>
+<p>
+  重要なのは、 fd_set のデータ構造である。
+  glibc 2.2.x では fd_set は以下のような定義である( gcc -E で得られる)
+「VCE が最初から65536接続可能なようにコンパイル」とは、 VCE からみて
+fd_set 構造体が十分大きい状態に見えるようにしてコンパイルしているという事
+である。単に、各種ヘッダの define を変更してから make しているだけ。
+それを最大値に合わせておくだけ(linuxのみ)
+これで fd_set のサイズが8KBほどになるが、linuxのサーバ用途では問題なし。
+利便性のほうが勝っている。
+</p>
+<pre>
+typedef long int __fd_mask;
+typedef struct
+{
+  __fd_mask __fds_bits[__FD_SETSIZE / (8 * sizeof (__fd_mask))];
+} fd_set;
+</pre>
+<p>
+  ここで __FD_SETSIZE は /usr/include/bits/types.h と、
+linux カーネルソース(libcから symlink されてもいる)の
+include/linux/posix_types.h で定義されている。
+前者は glibc 内用、後者がカーネル用である。
+幸いカーネルに渡す fd_set のポインタは単なる配列なので、
+どーんとでかい領域をとって、
+そのままどんなカーネルに渡しても問題とはならない(FreeBSD でも同じ)
+あとは便利のために、fs.h の INR_OPEN も同様に変更しておくといい。
+こうすると普通のユーザーでも 65536 個のfd を持てる。
+
+</p>
+
+
+<h3>FreeBSD では。</h3>
+<p>
+/usr/include/sys/types.h の FD_SETSIZE がすべてである。
+</p>
+<pre>
+typedef unsigned long   fd_mask;
+typedef struct fd_set {
+    fd_mask fds_bits[((( 1024  ) + ((  (sizeof(fd_mask) * 8 )  ) - 1)) / (  (sizeof(fd_mask) * 8 )  )) ];
+} fd_set;
+</pre>
+<p>
+ となっている。カーネルソースの sys/sys/types.h の FD_SETSIZEと、
+sys/sys/kern/sys_generic.c の 2048 という定数を変更すればいいのと、
+VCE をコンパイルする前に
+/usr/include/sys/types.h の FD_SETSIZE をそれに合わせておくだけでよい。
+linux の場合と同様、単なる配列なので、VCE がfd_set のサイズを
+大きく確保しすぎるのは問題なし。
+</p>
+
+
+
+<h2><a name="keepalive"></a>クライアントのコネクション断を検出する方法</h2>
+<p>
+  クライアントがたとえばダイヤルアップ PPP で、サーバが Linux の場合。
+クライアントが電話線を引きぬいた場合には ICMP メッセージが生成されないため、
+サーバ側で接続断を検出する手段がない。
+</p>
+<p>
+  VCE では、SO_KEEPALIVE オプションを使っているが、
+Linux の標準設定では、通信しなくなってから2時間以上たってから
+KEEPALIVE パケットが送出されるため、
+ゲームアプリケーションで必要な短い時間での検出ができない。
+ここではこれをチューンする。
+</p>
+
+<h3>KEEPALIVE パケットのしくみ</h3>
+<p>
+  TCP の keepalive は、最後のパケット交換から
+ tcp_keepalive_time 秒たったら tcp_keepalive_intvl 秒ごとに、
+probe パケットを相手の端点に送出し、
+tcp_keepalive_probes 回返事がなかったら接続断と見なす、というものである。
+Linux 2.4 ではこれらの設定を OS 単位で設定できる。
+(ソケット単位での設定はできない)。
+keepalive に関するオプションを操作するには、
+<ul>
+  <LI>/proc/sys/net/ipv4/tcp_keepalive_probes
+  <LI>/proc/sys/net/ipv4/tcp_keepalive_time
+  <LI>/proc/sys/net/ipv4/tcp_keepalive_intvl  ( 2.4 以降)
+</ul>
+の3変数を操作する。詳細は(man tcp(7))
+</p>
+
+<p>
+<pre>
+echo 2 &gt; /proc/sys/net/ipv4/tcp_keepalive_probes
+echo 60 &gt; /proc/sys/net/ipv4/tcp_keepalive_time
+echo 60 &gt; /proc/sys/net/ipv4/tcp_keepalive_intvl
+</pre>
+ <p>のように設定する。この場合は、通信終了から 60 + 2 * 60 = 約180 秒の
+  時間で切れることになる。VCE の場合はサーバ側の closewatcher が呼びだされる
+  事になる。<br>
+   <br>
+   <a href="index.html">index に戻る</a>
+   <br>
+    
+</p>
+ <div id="footer">
+Copyright 2000-2005 Community Engine Inc. All rights reserved.</div>
+
+</body> </html>
