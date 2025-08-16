@@ -1,0 +1,95 @@
+-*- outline -*-
+
+hed/datファイルの概要。
+
+# hed/datファイルは、ai sp@ceをインストールしたときのdataディレクトリに
+# 入っているファイルで、クライアントが動作するときに参照するデータを保持する。
+
+* aipower.hed
+詳細不明。ai sp@ceに入植したときにもaiぱわーがどうとか言われた気が…
+おや、こんな時間にだれか来たようだ。
+
+* chara/n/nnnn.hed
+キャラクタのデータ。以下のファイルを含む
+
+- n/nnnnn/anim アニメーションデータ(mrb, asdファイル)
+- n/nnnnn/attr 属性データ(vraファイル)
+- n/nnnnn/face 顔のデータ?(mrbファイル)
+- n/nnnnn/model モデルデータ(dxgファイル)
+- n/nnnnn/tex テクスチャデータ(ddsファイル)
+
+* default.hed
+デフォルトのaiちゅーんが入ってる。
+
+* emblem.hed
+画像データが入ってる。ゲーム立ち上げ時のロゴ表示?
+
+* equipment.hed
+リボン・サングラスなどの特定の装備品のモデルデータ
+
+* fx.hed
+各種効果
+
+* interface.hed
+UIに使われる画像やデータ
+
+* item.hed
+アイテム関連のデータ。以下のファイルを含む
+
+- n/nn/nnnnn/attr  属性(vraファイル)
+- n/nn/nnnnn/model モデルデータ(dxgファイル)
+- n/nn/nnnnn/tex   テクスチャ(ddsファイル)
+- icon/nnnnnnnn.dds アイコンデータ(ddsファイル)
+
+* mapimage.hed
+
+* script.hed
+各種スクリプト。以下のファイルを含む。
+いずれも「aiすぱいす」のスクリプトらしく、aiちゅーんやドラマとは異なる
+スクリプト形式となる。
+
+- event/*.csv
+新年イベント・ホワイトデー
+
+- furniture/*.csv
+家具をいじったときのスクリプト
+
+- mcs/*.csv
+初めてのマップに移動したときにカメラがパンするデモ
+
+- sys_event/*.csv
+ai sp@ceへの入植・キャラドルの初訪問・クリパイベント
+
+* settings.hed
+各種設定
+
+* shader.hed
+よく分からないが、Direct3D系のファイル?
+
+* sound/se.hed
+効果音。
+
+* sound/BGM/nnnn.hed
+BGM。
+
+- 1000番台がもとからあったもの。おそらく原作のデータ。二次利用禁止。
+- 2000番台はニコニコモンズ素材。
+
+* sound/VOICE/nnnn.hed
+- 0000番台はドラマ素材
+- 0100番台は原作ボイス
+
+* tools.hed
+不明
+
+* world/env_settings.hed
+環境光・フォグなどの設定?
+
+* world/field.hed
+各島のマップデータ
+
+* world/object.hed
+マップ中に含まれるオブジェクトのモデルデータ
+
+* world/sky.hed
+空のデータ

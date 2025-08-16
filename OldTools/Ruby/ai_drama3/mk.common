@@ -1,0 +1,20 @@
+# -*- Makefile -*-
+
+UTF16 = (sed -e 's/^[ 	]*//g' -e '/^\/\//d' -e '/^$$/d' | nkf -c -w16L)
+
+TIMESTAMPS = $(SOURCES:%=%/timestamp)
+
+all:: $(TIMESTAMPS)
+
+clean::
+	rm -rf $(SOURCES)
+
+%/timestamp: %.rb
+	@echo "### converting $(@:%/timestamp=%) ###"
+	mkdir -p $(@:%/timestamp=%)
+	ruby $< -drama > $(@:%/timestamp=%)/tmp_drama.txt
+	$(UTF16) < $(@:%/timestamp=%)/tmp_drama.txt > $(@:%/timestamp=%)/drama_0.csv
+	ruby $< -data > $(@:%/timestamp=%)/tmp_data.txt
+	$(UTF16) < $(@:%/timestamp=%)/tmp_data.txt > $(@:%/timestamp=%)/datalist_0.txt
+	wc $(@:%/timestamp=%)/tmp_*.txt
+	@touch $@

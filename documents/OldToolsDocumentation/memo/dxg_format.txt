@@ -1,0 +1,249 @@
+// -*- c++ -*-
+// モデルデータが格納されているdxgファイルのフォーマットに関するメモ。
+
+struct dxg_file {
+    struct file_header file_header;
+    struct mesh_data group_list[NR_GROUPS]; // 0以上
+    struct aux_data aux_list[NR_AUX]; // 0以上
+};
+
+/***********************************************************************/
+
+struct file_header {
+    // 0x0, シグネチャ 'DXG '
+    char signature[4];
+
+    // 0x4, 1固定 (フラグA1)
+    short flag_a1;
+
+    // 0x6, (5,6,7) (フラグA2)
+    short flag_a2;
+
+    // 0x8, bit0～bit5まで使用 (3,7,39が多い)(フラグA3)
+    // - bit 0: メッシュデータあり
+    // - bit 1: 補助データa0またはa1あり
+    // - bit 2: 補助データbあり
+    // - bit 3: 補助データcあり
+    // - bit 4: 常に0
+    // - bit 5: 補助データdあり
+    short flag_a3;
+
+    // 0xa, 0固定 (フラグA4)
+    short flag_a4;
+
+    // 0xc, グループ数
+    int nr_groups;
+
+    // 0x10, aux_dataへのオフセット
+    // = aux_data開始位置 - 20
+    int next_data_offset;
+
+    // 0x14, グループ名リストのサイズ
+    int group_names_size;
+
+    // 0x18, グループ名リスト
+    char group_names[group_names_size];
+};
+
+/***********************************************************************/
+
+struct group_data {
+    struct group_header group_header;
+    struct mesh_data mesh_list[];
+    struct vertex_coordinate verteces[group_header.verteces_nr];
+    struct normal_vector normals[group_header.normals_nr];
+    struct uv_coordinate uvs[group_header.uv_nr];
+    struct data_v[group_header.data_v_nr]
+    struct weight_map weight_map[group_header.weight_map_nr];
+};
+
+struct group_header {
+    // 0x00, 1固定 (フラグB1)
+    int flag_b1;
+
+    // 0x04, group_data後端へのオフセット
+    // = 後端 - 先端 - 8
+    int offset_f;
+
+    // 0x08, 0固定 (フラグB2)
+    int flag_b2;
+
+    // 0x0c, メッシュデータ数? (フラグB3)
+    // flag_b3 & 0xffff0000 == 0
+    // flag_b3 & 0xff00 == 0xff00
+    // flag_b3 & 0xff == メッシュデータ数
+    int flag_b3;
+
+    // 0x10, offset_f - 28
+    int offset_g;
+
+    // 0x14, 頂点座標の数
+    short verteces_nr;
+
+    // 0x16, 法線ベクトルの数
+    short normals_nr;
+
+    // 0x18, UV座標の数
+    int uv_nr;
+
+    // 0x1c, データVの数
+    int data_v_nr;
+
+    // 0x20, ウェイトマップの数
+    int weight_map_nr;
+};
+
+struct mesh_data {
+    struct mesh_header mesh_header;
+    struct vertex_info vertex_info[mesh_header.vertex_info_nr];
+    struct face_info face_info[mesh_header.face_info_nr];
+    struct name_t name_t;
+    struct data_u data_u;
+};
+
+// 頂点情報
+// (頂点座標ではない)
+struct vertex_info {
+    // 頂点座標へのインデクス
+    short vertex_index;
+    // 法線ベクトルへのインデクス
+    short normal_index;
+    // UV座標へのインデクス
+    short uv_index;
+    short unknown1;
+    short unknown2;
+};
+
+// 面情報
+struct face_info {
+    // 頂点情報へのインデクス(頂点座標の配列のインデクスではない)
+    short vi[3];
+};
+
+// 名前リストT
+struct name_t {
+    int name_t_size;
+    char name_t[name_t_size];
+};
+
+// データU
+// サイズは4の倍数に切り上げ。
+// 各バイト0～7までの値しかないことから、3ビットのフラグの配列と思われる。
+// 頂点情報数の3倍または4倍。
+struct data_u {
+    char data_u[group_header.data_u_nr];
+    char padding[];
+};
+
+struct data_v {
+    char unknown[4];
+};
+
+// 頂点座標
+struct vertex_coordinate {
+    float x, y, z;
+};
+
+// 法線ベクトル
+// ノルムが1に正規化されている。
+struct normal_vector {
+    float x, y, z;
+};
+
+// UV座標
+// 要素値は0～1の範囲。
+struct uv_coordinate {
+    float u, v;
+};
+
+// ウェイトマップ
+// 3つ一組のデータw0,w1,w2のうち最初の2つだけを記録。
+// w0+w1+w2=1.0の関係あり。
+// 頂点座標数の2倍または3倍らしい。(法線ベクトル数ではない)
+struct weight_map {
+    float w0, w1;
+};
+
+struct mesh_header {
+    // 頂点情報の個数
+    short vertex_info_nr;
+
+    // 面情報の個数
+    short face_info_nr;
+
+    // 名前リストT中の名前の数 
+    int name_t_nr;
+
+    // データUの個数
+    int data_u_nr;
+
+    // 頂点座標のオフセット
+    // = 頂点座標の位置 - メッシュ情報位置 - 52
+    int verteces_offset;
+};
+
+/***********************************************************************/
+
+struct aux_data {
+    // type		A0	A1	B	C	D
+    // aux_header	no	yes	yes	yes	yes
+    // aux_names	no	yes	yes	no	no
+    // bone_links	yes	yes	no	no	no
+    // data_z		yes	yes	yes	yes	yes
+
+    struct aux_header aux_header[];
+    struct aux_names aux_names[];
+    struct bone_link bone_links[];
+    char data_z[];
+};
+
+/*
+ * data_zフォーマット
+ *
+ * - A0
+ * 	16 * nr_groupsのfloatデータ
+ * - A1
+ * 	16 * nr_aux_elemsのfloatデータ
+ * - B
+ *	ソケット情報?
+ * 	4, ヘッダ長(int)
+ *	n, ヘッダ本体
+ *	16 * nr_aux_elemsのfloatデータ
+ * - C
+ *	60 * nr_aux_elems バイトのデータ
+ * - D
+ *	# nr_aux_elemsの下位バイト(第0バイト)をnl、上位バイトをnhとする
+ *	44 * nlバイトのデータ
+ *	名前リスト1 (nl個)
+ *	名前リスト2 (nl個)
+ *	以下をnh回繰り返し?
+ *		??バイトのデータ。先頭4バイトはヘッダ?
+ *		名前リスト
+ */
+
+struct aux_header {
+    // 個数
+    int nr_aux_elems;
+    // この補助データのサイズ-8
+    int aux_data_size;
+};
+
+struct aux_names {
+    // 名前リストのサイズ
+    int aux_names_size;
+    // 名前リスト
+    char aux_names[aux_names_size];
+};
+
+struct bone_link {
+    // ボーン番号
+    char index;
+    // 親のボーン番号。親がなければ255
+    char parent;
+    // 最初の子ボーンの番号。子がなければ255
+    char child;
+    // 次の兄弟ボーンの番号。兄弟がなければ255
+    char sibling;
+};
+
+/***********************************************************************/

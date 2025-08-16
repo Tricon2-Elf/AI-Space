@@ -1,0 +1,35 @@
+-*- outline -*-
+
+各種オブジェクトの属性が格納されたvraファイルのフォーマットに関するメモ。
+
+
+* 構造
+
+XML風の階層構造のデータ
+{}で階層構造
+	{node_name
+		子要素または属性情報
+	}
+()で属性情報
+	(属性名 属性型[要素数] 属性値)
+
+属性情報は必ずしも一行にはならない。例
+	(collisionIndex int16[3] 
+		1, 12, 13)
+
+** vraファイルの構造の例
+
+vra
+  geometry
+    mesh
+      lod0
+  material_set
+    material
+      texture
+        param_block
+  attribute
+
+** 有効なポリゴンデータ
+
+ジオメトリデータが入っているのは、attributeノードのGeometry属性で
+示されるファイルらしい。

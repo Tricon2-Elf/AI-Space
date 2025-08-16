@@ -1,0 +1,93 @@
+-*-outline-*-
+
+* field
+Fields stored under world/field.
+Defined in settings/map.csv.
+
+A01
+  A01_01 Akihabara station front street map
+  A01_02 Akihabara Ekimae-dori Event Map
+A02
+  A02_01 Akihabara UDX Map
+  A02_02 Akihabara UDX event map
+
+A11 ???? Probably an old event map
+A12 ???? Probably an old event map
+
+A22 ???? New map?
+
+I01 Avatar Makeup
+I02 Train
+Inside I03 Sotokanda Building
+I05 ???? [[Quest Room TPS Room?]]
+
+M01 Dacapo Island Shopping Street
+  M01_01 shopping street
+  M01_02 Shopping street event
+M02 CLANNAD island shopping street
+  M02_01 shopping street
+  M02_02 Shopping street event
+M03 Shuffle Island Shopping Street
+  M03_01 shopping street
+  M03_02 Shopping street event
+
+M11 ???? Probably an old event map
+M12 ???? Probably an old event map
+M13 ???? Probably an old event map
+
+R01
+  R01_01 My room (6 tatami mats)
+  R01_02 My room (8 tatami mats)
+  R01_03 My room (10 tatami mats)
+  R01_04 My room (12.5 tatami mats)
+  R01_99 isolation room
+
+P01 Mountain Temple
+
+
+S01
+  S01_01 stage
+S99
+  S99_01 Blue back for photography
+
+T01 Dacapo
+  T01_01 School map
+  T01_02 School event map
+  T01_03 Residential area
+T02 Shuffle!
+  T02_01 School map
+  T02_02 School event map
+  T02_03 Residential area
+T03 CLANNAD
+  T03_01 School map
+  T03_02 School event map
+  T03_03 Residential area
+
+T11 ???? Probably an old event map
+T12 ???? Probably an old event map
+T13 ???? Probably an old event map
+
+* Object category
+It is stored under world/object.
+Referenced from field definition files (especially *_obj.vra).
+
+00 Large outdoor trees
+02 Outdoor small plants
+04 potted plants
+09 Buildings (stores, school buildings, gymnasiums, swimming pools, incinerators, etc.)
+10 Akihabara Station/Private house
+20 Artifacts (shelves, posters, sofas, bicycles, schoolyard trucks, bulletin boards, etc.)
+22 Outdoor artifacts (signboards, lanterns, shrubbery, etc.)
+24 Stores, signboards, banners, tents
+25 Lighting
+26 Fences and fences (back nets, fences, guardrails, etc.)
+28 PA equipment
+29 Large artifacts (stations, trains, shops, buildings, pedestrian bridges, etc.)
+30 events
+35 Walls/Fences
+40 for the train scene
+60 Distant view?
+70 Private room? Private house
+80 house (original series)
+90 Nico Nico Douga
+99 shadow
