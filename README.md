@@ -8,3 +8,5 @@ The purpose of this repo is to create a central repository of anything AI Sp@ce 
 - Scripts: Contains a number of Python scripts for converting AI Sp@ce specific formats into more modern formats like converting DXG->GLTF and DSS->PNG and so on.
 - OldTools: Contains a number of tools in Java and Ruby that I have found over the last few months from previous efforts
 - Documentation: Contains what documentation I have been able to find over the last few months to help with this effort.
+
+This repo is meant as a one stop shop for all scripts and projects related to AI Sp@ce so feel free to commit any changes, new scripts or information 
