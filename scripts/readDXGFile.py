@@ -22,7 +22,6 @@ def read_group_header(file):
 
     mesh_count = flag_b3 & 255
 
-
     return {
         'flag_b1': flag_b1,
         'offset_f1': offset_f1,
@@ -52,13 +51,11 @@ def read_group(file, name):
 
     # UV coordinates
     uv_count = group_header['uv_nr']
-    print(f"UVCount:{uv_count}")
-    print(f"vertex:{len(normals)}")
     uvs = []
     for i in range(uv_count * 2):
         u_value = unpack('<f', file.read(4))[0]
         uvs.append(u_value if i % 2 == 0 else u_value)
-    print(f"UVDone")
+
     for mesh in meshes:
         #Generate Vertices
         act_vertices = []
@@ -100,9 +97,9 @@ def read_group(file, name):
     weight_map = [unpack('<f', file.read(4))[0] for _ in range(group_header['weight_map_nr'])]
 
     # remaining data. Unsure what it is
+    
     remaining = start_of_group_location + group_header['offset_f1'] + 8
     file.seek(remaining, os.SEEK_SET)
-
     return {
         'header': group_header,
         'meshes': meshes,
@@ -115,7 +112,6 @@ def read_mesh_header(file):
     """Function to read the mesh header from a binary file."""
     vertex_info_nr, face_info_nr = unpack('<HH', file.read(4))
     name_t_nr, data_u_nr, vertices_offset = unpack('<III', file.read(12))
-
     return {
         'vertex_info_nr': vertex_info_nr,
         'face_info_nr': face_info_nr,
@@ -166,28 +162,42 @@ def read_dxg_header(file):
     flag_a1, flag_a2, flag_a3, flag_a4, num_of_groups, next_data_offset, group_name_length = header_data
 
     bit_flags = [bool(flag_a3 & (1 << i)) for i in range(6)]
-    mesh_data_present, aux_data_a0_or_a1_present, aux_data_b_present, aux_data_c_present, _, aux_data_d_present = bit_flags
+    mesh_exists, aux_a_exists, aux_b_exist, aux_c_exist, _, aux_d_exists = bit_flags
 
     #Read the names of the groups in the file. These are null terminated strings
     group_names = read_null_terminated_strings(file.read(group_name_length))
-
+    file_size = next_data_offset+20
+    current_pos = file.tell()
+    auxheader = []
+    if(aux_a_exists):
+        file.seek(next_data_offset)
+        file.read(8) #Discard 8 bytes
+        file.read(8) #Discard 8 bytes
+        auxheader = unpack('<HHHHIII', file.read(20))
+        nr_aux_elems = auxheader[2]
+        aux_list_size = auxheader[4]
+        #nr_aux_elems, aux_list_size = unpack('<II', file.read(8))
+        file_size = next_data_offset + aux_list_size+28
+    file.seek(current_pos)
     return {
-        'flag_a1': flag_a1,
-        'flag_a2': flag_a2,
-        'flag_a3': flag_a3,
-        'flag_a4': flag_a4,
+        #'flag_a1': flag_a1,
+        #'flag_a2': flag_a2,
+        #'flag_a3': flag_a3,
+        #'flag_a4': flag_a4,
         'nr_groups': num_of_groups,
         'next_data_offset': next_data_offset,
         'group_name_size': group_name_length,
-        'mesh_data_present': mesh_data_present,
-        'aux_data_a0_or_a1_present': aux_data_a0_or_a1_present,
-        'aux_data_b_present': aux_data_b_present,
-        'aux_data_c_present': aux_data_c_present,
-        'aux_data_d_present': aux_data_d_present,
-        'group_names': group_names
+        'mesh_data_present': mesh_exists,
+        'aux_data_a0_or_a1_present': aux_a_exists,
+        'aux_data_b_present': aux_b_exist,
+        'aux_data_c_present': aux_c_exist,
+        'aux_data_d_present': aux_d_exists,
+        'group_names': group_names,
+        'file_size': file_size,
+        'auxhead': auxheader
     }
 
-def read_dxg_file(filename):
+def read_dxg_file(filename, headerOnly):
     """Function to read a binary file."""
     # Check the file extension
     if not filename.lower().endswith('.dxg'):
@@ -201,9 +211,10 @@ def read_dxg_file(filename):
         # If the identifier is not 'DXG ', raise an error
         if identifier != 'DXG ':
             raise ValueError(f'Invalid file identifier {identifier}. Expected DXG')
-
         # Read the file header
         dxg_header = read_dxg_header(file)
+        if(headerOnly):
+            return dxg_header
         filedata = {}
         filedata['dxg_header'] = dxg_header
         if dxg_header["mesh_data_present"]:
