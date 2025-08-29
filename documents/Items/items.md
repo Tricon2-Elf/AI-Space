@@ -1,0 +1,1 @@
+![alt text](https://raw.githubusercontent.com/Tricon2-Elf/AI-Space/refs/heads/main/documents/Items/Icons/00000001.png)
