@@ -1,3 +1,5 @@
 .python-version
 .vscode/
 listofmaps.csv
+scripts/ExtractHEDKeys.py
+scripts/__pycache__/
